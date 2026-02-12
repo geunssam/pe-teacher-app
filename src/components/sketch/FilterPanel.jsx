@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 
 /**
  * 수업스케치 필터 패널
- * 생성형 추천 조건 입력
+ * 생성형 추천 조건 입력 (컴팩트 가로 레이아웃)
  */
 export default function FilterPanel({
   selectedGrade,
@@ -43,183 +43,163 @@ export default function FilterPanel({
 
   return (
     <>
-      <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-xl border border-white/80 shadow-glass-strong">
-        <h3 className="text-card-title mb-lg">🎯 생성형 추천 필터</h3>
-
-        <div className="mb-lg p-md bg-white/40 rounded-lg border border-white/60">
-          <div className="text-caption text-muted mb-xs">영역</div>
-          <div className="text-body-bold text-text">스포츠 · 전략형 (고정)</div>
+      <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-md border border-white/80 shadow-glass-strong">
+        <div className="flex items-center justify-between gap-sm mb-sm flex-wrap">
+          <div>
+            <h3 className="text-body-bold text-text">🎯 추천 조건</h3>
+            <div className="text-caption text-muted">스포츠 · 전략형 (고정)</div>
+          </div>
+          <button
+            onClick={onRecommend}
+            className="py-2 px-4 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-all"
+          >
+            🧩 후보 생성
+          </button>
         </div>
 
-        <div className="mb-lg">
-          <div className="text-body font-semibold text-text mb-sm">학년</div>
-          <div className="grid grid-cols-2 gap-sm">
-            {GRADES.map((grade) => (
-              <button
-                key={grade}
-                onClick={() => setSelectedGrade(grade)}
-                className={`
-                  py-2 px-3 rounded-lg font-semibold text-sm transition-all border
-                  ${
+        <div className="grid lg:grid-cols-12 gap-sm">
+          <div className="lg:col-span-3 bg-white/45 rounded-lg border border-white/70 p-sm">
+            <div className="text-caption font-semibold text-text mb-xs">학년</div>
+            <div className="flex flex-wrap gap-1.5 mb-sm">
+              {GRADES.map((grade) => (
+                <button
+                  key={grade}
+                  onClick={() => setSelectedGrade(grade)}
+                  className={`py-1.5 px-2.5 rounded-md text-xs font-semibold border transition-all ${
                     selectedGrade === grade
                       ? 'bg-primary text-white border-primary'
-                      : 'bg-white/60 text-text border-white/80 hover:bg-white/80'
-                  }
-                `}
-              >
-                {grade}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-lg">
-          <div className="text-body font-semibold text-text mb-sm">종목</div>
-          <div className="grid grid-cols-2 gap-sm">
-            {SPORTS.map((sport) => (
-              <button
-                key={sport}
-                onClick={() => setSelectedSport(sport)}
-                className={`
-                  py-2 px-3 rounded-lg font-semibold text-sm transition-all border
-                  ${
-                    selectedSport === sport
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-white/60 text-text border-white/80 hover:bg-white/80'
-                  }
-                `}
-              >
-                {sport}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-lg">
-          <div className="flex items-center justify-between gap-sm mb-sm">
-            <div className="text-body font-semibold text-text">FMS 포커스</div>
-            <div className="text-caption text-muted">선택 {selectedFmsCount}개</div>
-          </div>
-          <div className="grid grid-cols-3 gap-sm mb-sm">
-            {FMS_CATEGORIES.map((category) => {
-              const count = selectedFmsByCategory[category]?.length || 0
-              return (
-                <button
-                  key={category}
-                  onClick={() => setOpenFmsCategory(category)}
-                  className="py-2 px-2 rounded-lg font-semibold text-sm transition-all border bg-white/60 text-text border-white/80 hover:bg-white/80"
+                      : 'bg-white/70 text-text border-white/80 hover:bg-white'
+                  }`}
                 >
-                  {category}
-                  <span className="ml-1 text-caption text-muted">({count})</span>
+                  {grade}
                 </button>
-              )
-            })}
-          </div>
-
-          {selectedFmsFocus.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {selectedFmsFocus.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-caption px-2 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20"
-                >
-                  {tag}
-                </span>
               ))}
             </div>
-          ) : (
-            <div className="text-caption text-muted">카테고리를 눌러 FMS를 선택하세요.</div>
-          )}
-        </div>
 
-        <div className="mb-lg">
-          <div className="flex items-center justify-between gap-sm mb-sm">
-            <div className="text-body font-semibold text-text">종목기술</div>
-            <div className="text-caption text-muted">{selectedSport}</div>
+            <div className="text-caption font-semibold text-text mb-xs">종목</div>
+            <div className="flex flex-wrap gap-1.5">
+              {SPORTS.map((sport) => (
+                <button
+                  key={sport}
+                  onClick={() => setSelectedSport(sport)}
+                  className={`py-1.5 px-2.5 rounded-md text-xs font-semibold border transition-all ${
+                    selectedSport === sport
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-white/70 text-text border-white/80 hover:bg-white'
+                  }`}
+                >
+                  {sport}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-sm">
-            {sportSkillOptions.map((skill) => (
-              <button
-                key={skill}
-                onClick={() => toggleSportSkill(skill)}
-                className={`
-                  py-2 px-3 rounded-lg font-semibold text-sm transition-all border text-left
-                  ${
+
+          <div className="lg:col-span-4 bg-white/45 rounded-lg border border-white/70 p-sm">
+            <div className="flex items-center justify-between gap-sm mb-xs">
+              <div className="text-caption font-semibold text-text">FMS</div>
+              <div className="text-caption text-muted">{selectedFmsCount}개</div>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 mb-xs">
+              {FMS_CATEGORIES.map((category) => {
+                const count = selectedFmsByCategory[category]?.length || 0
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setOpenFmsCategory(category)}
+                    className="py-1.5 px-2.5 rounded-md text-xs font-semibold border bg-white/70 text-text border-white/80 hover:bg-white transition-all"
+                  >
+                    {category} ({count})
+                  </button>
+                )
+              })}
+            </div>
+
+            {selectedFmsFocus.length > 0 ? (
+              <div className="flex flex-wrap gap-1 max-h-14 overflow-y-auto pr-1">
+                {selectedFmsFocus.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded-md border border-primary/20"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="text-[11px] text-muted">카테고리를 눌러 선택</div>
+            )}
+          </div>
+
+          <div className="lg:col-span-3 bg-white/45 rounded-lg border border-white/70 p-sm">
+            <div className="flex items-center justify-between gap-sm mb-xs">
+              <div className="text-caption font-semibold text-text">종목기술</div>
+              <div className="text-[11px] text-muted">{selectedSport}</div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1">
+              {sportSkillOptions.map((skill) => (
+                <button
+                  key={skill}
+                  onClick={() => toggleSportSkill(skill)}
+                  className={`py-1.5 px-2.5 rounded-md text-xs font-semibold border transition-all ${
                     selectedSportSkills.includes(skill)
                       ? 'bg-secondary/25 text-text border-secondary/40'
-                      : 'bg-white/60 text-text border-white/80 hover:bg-white/80'
-                  }
-                `}
-              >
-                {skill}
-              </button>
-            ))}
+                      : 'bg-white/70 text-text border-white/80 hover:bg-white'
+                  }`}
+                >
+                  {skill}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="mb-lg">
-          <div className="text-body font-semibold text-text mb-sm">장소</div>
-          <div className="grid grid-cols-2 gap-sm mb-sm">
-            {LOCATIONS.map((location) => (
-              <button
-                key={location}
-                onClick={() => setSelectedLocation(location)}
-                className={`
-                  py-2 px-3 rounded-lg font-semibold text-sm transition-all border
-                  ${
+          <div className="lg:col-span-2 bg-white/45 rounded-lg border border-white/70 p-sm">
+            <div className="text-caption font-semibold text-text mb-xs">장소/시간</div>
+            <div className="flex flex-wrap gap-1.5 mb-xs">
+              {LOCATIONS.map((location) => (
+                <button
+                  key={location}
+                  onClick={() => setSelectedLocation(location)}
+                  className={`py-1.5 px-2 rounded-md text-xs font-semibold border transition-all ${
                     selectedLocation === location
                       ? 'bg-primary text-white border-primary'
-                      : 'bg-white/60 text-text border-white/80 hover:bg-white/80'
-                  }
-                `}
-              >
-                {location}
-              </button>
-            ))}
-          </div>
+                      : 'bg-white/70 text-text border-white/80 hover:bg-white'
+                  }`}
+                >
+                  {location}
+                </button>
+              ))}
+            </div>
 
-          <label className="flex items-center gap-2 cursor-pointer text-caption text-text">
             <input
-              type="checkbox"
-              checked={weatherFilter}
-              onChange={(e) => setWeatherFilter(e.target.checked)}
-              className="w-4 h-4 rounded accent-primary"
+              type="range"
+              min={25}
+              max={40}
+              step={5}
+              value={durationMin}
+              onChange={(e) => setDurationMin(Number(e.target.value))}
+              className="w-full accent-primary mb-xs"
             />
-            비/미세먼지 상황 가정 (실내 우선)
-          </label>
-        </div>
+            <div className="text-[11px] text-muted mb-xs">{durationMin}분</div>
 
-        <div className="mb-lg">
-          <div className="text-body font-semibold text-text mb-sm">수업 시간 (분)</div>
-          <input
-            type="range"
-            min={25}
-            max={40}
-            step={5}
-            value={durationMin}
-            onChange={(e) => setDurationMin(Number(e.target.value))}
-            className="w-full accent-primary"
-          />
-          <div className="text-caption text-muted mt-xs">{durationMin}분 내 운영 가능한 활동만 생성</div>
-        </div>
+            <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-text mb-xs">
+              <input
+                type="checkbox"
+                checked={weatherFilter}
+                onChange={(e) => setWeatherFilter(e.target.checked)}
+                className="w-3.5 h-3.5 rounded accent-primary"
+              />
+              실내 우선
+            </label>
 
-        <div className="mb-lg">
-          <div className="text-body font-semibold text-text mb-sm">사용 가능 교구 (쉼표 구분)</div>
-          <textarea
-            value={availableEquipmentText}
-            onChange={(e) => setAvailableEquipmentText(e.target.value)}
-            rows={2}
-            className="w-full p-md bg-white/60 border border-white/80 rounded-lg text-body text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-            placeholder="예: 축구공, 콘, 조끼, 호루라기"
-          />
+            <input
+              value={availableEquipmentText}
+              onChange={(e) => setAvailableEquipmentText(e.target.value)}
+              className="w-full py-1.5 px-2 bg-white/70 border border-white/80 rounded-md text-xs text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder="교구(쉼표)"
+            />
+          </div>
         </div>
-
-        <button
-          onClick={onRecommend}
-          className="w-full py-3 px-4 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition-all"
-        >
-          🧩 후보 3개 생성
-        </button>
       </div>
 
       {openFmsCategory && (

@@ -1,6 +1,8 @@
+import { useState } from 'react'
+
 /**
  * 생성형 추천 결과 카드
- * 템플릿 구조: 제목/규칙/미션/팁/효과/링크/준비물
+ * 기본은 요약형, 필요 시 상세 펼침
  */
 export default function ResultCard({
   card,
@@ -10,96 +12,101 @@ export default function ResultCard({
   selected = false,
   disabled = false,
 }) {
+  const [expanded, setExpanded] = useState(false)
+
   if (!card) {
     return (
-      <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-xl border border-white/80 shadow-glass-strong">
-        <div className="text-center py-lg">
-          <div className="text-5xl mb-md">🧩</div>
-          <div className="text-body text-muted">조건을 설정하고 후보 3개 생성을 눌러주세요</div>
+      <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-lg border border-white/80 shadow-glass-strong">
+        <div className="text-center py-md">
+          <div className="text-4xl mb-sm">🧩</div>
+          <div className="text-caption text-muted">조건을 설정하고 후보 3개 생성을 눌러주세요</div>
         </div>
       </div>
     )
   }
 
+  const rulePreview = (card.basicRules || []).slice(0, 2)
+  const equipmentPreview = (card.equipment || []).slice(0, 3)
+  const extraEquipmentCount = Math.max(0, (card.equipment || []).length - equipmentPreview.length)
+
+  const sportSkillPreview = (card.sportSkillTags || []).slice(0, 2)
+  const extraSportSkillCount = Math.max(0, (card.sportSkillTags || []).length - sportSkillPreview.length)
+
+  const fmsPreview = (card.fmsTags || []).slice(0, 2)
+  const extraFmsCount = Math.max(0, (card.fmsTags || []).length - fmsPreview.length)
+
   return (
-    <div className={`bg-white/60 backdrop-blur-xl rounded-2xl p-xl border shadow-glass-strong ${
+    <div className={`bg-white/60 backdrop-blur-xl rounded-2xl p-md border shadow-glass-strong h-full flex flex-col ${
       selected ? 'border-primary/60 ring-2 ring-primary/20' : 'border-white/80'
     }`}>
-      <div className="flex items-start justify-between gap-md mb-md">
-        <h2 className="text-card-title flex-1">
-          #{index}. {card.title}
-        </h2>
+      <div className="flex items-start justify-between gap-sm mb-sm">
+        <h2 className="text-body-bold flex-1 leading-snug">#{index}. {truncateText(card.title, 40)}</h2>
         <div className="text-right">
-          <div className="text-caption text-muted">추천 점수</div>
-          <div className="text-body-bold text-primary">{card.score}점</div>
+          <div className="text-[11px] text-muted">점수</div>
+          <div className="text-body-bold text-primary">{card.score}</div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-md">
-        <span className="text-caption px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20">
-          {card.sport}
-        </span>
-        <span className="text-caption px-3 py-1 bg-white/60 rounded-lg border border-white/80">
-          난이도 {card.difficulty}
-        </span>
-        {card.sportSkillTags?.map((tag) => (
-          <span
-            key={`${card.id}-skill-${tag}`}
-            className="text-caption px-3 py-1 bg-secondary/25 text-text rounded-lg border border-secondary/40"
-          >
-            기술 {tag}
-          </span>
+      <div className="flex flex-wrap gap-1.5 mb-sm">
+        <Badge tone="primary">{card.sport}</Badge>
+        <Badge>난이도 {card.difficulty}</Badge>
+        {sportSkillPreview.map((tag) => (
+          <Badge key={`${card.id}-skill-${tag}`} tone="secondary">기술 {tag}</Badge>
         ))}
-        {card.fmsTags?.map((tag) => (
-          <span
-            key={`${card.id}-${tag}`}
-            className="text-caption px-3 py-1 bg-white/60 rounded-lg border border-white/80"
-          >
-            {tag}
-          </span>
+        {extraSportSkillCount > 0 && <Badge>+{extraSportSkillCount}</Badge>}
+        {fmsPreview.map((tag) => (
+          <Badge key={`${card.id}-${tag}`}>{tag}</Badge>
         ))}
+        {extraFmsCount > 0 && <Badge>+{extraFmsCount}</Badge>}
       </div>
 
-      <Section title="기본 규칙" items={card.basicRules} />
-      <Section title="벌칙/미션" items={card.penaltiesMissions} />
-      <Section title="운영 팁/변형" items={card.operationTips} />
-      <Section title="교육적 효과" items={card.educationEffects} />
-
-      <div className="mb-md">
-        <div className="text-body font-semibold text-text mb-sm">유튜브 링크</div>
-        <a
-          href={card.youtubeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-caption text-primary font-semibold break-all hover:underline"
-        >
-          {card.youtubeUrl}
-        </a>
-      </div>
-
-      <div className="mb-lg">
-        <div className="text-body font-semibold text-text mb-sm">교구/준비물</div>
-        <div className="flex flex-wrap gap-2">
-          {card.equipment?.map((item) => (
-            <span
-              key={`${card.id}-${item}`}
-              className="text-caption px-3 py-1 bg-white/60 rounded-lg border border-white/80"
-            >
-              {item}
-            </span>
+      <div className="mb-sm">
+        <div className="text-[11px] font-semibold text-muted mb-xs">핵심 규칙</div>
+        <ul className="space-y-1">
+          {rulePreview.map((item, itemIndex) => (
+            <li key={`rule-${itemIndex}`} className="text-[12px] text-text leading-relaxed">
+              • {truncateText(item, 58)}
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
-      <div className="p-md bg-white/40 rounded-lg border border-white/60 mb-lg">
-        <div className="text-caption text-muted mb-xs">추천 설명</div>
-        <div className="text-caption text-text">{card.explanation}</div>
+      <div className="text-[11px] text-muted mb-sm">
+        준비물: {equipmentPreview.join(', ') || '없음'}{extraEquipmentCount > 0 ? ` +${extraEquipmentCount}` : ''}
       </div>
+
+      <div className="flex gap-2 mb-sm">
+        <button
+          onClick={() => setExpanded((prev) => !prev)}
+          className="py-1.5 px-2.5 rounded-md text-xs font-semibold bg-white/70 border border-white/80 hover:bg-white transition-all"
+        >
+          {expanded ? '상세 접기' : '상세 보기'}
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="space-y-sm mb-sm p-sm bg-white/45 rounded-lg border border-white/70">
+          <Section title="벌칙/미션" items={card.penaltiesMissions} />
+          <Section title="운영 팁" items={card.operationTips} />
+          <Section title="교육 효과" items={card.educationEffects} />
+
+          {card.youtubeUrl && (
+            <a
+              href={card.youtubeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-[11px] text-primary font-semibold break-all hover:underline"
+            >
+              영상 링크 보기
+            </a>
+          )}
+        </div>
+      )}
 
       <button
         onClick={() => onConfirm(card)}
         disabled={disabled}
-        className={`w-full py-3 px-4 rounded-xl font-semibold transition-all ${
+        className={`mt-auto w-full py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${
           disabled
             ? 'bg-success/20 text-success cursor-default'
             : selected
@@ -113,21 +120,40 @@ export default function ResultCard({
   )
 }
 
+function Badge({ children, tone = 'default' }) {
+  const className =
+    tone === 'primary'
+      ? 'text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded-md border border-primary/20'
+      : tone === 'secondary'
+      ? 'text-[11px] px-2 py-0.5 bg-secondary/25 text-text rounded-md border border-secondary/40'
+      : 'text-[11px] px-2 py-0.5 bg-white/70 rounded-md border border-white/80'
+
+  return <span className={className}>{children}</span>
+}
+
 function Section({ title, items }) {
   if (!items || items.length === 0) {
     return null
   }
 
   return (
-    <div className="mb-md">
-      <div className="text-body font-semibold text-text mb-sm">{title}</div>
-      <ul className="space-y-xs">
-        {items.map((item, index) => (
-          <li key={`${title}-${index}`} className="text-caption text-text leading-relaxed">
-            • {item}
+    <div>
+      <div className="text-[11px] font-semibold text-muted mb-xs">{title}</div>
+      <ul className="space-y-1">
+        {items.slice(0, 3).map((item, index) => (
+          <li key={`${title}-${index}`} className="text-[12px] text-text leading-relaxed">
+            • {truncateText(item, 74)}
           </li>
         ))}
       </ul>
     </div>
   )
+}
+
+function truncateText(value, maxLength = 60) {
+  const text = String(value || '').trim()
+  if (text.length <= maxLength) {
+    return text
+  }
+  return `${text.slice(0, maxLength)}...`
 }
