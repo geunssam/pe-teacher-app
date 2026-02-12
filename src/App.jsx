@@ -26,7 +26,13 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
+    <Router
+      basename={import.meta.env.BASE_URL}
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AppContent />
     </Router>
   )

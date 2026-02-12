@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import { loadNaverMapScript } from '../../utils/loadNaverMapScript'
 
 /**
  * LocationMapPicker
@@ -21,54 +22,70 @@ export default function LocationMapPicker({ initialLat, initialLon, onSelect, on
   })
 
   useEffect(() => {
-    // 네이버 지도 API 로드 확인
-    if (!window.naver || !window.naver.maps) {
-      toast.error('네이버 지도 API를 로드할 수 없습니다')
-      return
+    let isUnmounted = false
+
+    const initializeMap = async () => {
+      try {
+        await loadNaverMapScript()
+
+        if (isUnmounted || !mapRef.current) {
+          return
+        }
+
+        const { naver } = window
+        if (!naver || !naver.maps) {
+          throw new Error('NAVER_MAP_API_UNAVAILABLE')
+        }
+
+        // 지도 초기화
+        const mapOptions = {
+          center: new naver.maps.LatLng(initialLat, initialLon),
+          zoom: 15,
+          zoomControl: true,
+          zoomControlOptions: {
+            position: naver.maps.Position.TOP_RIGHT,
+          },
+        }
+
+        const map = new naver.maps.Map(mapRef.current, mapOptions)
+        mapInstanceRef.current = map
+
+        // 초기 마커 생성
+        const marker = new naver.maps.Marker({
+          position: new naver.maps.LatLng(initialLat, initialLon),
+          map,
+          draggable: true,
+        })
+        markerRef.current = marker
+
+        // 마커 드래그 이벤트
+        naver.maps.Event.addListener(marker, 'dragend', (e) => {
+          const lat = e.coord.lat()
+          const lon = e.coord.lng()
+          setSelectedCoords({ lat, lon })
+        })
+
+        // 지도 클릭 이벤트
+        naver.maps.Event.addListener(map, 'click', (e) => {
+          const lat = e.coord.lat()
+          const lon = e.coord.lng()
+
+          // 마커 이동
+          marker.setPosition(new naver.maps.LatLng(lat, lon))
+          setSelectedCoords({ lat, lon })
+        })
+      } catch (error) {
+        console.error('Failed to initialize Naver map:', error)
+        toast.error('네이버 지도 인증 실패: 네이버 콘솔의 웹 서비스 URL 설정을 확인하세요')
+      }
     }
 
-    const { naver } = window
-
-    // 지도 초기화
-    const mapOptions = {
-      center: new naver.maps.LatLng(initialLat, initialLon),
-      zoom: 15,
-      zoomControl: true,
-      zoomControlOptions: {
-        position: naver.maps.Position.TOP_RIGHT,
-      },
-    }
-
-    const map = new naver.maps.Map(mapRef.current, mapOptions)
-    mapInstanceRef.current = map
-
-    // 초기 마커 생성
-    const marker = new naver.maps.Marker({
-      position: new naver.maps.LatLng(initialLat, initialLon),
-      map: map,
-      draggable: true,
-    })
-    markerRef.current = marker
-
-    // 마커 드래그 이벤트
-    naver.maps.Event.addListener(marker, 'dragend', (e) => {
-      const lat = e.coord.lat()
-      const lon = e.coord.lng()
-      setSelectedCoords({ lat, lon })
-    })
-
-    // 지도 클릭 이벤트
-    naver.maps.Event.addListener(map, 'click', (e) => {
-      const lat = e.coord.lat()
-      const lon = e.coord.lng()
-
-      // 마커 이동
-      marker.setPosition(new naver.maps.LatLng(lat, lon))
-      setSelectedCoords({ lat, lon })
-    })
+    initializeMap()
 
     // cleanup
     return () => {
+      isUnmounted = true
+
       if (markerRef.current) {
         markerRef.current.setMap(null)
       }
