@@ -6,7 +6,8 @@ import { validateCandidate } from './validateCandidate.js'
 import { scoreCandidate } from './scoreCandidate.js'
 import { renderTemplate } from './renderTemplate.js'
 
-const MIN_MODIFIER_COUNT = 2
+const STRICT_MIN_MODIFIER_COUNT = 2
+const RELAXED_MIN_MODIFIER_COUNT = 1
 const MAX_MODIFIER_COUNT = 3
 const EQUIPMENT_ALIASES = {
   팀조끼: '조끼',
@@ -250,12 +251,14 @@ function getAllowedModifiers(request, coreRule) {
   })
 }
 
-function pickModifiers(modifierPool) {
+function pickModifiers(modifierPool, { minCount = STRICT_MIN_MODIFIER_COUNT, maxCount = MAX_MODIFIER_COUNT } = {}) {
   if (modifierPool.length === 0) {
     return []
   }
 
-  const targetCount = MIN_MODIFIER_COUNT + Math.floor(Math.random() * (MAX_MODIFIER_COUNT - MIN_MODIFIER_COUNT + 1))
+  const upper = Math.min(maxCount, modifierPool.length)
+  const lower = Math.min(minCount, upper)
+  const targetCount = lower + Math.floor(Math.random() * (upper - lower + 1))
   const byType = modifierPool.reduce((acc, modifier) => {
     if (!acc[modifier.type]) {
       acc[modifier.type] = []
@@ -294,8 +297,18 @@ function pickModifiers(modifierPool) {
 }
 
 function buildTitle(request, atom, modifiers) {
-  const anchorModifier = modifiers[0]?.name || '기본형'
-  return `${request.sport} ${atom.name} (${anchorModifier})`
+  const modifierNames = modifiers.map((modifier) => modifier.name).filter(Boolean)
+
+  let suffix = '기본형'
+  if (modifierNames.length === 1) {
+    suffix = modifierNames[0]
+  } else if (modifierNames.length === 2) {
+    suffix = `${modifierNames[0]} + ${modifierNames[1]}`
+  } else if (modifierNames.length >= 3) {
+    suffix = `${modifierNames[0]} + ${modifierNames[1]} +${modifierNames.length - 2}`
+  }
+
+  return `${request.sport} ${atom.name} (${suffix})`
 }
 
 function buildCandidate({ request, atom, modifiers, coreRule }) {
@@ -402,16 +415,30 @@ export function generateCandidates(request) {
 
   const candidates = []
   const seen = new Set()
-  const maxAttempts = 100
+  const usedAtomIds = new Set()
+  const maxAttempts = 140
   let attempts = 0
+  let phase = 1
   const failureReasonCounts = {}
+  const shouldEnforceUniqueAtom = atomPool.length >= 3
 
   while (candidates.length < 3 && attempts < maxAttempts) {
     attempts += 1
 
+    if (phase === 1 && attempts > 70 && candidates.length < 3) {
+      phase = 2
+    }
+
+    const enforceUniqueAtom = phase === 1 ? shouldEnforceUniqueAtom : false
+    const minModifierCount = phase === 1 ? STRICT_MIN_MODIFIER_COUNT : RELAXED_MIN_MODIFIER_COUNT
+
     const atom = pickRandom(atomPool)
-    const modifiers = pickModifiers(modifierPool)
-    if (modifiers.length < MIN_MODIFIER_COUNT) {
+    if (enforceUniqueAtom && usedAtomIds.has(atom.id)) {
+      continue
+    }
+
+    const modifiers = pickModifiers(modifierPool, { minCount: minModifierCount, maxCount: MAX_MODIFIER_COUNT })
+    if (modifiers.length < minModifierCount) {
       continue
     }
 
@@ -445,6 +472,9 @@ export function generateCandidates(request) {
       duplicatePenalty: scoring.duplicatePenalty,
       validation,
     })
+    if (enforceUniqueAtom) {
+      usedAtomIds.add(atom.id)
+    }
   }
 
   const topFailureReasons = Object.entries(failureReasonCounts)
@@ -456,6 +486,7 @@ export function generateCandidates(request) {
     candidates: reorderWithTemplates(candidates),
     meta: {
       attempts,
+      phaseEnded: phase,
       atomPoolCount: atomPool.length,
       modifierPoolCount: modifierPool.length,
       topFailureReasons,
