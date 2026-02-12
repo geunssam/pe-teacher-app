@@ -26,6 +26,7 @@ export function useClassManager() {
   const [classSetup, setClassSetup] = useLocalStorage('pe_class_setup', null)
   const [classes, setClasses] = useLocalStorage('pe_classes', [])
   const [rosters, setRosters] = useLocalStorage('pe_rosters', {})
+  const [records, setRecords] = useLocalStorage('pe_class_records', {})
 
   /**
    * 학급 설정 초기화 (위저드 Step 1-4 완료 시)
@@ -35,6 +36,7 @@ export function useClassManager() {
   const initializeClasses = (setup) => {
     const newClasses = []
     const newRosters = {}
+    const newRecords = {}
 
     // 각 학년의 각 반 생성
     setup.grades.forEach((gradeInfo) => {
@@ -65,14 +67,18 @@ export function useClassManager() {
           gender: '',
           note: '',
         }))
+
+        // 수업 기록 배열 초기화
+        newRecords[classId] = []
       }
     })
 
     setClassSetup(setup)
     setClasses(newClasses)
     setRosters(newRosters)
+    setRecords(newRecords)
 
-    return { classes: newClasses, rosters: newRosters }
+    return { classes: newClasses, rosters: newRosters, records: newRecords }
   }
 
   /**
@@ -90,10 +96,38 @@ export function useClassManager() {
   }
 
   /**
+   * 학급 정보 업데이트
+   */
+  const updateClass = (classId, updates) => {
+    setClasses((prev) =>
+      prev.map((cls) =>
+        cls.id === classId ? { ...cls, ...updates, updatedAt: new Date().toISOString() } : cls
+      )
+    )
+  }
+
+  /**
    * 특정 학급의 명단 가져오기
    */
   const getRoster = (classId) => {
     return rosters[classId] || []
+  }
+
+  /**
+   * 특정 학급 수업 기록 조회
+   */
+  const getClassRecords = (classId) => {
+    return records[classId] || []
+  }
+
+  /**
+   * 수업 기록 추가
+   */
+  const addClassRecord = (classId, record) => {
+    setRecords((prev) => ({
+      ...prev,
+      [classId]: [record, ...(prev[classId] || [])],
+    }))
   }
 
   /**
@@ -237,6 +271,7 @@ export function useClassManager() {
     setClassSetup(null)
     setClasses([])
     setRosters({})
+    setRecords({})
   }
 
   /**
@@ -263,6 +298,7 @@ export function useClassManager() {
     classSetup,
     classes,
     rosters,
+    records,
 
     // 초기화
     initializeClasses,
@@ -271,7 +307,10 @@ export function useClassManager() {
 
     // 조회
     getClass,
+    updateClass,
     getRoster,
+    getClassRecords,
+    addClassRecord,
     getClassesByGrade,
 
     // 색상 관리

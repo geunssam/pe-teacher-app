@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "scope": "5~6학년 스포츠 전략형 4종목"
+  },
+  "sports": {
+    "축구": {
+      "coreRules": [
+        "볼 조작은 발 중심으로 진행하고, 골키퍼 역할을 제외한 손 사용은 금지한다.",
+        "패스 이후에는 반드시 빈 공간으로 재이동한다.",
+        "수비 시 상대의 진행 방향을 차단하되 신체 접촉은 최소화한다."
+      ],
+      "requiredConcepts": ["발 조작", "패스", "공 없는 움직임"],
+      "forbiddenModifierIds": ["carry_ball_free"],
+      "forbiddenTags": ["hand_only", "carry_ball"],
+      "safetyRules": [
+        "슬라이딩 태클 금지",
+        "발목 보호를 위해 충돌 거리 유지"
+      ],
+      "defaultEquipment": ["축구공", "콘", "팀조끼"],
+      "youtubeKeywords": ["초등 축구 패스 게임", "양수쌤 축구 수업", "기백쌤 축구 활동"]
+    },
+    "농구": {
+      "coreRules": [
+        "이동 시 볼을 운반하지 않고 드리블 또는 패스로 연결한다.",
+        "패스 후에는 스크린 또는 컷인으로 지원 위치를 만든다.",
+        "수비 전환은 3초 이내 복귀를 기본으로 한다."
+      ],
+      "requiredConcepts": ["드리블", "패스", "지원 플레이"],
+      "forbiddenModifierIds": ["foot_only_touch"],
+      "forbiddenTags": ["foot_only", "carry_ball"],
+      "safetyRules": [
+        "리바운드 경합 시 팔꿈치 사용 금지",
+        "공을 잡은 학생의 착지 공간 확보"
+      ],
+      "defaultEquipment": ["농구공", "콘", "조끼"],
+      "youtubeKeywords": ["초등 농구 전략형 게임", "양수쌤 농구 활동", "기백쌤 농구 수업"]
+    },
+    "피구": {
+      "coreRules": [
+        "공은 던지기-받기-피하기 흐름으로 순환하고, 홀딩 시간은 3초 이내로 제한한다.",
+        "아웃 학생은 즉시 복귀 미션을 수행한 뒤 재참여한다.",
+        "협력 수비를 위해 2인 이상이 같은 구역을 커버한다."
+      ],
+      "requiredConcepts": ["던지기", "받기", "피하기"],
+      "forbiddenModifierIds": ["head_shot_bonus"],
+      "forbiddenTags": ["head_shot", "aggressive_contact"],
+      "safetyRules": [
+        "얼굴 방향 강투 금지",
+        "근거리 강습 전 안내 콜 사용"
+      ],
+      "defaultEquipment": ["피구공", "콘", "팀조끼"],
+      "youtubeKeywords": ["초등 피구 전략 게임", "양수쌤 피구", "기백쌤 피구 수업"]
+    },
+    "배구": {
+      "coreRules": [
+        "공을 잡아두지 않고 언더핸드 또는 오버핸드 패스로 연결한다.",
+        "세 번째 터치 안에 상대 코트로 보내는 팀 리듬을 유지한다.",
+        "리시브 후 세터 역할 학생이 공격 방향을 지시한다."
+      ],
+      "requiredConcepts": ["리시브", "토스", "공간 분담"],
+      "forbiddenModifierIds": ["carry_ball_free"],
+      "forbiddenTags": ["carry_ball", "foot_only"],
+      "safetyRules": [
+        "네트 근처 충돌 방지를 위해 호출 후 이동",
+        "손가락 보호를 위해 손 모양 사전 지도"
+      ],
+      "defaultEquipment": ["배구공", "네트", "콘"],
+      "youtubeKeywords": ["초등 배구 전략형 활동", "양수쌤 배구 게임", "기백쌤 배구 수업"]
+    }
+  }
+}

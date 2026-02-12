@@ -74,18 +74,8 @@ export default function Header() {
   // TODO: 실제 학급 데이터에서 가져오기
   const currentClass = null // 예: "6학년 3반"
 
-  const handleSettings = async () => {
-    const confirmed = await confirm(
-      '학급 설정을 다시 하시겠습니까?\n기존 데이터는 모두 삭제됩니다.',
-      '초기화',
-      '취소'
-    )
-
-    if (confirmed) {
-      resetClassSetup()
-      toast.success('학급 설정이 초기화되었습니다')
-      navigate('/setup')
-    }
+  const handleSettings = () => {
+    navigate('/settings')
   }
 
   return (

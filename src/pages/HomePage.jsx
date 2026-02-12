@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useClassManager } from '../hooks/useClassManager'
 import GlassCard from '../components/common/GlassCard'
-import WeatherMiniWidget from '../components/home/WeatherMiniWidget'
+import HourlyWeatherSummary from '../components/home/HourlyWeatherSummary'
 import TodaySchedule from '../components/home/TodaySchedule'
 import RecentLessons from '../components/home/RecentLessons'
 
@@ -14,9 +14,9 @@ export default function HomePage() {
       <h1 className="text-page-title mb-lg">🏠 오늘</h1>
 
       <div className="space-y-lg">
-        {/* 날씨 미니 위젯 */}
+        {/* 시간별 날씨 요약 */}
         <GlassCard accent="weather">
-          <WeatherMiniWidget />
+          <HourlyWeatherSummary />
         </GlassCard>
 
         {/* 오늘 시간표 */}

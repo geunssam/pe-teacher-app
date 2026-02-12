@@ -1,0 +1,298 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "note": "핵심 규칙 고정 + 부수 규칙 조합용 atom"
+  },
+  "atoms": [
+    {
+      "id": "atom_leg_pass",
+      "name": "다리사이 패스 침투",
+      "compatibleSports": ["축구", "농구", "피구", "배구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["패스", "달리기", "방향전환"],
+      "movementCategories": ["이동", "조작"],
+      "tacticalTags": ["공간창출", "지원플레이"],
+      "basicRules": [
+        "2인 1조로 이동하며 다리사이 패스를 1회 성공할 때마다 전진한다.",
+        "패스를 준 학생은 즉시 빈 공간으로 침투해 다음 패스 라인을 만든다.",
+        "실패 시 시작 지점에서 재시도한다."
+      ],
+      "operationTips": [
+        "초반에는 패스 거리 2m로 시작하고 익숙해지면 4m까지 확장한다.",
+        "교사는 침투 타이밍 콜(지금/기다려)을 반복하여 리듬을 잡아준다."
+      ],
+      "educationEffects": [
+        "패스 정확도와 이동 타이밍을 함께 강화한다.",
+        "전략형 게임에서 공 없는 움직임의 중요성을 이해하게 한다."
+      ],
+      "equipment": ["공", "콘"],
+      "baseDurationMin": 14,
+      "location": ["실내", "실외"],
+      "difficultyBase": 2,
+      "youtubeKeyword": "다리사이 패스 게임"
+    },
+    {
+      "id": "atom_pass_cut",
+      "name": "패스 후 빈공간 침투",
+      "compatibleSports": ["축구", "농구", "피구", "배구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["패스", "달리기", "멈추기"],
+      "movementCategories": ["이동", "조작"],
+      "tacticalTags": ["삼각지원", "침투"],
+      "basicRules": [
+        "3인 1조가 삼각형을 유지하며 패스 후 빈 공간으로 이동한다.",
+        "공을 받기 전 이름을 콜해 의사소통한다.",
+        "5회 연속 성공 시 다음 라운드로 이동한다."
+      ],
+      "operationTips": [
+        "삼각형 간격을 학생 수준에 따라 2~5m로 조절한다.",
+        "이동 속도보다 정확한 타이밍을 먼저 강조한다."
+      ],
+      "educationEffects": [
+        "패스-이동 연계 능력과 의사소통을 동시에 훈련한다.",
+        "전략형 경기의 기본 구조인 삼각 지원 개념을 익힌다."
+      ],
+      "equipment": ["공", "마커콘"],
+      "baseDurationMin": 15,
+      "location": ["실내", "실외"],
+      "difficultyBase": 2,
+      "youtubeKeyword": "패스 후 침투 게임"
+    },
+    {
+      "id": "atom_triangle_switch",
+      "name": "삼각 지원 스위치",
+      "compatibleSports": ["축구", "농구", "배구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["패스", "피벗", "사이드스텝"],
+      "movementCategories": ["비이동", "조작"],
+      "tacticalTags": ["지원위치", "전환"],
+      "basicRules": [
+        "코트를 3개 존으로 나누고 존마다 지원 1명을 둔다.",
+        "패스가 성공할 때마다 지원자는 시계 방향으로 존을 교대한다.",
+        "수비는 패스 길목만 차단하고 직접 접촉은 금지한다."
+      ],
+      "operationTips": [
+        "존 경계를 콘으로 명확히 표시해 이동 혼선을 줄인다.",
+        "교대 속도가 빨라질수록 의사소통 키워드를 줄여 간결하게 만든다."
+      ],
+      "educationEffects": [
+        "지원 위치 전환과 공간 분담 이해를 높인다.",
+        "패스 전후의 시야 전환 능력을 기른다."
+      ],
+      "equipment": ["공", "콘", "조끼"],
+      "baseDurationMin": 16,
+      "location": ["실내", "실외"],
+      "difficultyBase": 3,
+      "youtubeKeyword": "삼각 패스 전략 활동"
+    },
+    {
+      "id": "atom_gate_break",
+      "name": "게이트 돌파 패스",
+      "compatibleSports": ["축구", "농구", "피구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["패스", "가속", "감속"],
+      "movementCategories": ["이동", "조작"],
+      "tacticalTags": ["돌파", "공간인식"],
+      "basicRules": [
+        "콘으로 만든 게이트를 통과하는 패스만 점수로 인정한다.",
+        "패스 후 다음 게이트로 빠르게 이동해 재지원한다.",
+        "수비 팀은 게이트 1개만 방어할 수 있다."
+      ],
+      "operationTips": [
+        "게이트 폭은 난이도에 따라 1m~2m로 조절한다.",
+        "5분마다 방어 게이트를 교체해 전략 변화를 준다."
+      ],
+      "educationEffects": [
+        "정확한 패스와 공간 판단 능력을 동시에 강화한다.",
+        "공격 루트 선택과 수비 분산 전략을 학습한다."
+      ],
+      "equipment": ["공", "콘"],
+      "baseDurationMin": 15,
+      "location": ["실내", "실외"],
+      "difficultyBase": 2,
+      "youtubeKeyword": "게이트 패스 게임"
+    },
+    {
+      "id": "atom_turnover_3sec",
+      "name": "전환 3초 복귀",
+      "compatibleSports": ["축구", "농구", "피구", "배구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["달리기", "피벗", "패스"],
+      "movementCategories": ["이동", "비이동", "조작"],
+      "tacticalTags": ["공수전환", "협력수비"],
+      "basicRules": [
+        "공을 잃은 팀은 3초 안에 지정 구역으로 복귀해야 한다.",
+        "복귀 실패 시 상대 팀에 추가 패스 기회를 부여한다.",
+        "공을 가진 팀은 복귀 지연을 유도하는 패스 루트를 선택한다."
+      ],
+      "operationTips": [
+        "초반 1라운드는 5초 제한으로 시작해 점진적으로 3초로 줄인다.",
+        "복귀 기준선은 코트 중앙선으로 통일한다."
+      ],
+      "educationEffects": [
+        "공수 전환 속도와 역할 분담 능력을 기른다.",
+        "상황 판단과 즉각적 의사결정을 훈련한다."
+      ],
+      "equipment": ["공", "콘", "호루라기"],
+      "baseDurationMin": 14,
+      "location": ["실내", "실외"],
+      "difficultyBase": 3,
+      "youtubeKeyword": "전환 훈련 체육"
+    },
+    {
+      "id": "atom_pass_escape",
+      "name": "3패스 탈출",
+      "compatibleSports": ["축구", "농구", "피구", "배구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["패스", "받기", "달리기"],
+      "movementCategories": ["이동", "조작"],
+      "tacticalTags": ["협력", "압박탈출"],
+      "basicRules": [
+        "공격 팀은 3회 연속 패스를 성공하면 탈출 점수 1점을 얻는다.",
+        "수비 팀은 공을 가로채면 즉시 공격으로 전환한다.",
+        "같은 학생에게 연속 패스는 허용하지 않는다."
+      ],
+      "operationTips": [
+        "쉬운 버전은 수비 인원을 1명 줄여 성공 경험을 높인다.",
+        "중간 버전은 터치 제한 2회로 조절한다."
+      ],
+      "educationEffects": [
+        "패스 선택과 지원 이동의 관계를 이해한다.",
+        "팀 내 역할 분담과 의사소통 역량을 강화한다."
+      ],
+      "equipment": ["공", "조끼"],
+      "baseDurationMin": 13,
+      "location": ["실내", "실외"],
+      "difficultyBase": 1,
+      "youtubeKeyword": "3패스 탈출 게임"
+    },
+    {
+      "id": "atom_squat_first_shot",
+      "name": "스쿼트 승자 선공 슛",
+      "compatibleSports": ["축구", "농구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["스쿼트", "슛", "균형"],
+      "movementCategories": ["비이동", "조작"],
+      "tacticalTags": ["선공선택", "결정력"],
+      "basicRules": [
+        "2인 1조가 스쿼트 가위바위보를 3회 진행한다.",
+        "승자는 선공 슛 기회를 얻고, 실패 시 즉시 수비 전환한다.",
+        "득점 이후에는 역할을 교대한다."
+      ],
+      "operationTips": [
+        "스쿼트 자세를 먼저 확인해 무릎 안전을 확보한다.",
+        "슛 거리(축구 6m/농구 자유투 라인)를 고정해 공정성을 유지한다."
+      ],
+      "educationEffects": [
+        "하체 안정성과 슈팅 집중력을 동시에 훈련한다.",
+        "선공/후공 전략 선택의 의미를 체험한다."
+      ],
+      "equipment": ["공", "골대 또는 링", "콘"],
+      "baseDurationMin": 12,
+      "location": ["실내", "실외"],
+      "difficultyBase": 2,
+      "youtubeKeyword": "스쿼트 슛 게임"
+    },
+    {
+      "id": "atom_wall_rebound_support",
+      "name": "벽패스 복귀 지원",
+      "compatibleSports": ["축구", "농구", "피구", "배구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["패스", "받기", "방향전환"],
+      "movementCategories": ["이동", "조작"],
+      "tacticalTags": ["리바운드대응", "재지원"],
+      "basicRules": [
+        "벽 또는 리바운드 보드에 공을 맞춘 뒤 팀원이 이어 받아 공격을 지속한다.",
+        "벽패스를 시도한 학생은 바로 측면 지원 위치로 이동한다.",
+        "리바운드 볼은 첫 바운드 전에만 처리한다."
+      ],
+      "operationTips": [
+        "실내는 벽패스, 실외는 리바운드 보드/반사판으로 대체한다.",
+        "바운드 높이를 낮춰 초반 성공률을 확보한다."
+      ],
+      "educationEffects": [
+        "예측 이동과 2차 플레이 대응 능력을 강화한다.",
+        "실패 후 재도전 흐름을 자연스럽게 학습한다."
+      ],
+      "equipment": ["공", "벽면 또는 리바운드판", "콘"],
+      "baseDurationMin": 14,
+      "location": ["실내", "실외"],
+      "difficultyBase": 2,
+      "youtubeKeyword": "벽패스 체육 게임"
+    },
+    {
+      "id": "atom_number_call_overload",
+      "name": "숫자 콜 오버로드",
+      "compatibleSports": ["축구", "농구", "피구", "배구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["달리기", "패스", "멈추기"],
+      "movementCategories": ["이동", "조작"],
+      "tacticalTags": ["수적우세", "공간전환"],
+      "basicRules": [
+        "교사가 숫자를 콜하면 해당 번호 학생만 공격에 추가 참여한다.",
+        "수적 우세 10초 동안 패스 4회 성공 시 점수 획득.",
+        "시간 종료 즉시 원래 포지션으로 복귀한다."
+      ],
+      "operationTips": [
+        "번호 콜 간격을 20초로 시작해 익숙해지면 10초로 단축한다.",
+        "수비 팀도 번호 콜로 보정해 난이도를 맞춘다."
+      ],
+      "educationEffects": [
+        "순간적인 수적 우세 활용 전략을 익힌다.",
+        "콜 신호 반응 속도와 집중력을 향상한다."
+      ],
+      "equipment": ["공", "번호 조끼", "콘"],
+      "baseDurationMin": 17,
+      "location": ["실내", "실외"],
+      "difficultyBase": 3,
+      "youtubeKeyword": "숫자 콜 전략 게임"
+    },
+    {
+      "id": "atom_target_zone_finish",
+      "name": "타깃존 마무리",
+      "compatibleSports": ["축구", "농구", "피구", "배구"],
+      "domain": "스포츠",
+      "subDomain": "전략형",
+      "grades": ["5학년", "6학년"],
+      "fmsTags": ["슛", "던지기", "패스"],
+      "movementCategories": ["조작"],
+      "tacticalTags": ["마무리", "의사결정"],
+      "basicRules": [
+        "코트 끝 3개 타깃존 중 하나를 선택해 마무리 공격을 시도한다.",
+        "타깃존 진입 전 최소 2회 패스를 완료해야 한다.",
+        "실패 시 즉시 수비 전환하여 역습을 막는다."
+      ],
+      "operationTips": [
+        "타깃존 크기를 조정해 성공률을 조절한다.",
+        "존마다 점수를 다르게 배치해 전략 선택을 유도한다."
+      ],
+      "educationEffects": [
+        "공격 마무리 상황의 판단력을 기른다.",
+        "득점 기회 선택과 리스크 관리 개념을 학습한다."
+      ],
+      "equipment": ["공", "존 마커", "조끼"],
+      "baseDurationMin": 16,
+      "location": ["실내", "실외"],
+      "difficultyBase": 2,
+      "youtubeKeyword": "타깃존 게임 체육"
+    }
+  ]
+}

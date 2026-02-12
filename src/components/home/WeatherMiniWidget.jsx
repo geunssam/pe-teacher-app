@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { getCurrentWeather, getAirQuality, judgeOutdoorClass } from '../../data/mockWeather'
+import { fetchWeatherData, fetchAirQualityData } from '../../services/weatherApi'
+import { judgeOutdoorClass } from '../../data/mockWeather'
 
 /**
  * 홈 탭의 날씨 미니 위젯
@@ -21,10 +22,10 @@ export default function WeatherMiniWidget() {
     return () => clearInterval(interval)
   }, [])
 
-  const loadWeatherSummary = () => {
-    setTimeout(() => {
-      const weather = getCurrentWeather()
-      const air = getAirQuality()
+  const loadWeatherSummary = async () => {
+    try {
+      const weather = await fetchWeatherData()
+      const air = await fetchAirQualityData('대전')
       const judgment = judgeOutdoorClass(weather, air)
 
       setSummary({
@@ -36,7 +37,10 @@ export default function WeatherMiniWidget() {
         judgment
       })
       setLoading(false)
-    }, 300)
+    } catch (error) {
+      console.error('날씨 요약 로드 실패:', error)
+      setLoading(false)
+    }
   }
 
   if (loading) {

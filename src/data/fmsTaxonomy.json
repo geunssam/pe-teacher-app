@@ -1,0 +1,233 @@
+{
+  "generatedAt": "2026-02-12T14:42:41.916Z",
+  "sourceFile": "/Users/iwongeun/Downloads/기본 움직임 기술 분류 및 2022 개정 교육과정 연계 - Table 1.tsv",
+  "taxonomy": [
+    {
+      "category": "이동",
+      "label": "이동 움직임",
+      "aliases": [
+        "Locomotor Skills"
+      ],
+      "skills": [
+        {
+          "name": "걷기",
+          "aliases": []
+        },
+        {
+          "name": "달리기",
+          "aliases": [
+            "뛰기"
+          ]
+        },
+        {
+          "name": "점핑",
+          "aliases": []
+        },
+        {
+          "name": "호핑",
+          "aliases": [
+            "앙감질"
+          ]
+        },
+        {
+          "name": "리핑",
+          "aliases": [
+            "한 발 뛰기"
+          ]
+        },
+        {
+          "name": "스키핑",
+          "aliases": []
+        },
+        {
+          "name": "갤로핑",
+          "aliases": [
+            "말처럼 뛰기"
+          ]
+        },
+        {
+          "name": "사이드 스텝",
+          "aliases": []
+        },
+        {
+          "name": "슬라이딩",
+          "aliases": []
+        },
+        {
+          "name": "구르기",
+          "aliases": []
+        },
+        {
+          "name": "기어가기",
+          "aliases": []
+        }
+      ],
+      "movementElements": [
+        "공간(방향, 경로, 높낮이, 크기)",
+        "노력(빠르기, 힘, 무게, 흐름)"
+      ],
+      "curriculumLink": "움직임 수행 역량의 기초가 되며, 신체활동 형식을 통한 역량 함양의 출발점임. 도구적 의미를 넘어 신체활동 그 자체의 본질적 가치를 강조함.",
+      "gradeFocus": [
+        {
+          "grade": "3학년",
+          "focus": "기본 움직임 기술 자체 습득 및 익히기"
+        },
+        {
+          "grade": "4~6학년",
+          "focus": "복합 및 응용 기술로 발전시켜 전략형 스포츠 게임에 적용"
+        }
+      ],
+      "source": "1, 2"
+    },
+    {
+      "category": "비이동",
+      "label": "비이동 움직임",
+      "aliases": [
+        "Non-locomotor Skills"
+      ],
+      "skills": [
+        {
+          "name": "돌리기",
+          "aliases": [
+            "머리",
+            "어깨",
+            "엉덩이"
+          ]
+        },
+        {
+          "name": "털기",
+          "aliases": []
+        },
+        {
+          "name": "흔들기",
+          "aliases": []
+        },
+        {
+          "name": "돌기",
+          "aliases": [
+            "제자리 회전"
+          ]
+        },
+        {
+          "name": "꺾기",
+          "aliases": []
+        },
+        {
+          "name": "펴기",
+          "aliases": []
+        },
+        {
+          "name": "구부리기",
+          "aliases": []
+        },
+        {
+          "name": "움츠리기 & 늘리기",
+          "aliases": []
+        },
+        {
+          "name": "비틀기",
+          "aliases": []
+        },
+        {
+          "name": "균형 잡기",
+          "aliases": []
+        },
+        {
+          "name": "들기",
+          "aliases": []
+        }
+      ],
+      "movementElements": [
+        "신체(전신, 부분)",
+        "노력(힘, 흐름, 무게)",
+        "관계(신체와 신체)"
+      ],
+      "curriculumLink": "신체활동 역량 중 움직임의 원리를 이해하고 조절하는 능력과 직결됨. 건강 관리 역량 및 신체 수련의 기초를 형성함.",
+      "gradeFocus": [
+        {
+          "grade": "3학년",
+          "focus": "제자리에서 몸을 움직이는 기본 원리 습득"
+        },
+        {
+          "grade": "4~6학년",
+          "focus": "표현 활동 및 체력 운동 활동의 복합 기술로 전이"
+        }
+      ],
+      "source": "1, 2"
+    },
+    {
+      "category": "조작",
+      "label": "조작 움직임",
+      "aliases": [
+        "Manipulative Skills"
+      ],
+      "skills": [
+        {
+          "name": "던지기",
+          "aliases": []
+        },
+        {
+          "name": "받기",
+          "aliases": []
+        },
+        {
+          "name": "굴리기",
+          "aliases": []
+        },
+        {
+          "name": "치기",
+          "aliases": [
+            "손",
+            "배트"
+          ]
+        },
+        {
+          "name": "튀기기",
+          "aliases": []
+        },
+        {
+          "name": "되받아치기",
+          "aliases": []
+        },
+        {
+          "name": "차기",
+          "aliases": []
+        },
+        {
+          "name": "공 몰기",
+          "aliases": [
+            "드리블"
+          ]
+        },
+        {
+          "name": "볼 멈추기",
+          "aliases": []
+        },
+        {
+          "name": "타기",
+          "aliases": [
+            "스케이트",
+            "자전거"
+          ]
+        }
+      ],
+      "movementElements": [
+        "관계(사람과 물체, 물체와 물체)",
+        "공간(경로, 방향)",
+        "노력(힘 조절, 빠르기)"
+      ],
+      "curriculumLink": "영역형, 필드형, 네트형 스포츠의 필수 기능으로, '움직임 수행 역량' 및 '신체활동 문화 향유 역량' 강화에 기여함.",
+      "gradeFocus": [
+        {
+          "grade": "3학년",
+          "focus": "공과 도구를 다루는 기초 기술 연습"
+        },
+        {
+          "grade": "4~6학년",
+          "focus": "전략형 스포츠(축구, 농구, 배구 등) 내 응용 기술로 전이"
+        }
+      ],
+      "source": "1, 2"
+    }
+  ]
+}

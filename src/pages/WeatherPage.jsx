@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import WeatherDetail from '../components/weather/WeatherDetail'
 import AirQuality from '../components/weather/AirQuality'
 import HourlyForecast from '../components/weather/HourlyForecast'
 import OutdoorJudge from '../components/weather/OutdoorJudge'
-import {
-  getCurrentWeather,
-  getAirQuality,
-  getHourlyForecast,
-  judgeOutdoorClass
-} from '../data/mockWeather'
+import { fetchWeatherData, fetchAirQualityData } from '../services/weatherApi'
+import { judgeOutdoorClass, getHourlyForecast } from '../data/mockWeather'
+import { useSettings } from '../hooks/useSettings'
+import toast from 'react-hot-toast'
 
 /**
  * 날씨 탭 메인 페이지
@@ -16,6 +15,7 @@ import {
  * Phase 2에서 실제 API 연동 예정
  */
 export default function WeatherPage() {
+  const { location } = useSettings()
   const [weather, setWeather] = useState(null)
   const [air, setAir] = useState(null)
   const [hourly, setHourly] = useState([])
@@ -33,22 +33,27 @@ export default function WeatherPage() {
     return () => clearInterval(interval)
   }, [])
 
-  const loadWeatherData = () => {
+  const loadWeatherData = async () => {
     setLoading(true)
 
-    // Mock 데이터 로드 (실제로는 API 호출)
-    setTimeout(() => {
-      const weatherData = getCurrentWeather()
-      const airData = getAirQuality()
-      const hourlyData = getHourlyForecast()
+    try {
+      // 실제 API 호출 (저장된 위치 사용)
+      const weatherData = await fetchWeatherData(location)
+      const airData = await fetchAirQualityData(location.stationName)
+      const hourlyData = getHourlyForecast() // 시간별 예보는 Mock 사용 (단기예보 API로 확장 가능)
       const judgmentData = judgeOutdoorClass(weatherData, airData)
 
       setWeather(weatherData)
       setAir(airData)
       setHourly(hourlyData)
       setJudgment(judgmentData)
+      toast.success('날씨 정보를 업데이트했습니다')
+    } catch (error) {
+      console.error('날씨 데이터 로드 실패:', error)
+      toast.error('날씨 정보를 불러오는데 실패했습니다')
+    } finally {
       setLoading(false)
-    }, 500)
+    }
   }
 
   if (loading) {
@@ -87,17 +92,30 @@ export default function WeatherPage() {
         </button>
       </div>
 
-      {/* Mock 데이터 안내 */}
-      <div className="mb-lg p-md bg-primary/10 rounded-xl border border-primary/30">
+      {/* 위치 정보 안내 */}
+      <div className="mb-lg p-md bg-success/10 rounded-xl border border-success/30">
         <div className="flex items-start gap-2">
-          <span className="text-xl">💡</span>
+          <span className="text-xl">✅</span>
           <div className="flex-1">
-            <div className="text-body font-semibold text-primary mb-xs">
-              프로토타입 Mock 데이터
+            <div className="text-body font-semibold text-success mb-xs">
+              {location.name || '실시간 날씨 정보'}
             </div>
             <div className="text-caption text-text">
-              현재는 Mock 데이터로 동작합니다. Phase 2에서 기상청·에어코리아 API를 연동할 예정입니다.
+              📍 {location.address || '대전 지역'} 날씨를 제공합니다.
+              {!location.address && (
+                <>
+                  <br />
+                  <Link to="/settings" className="text-primary underline">
+                    ⚙️ 설정에서 학교 위치를 등록하세요
+                  </Link>
+                </>
+              )}
             </div>
+            {location.address && (
+              <div className="text-caption text-text-muted mt-xs">
+                🌫️ 대기질 측정소: {location.stationName}
+              </div>
+            )}
           </div>
         </div>
       </div>
