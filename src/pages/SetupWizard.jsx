@@ -277,35 +277,35 @@ export default function SetupWizard() {
               {selectedGrades.map((grade) => (
                 <div key={grade}>
                   <h3 className="text-body-bold mb-md">{grade}학년</h3>
-                  <div className="space-y-sm">
+                  <div className="grid grid-cols-3 gap-2">
                     {Array.from({ length: classCount[grade] }, (_, i) => i + 1).map((classNum) => {
                       const key = `${grade}-${classNum}`
                       return (
                         <div
                           key={key}
-                          className="flex items-center justify-between p-sm bg-surface rounded-lg"
+                          className="flex items-center justify-between gap-1 px-2 py-1.5 bg-surface rounded-lg"
                         >
-                          <span className="text-body">{classNum}반</span>
+                          <span className="text-caption font-semibold">{classNum}반</span>
 
-                          <div className="flex items-center gap-sm">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => adjustStudentCount(key, -1)}
-                              className="btn-icon btn-sm bg-white hover:bg-primary/10"
+                              className="w-6 h-6 flex items-center justify-center rounded bg-white hover:bg-primary/10 transition-all"
                             >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                               </svg>
                             </button>
 
-                            <span className="text-body w-16 text-center">
-                              {studentCounts[key] || 25}명
+                            <span className="text-caption font-semibold w-8 text-center">
+                              {studentCounts[key] || 25}
                             </span>
 
                             <button
                               onClick={() => adjustStudentCount(key, 1)}
-                              className="btn-icon btn-sm bg-white hover:bg-primary/10"
+                              className="w-6 h-6 flex items-center justify-center rounded bg-white hover:bg-primary/10 transition-all"
                             >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                               </svg>

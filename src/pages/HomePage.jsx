@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useClassManager } from '../hooks/useClassManager'
 import GlassCard from '../components/common/GlassCard'
+import WeatherMiniWidget from '../components/home/WeatherMiniWidget'
+import TodaySchedule from '../components/home/TodaySchedule'
+import RecentLessons from '../components/home/RecentLessons'
 
 export default function HomePage() {
   const { classes, getClassesByGrade } = useClassManager()
@@ -11,39 +14,19 @@ export default function HomePage() {
       <h1 className="text-page-title mb-lg">🏠 오늘</h1>
 
       <div className="space-y-lg">
-        {/* 날씨 미니 위젯 (향후 구현) */}
+        {/* 날씨 미니 위젯 */}
         <GlassCard accent="weather">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-card-title mb-sm">오늘의 날씨</h2>
-              <p className="text-body text-muted">날씨 정보 로딩 중...</p>
-            </div>
-            <Link to="/weather" className="btn btn-sm btn-ghost">
-              상세보기 →
-            </Link>
-          </div>
+          <WeatherMiniWidget />
         </GlassCard>
 
-        {/* 오늘 시간표 (향후 구현) */}
+        {/* 오늘 시간표 */}
         <GlassCard accent="schedule">
-          <div className="flex items-center justify-between mb-md">
-            <h2 className="text-card-title">오늘 시간표</h2>
-            <Link to="/schedule" className="btn btn-sm btn-ghost">
-              전체보기 →
-            </Link>
-          </div>
-          <p className="text-body text-muted">시간표를 등록해주세요</p>
+          <TodaySchedule />
         </GlassCard>
 
-        {/* 최근 수업 (향후 구현) */}
+        {/* 최근 수업 */}
         <GlassCard accent="sketch">
-          <div className="flex items-center justify-between mb-md">
-            <h2 className="text-card-title">최근 수업</h2>
-            <Link to="/sketch" className="btn btn-sm btn-ghost">
-              수업스케치 →
-            </Link>
-          </div>
-          <p className="text-body text-muted">아직 수업 기록이 없습니다</p>
+          <RecentLessons />
         </GlassCard>
 
         {/* 학급 현황 */}

@@ -1,0 +1,191 @@
+/**
+ * Mock Weather Data
+ * 실제 API 연동 전까지 사용할 Mock 데이터
+ *
+ * 기상청 단기예보 + 에어코리아 + 생활기상지수 통합
+ */
+
+// 하늘상태 코드
+export const SKY_CODE = {
+  1: { text: '맑음', emoji: '☀️', color: '#F5E07C' },
+  3: { text: '구름많음', emoji: '⛅', color: '#A0AEC0' },
+  4: { text: '흐림', emoji: '☁️', color: '#718096' }
+}
+
+// 강수형태 코드
+export const PTY_CODE = {
+  0: { text: '없음', emoji: '', color: '' },
+  1: { text: '비', emoji: '🌧️', color: '#7C9EF5' },
+  2: { text: '비/눈', emoji: '🌨️', color: '#A78BFA' },
+  3: { text: '눈', emoji: '❄️', color: '#7CF5D4' },
+  5: { text: '빗방울', emoji: '💧', color: '#7C9EF5' },
+  6: { text: '빗방울눈날림', emoji: '🌨️', color: '#A78BFA' },
+  7: { text: '눈날림', emoji: '❄️', color: '#7CF5D4' }
+}
+
+// 미세먼지 등급
+export const PM_GRADE = {
+  1: { text: '좋음', emoji: '😊', color: '#7CE0A3', bg: 'rgba(124, 224, 163, 0.1)' },
+  2: { text: '보통', emoji: '😐', color: '#F5E07C', bg: 'rgba(245, 224, 124, 0.1)' },
+  3: { text: '나쁨', emoji: '😷', color: '#F5A67C', bg: 'rgba(245, 166, 124, 0.1)' },
+  4: { text: '매우나쁨', emoji: '🤢', color: '#F57C7C', bg: 'rgba(245, 124, 124, 0.1)' }
+}
+
+/**
+ * Mock 현재 날씨 데이터
+ * 실제로는 기상청 API에서 받아옴
+ */
+export const getCurrentWeather = () => {
+  const now = new Date()
+  const hour = now.getHours()
+
+  // 시간대별로 약간씩 다른 데이터 제공
+  const isRainy = hour >= 14 && hour <= 17 // 오후 2~5시에 비
+  const sky = isRainy ? 4 : (hour >= 18 || hour <= 6) ? 1 : 3
+  const pty = isRainy ? 1 : 0
+
+  return {
+    baseDate: now.toISOString().split('T')[0].replace(/-/g, ''),
+    baseTime: `${String(hour).padStart(2, '0')}00`,
+    sky, // 하늘상태 (1:맑음, 3:구름많음, 4:흐림)
+    pty, // 강수형태 (0:없음, 1:비, 2:비/눈, 3:눈)
+    t1h: isRainy ? 18 : 24, // 기온 (℃)
+    rn1: isRainy ? 5 : 0, // 1시간 강수량 (mm)
+    reh: isRainy ? 75 : 45, // 습도 (%)
+    pop: isRainy ? 80 : 10, // 강수확률 (%)
+    wsd: 2.5 // 풍속 (m/s)
+  }
+}
+
+/**
+ * Mock 대기질 데이터
+ * 실제로는 에어코리아 API에서 받아옴
+ */
+export const getAirQuality = () => {
+  const now = new Date()
+  const hour = now.getHours()
+
+  // 출퇴근 시간대에 미세먼지 증가
+  const isRushHour = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)
+  const pm10Value = isRushHour ? 65 : 35
+  const pm25Value = isRushHour ? 25 : 15
+
+  return {
+    stationName: '대전',
+    dataTime: new Date().toISOString(),
+    pm10Value, // PM10 농도 (㎍/㎥)
+    pm10Grade: pm10Value > 80 ? 3 : pm10Value > 50 ? 2 : 1, // 1:좋음, 2:보통, 3:나쁨, 4:매우나쁨
+    pm25Value, // PM2.5 농도 (㎍/㎥)
+    pm25Grade: pm25Value > 35 ? 3 : pm25Value > 15 ? 2 : 1,
+    uvIndex: 5, // 자외선 지수 (0~11+)
+    uvGrade: 2 // 1:낮음, 2:보통, 3:높음, 4:매우높음, 5:위험
+  }
+}
+
+/**
+ * Mock 시간별 예보 데이터
+ * 실제로는 기상청 단기예보 API에서 받아옴
+ */
+export const getHourlyForecast = () => {
+  const now = new Date()
+  const hourly = []
+
+  for (let i = 0; i < 12; i++) {
+    const time = new Date(now.getTime() + i * 60 * 60 * 1000)
+    const hour = time.getHours()
+
+    // 오후 2~5시 비
+    const isRainy = hour >= 14 && hour <= 17
+    const sky = isRainy ? 4 : (hour >= 18 || hour <= 6) ? 1 : 3
+    const pty = isRainy ? 1 : 0
+
+    hourly.push({
+      time: `${String(hour).padStart(2, '0')}시`,
+      sky,
+      pty,
+      temp: isRainy ? 18 + Math.floor(Math.random() * 3) : 22 + Math.floor(Math.random() * 5),
+      pop: isRainy ? 70 + Math.floor(Math.random() * 20) : 5 + Math.floor(Math.random() * 15),
+      reh: isRainy ? 70 + Math.floor(Math.random() * 10) : 40 + Math.floor(Math.random() * 20)
+    })
+  }
+
+  return hourly
+}
+
+/**
+ * 야외수업 자동 판단 로직
+ * @param {Object} weather - 현재 날씨 데이터
+ * @param {Object} air - 대기질 데이터
+ * @returns {Object} 판정 결과
+ */
+export const judgeOutdoorClass = (weather, air) => {
+  const checks = {
+    rain: { pass: weather.pty === 0, label: '강수', value: weather.pty === 0 ? '없음' : PTY_CODE[weather.pty].text },
+    pm10: { pass: air.pm10Value <= 80, label: '미세먼지', value: `${air.pm10Value}㎍/㎥ (${PM_GRADE[air.pm10Grade].text})` },
+    temp: { pass: weather.t1h >= -5 && weather.t1h <= 33, label: '기온', value: `${weather.t1h}℃` },
+    pm10Warning: { pass: air.pm10Value <= 50, label: '미세먼지 주의', value: '' }
+  }
+
+  let result = {
+    status: 'optimal', // 'optimal', 'caution', 'not-recommended'
+    emoji: '✅',
+    text: '야외 수업 최적',
+    color: '#7CE0A3',
+    reason: '',
+    checks
+  }
+
+  // 1순위: 강수
+  if (!checks.rain.pass) {
+    result = {
+      ...result,
+      status: 'not-recommended',
+      emoji: '❌',
+      text: '실내 수업 추천',
+      color: '#F57C7C',
+      reason: `${checks.rain.value} 예보`
+    }
+    return result
+  }
+
+  // 2순위: 미세먼지 나쁨
+  if (!checks.pm10.pass) {
+    result = {
+      ...result,
+      status: 'not-recommended',
+      emoji: '❌',
+      text: '실내 수업 권장',
+      color: '#F57C7C',
+      reason: '미세먼지 나쁨'
+    }
+    return result
+  }
+
+  // 3순위: 기온 부적합
+  if (!checks.temp.pass) {
+    result = {
+      ...result,
+      status: 'not-recommended',
+      emoji: '❌',
+      text: '실내 수업 권장',
+      color: '#F57C7C',
+      reason: weather.t1h < -5 ? '기온이 너무 낮음' : '기온이 너무 높음'
+    }
+    return result
+  }
+
+  // 4순위: 미세먼지 보통 상위 (마스크 권장)
+  if (!checks.pm10Warning.pass) {
+    result = {
+      ...result,
+      status: 'caution',
+      emoji: '⚠️',
+      text: '야외 가능 (마스크 권장)',
+      color: '#F5E07C',
+      reason: '미세먼지 보통~나쁨 수준'
+    }
+    return result
+  }
+
+  return result
+}

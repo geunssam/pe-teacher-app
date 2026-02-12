@@ -1,0 +1,89 @@
+import { Link } from 'react-router-dom'
+import { useSchedule } from '../../hooks/useSchedule'
+import { useCurrentPeriod } from '../../hooks/useCurrentPeriod'
+
+/**
+ * 홈 탭의 오늘 시간표 요약
+ * 오늘 요일의 교시별 학급 리스트 + 현재 교시 표시
+ */
+export default function TodaySchedule() {
+  const { WEEKDAYS, WEEKDAY_LABELS, getTimetableForWeek } = useSchedule()
+  const { currentDay, isCurrentPeriod } = useCurrentPeriod()
+
+  const today = currentDay || 'monday' // null일 경우 월요일 기본값
+  const { timetable } = getTimetableForWeek()
+
+  // 오늘 요일의 시간표만 필터링
+  const todaySchedule = []
+  for (let period = 1; period <= 7; period++) {
+    const cellKey = `${today}-${period}`
+    const periodData = timetable[cellKey]
+    if (periodData) {
+      todaySchedule.push({
+        period,
+        ...periodData,
+        isCurrent: isCurrentPeriod(today, period)
+      })
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-md">
+        <h2 className="text-card-title">
+          오늘 시간표 ({WEEKDAY_LABELS[today]})
+        </h2>
+        <Link to="/schedule" className="btn btn-sm btn-ghost">
+          전체보기 →
+        </Link>
+      </div>
+
+      {todaySchedule.length > 0 ? (
+        <div className="space-y-xs">
+          {todaySchedule.map((item) => (
+            <div
+              key={item.period}
+              className={`
+                flex items-center justify-between p-md rounded-lg border transition-all
+                ${
+                  item.isCurrent
+                    ? 'bg-primary/10 border-primary'
+                    : 'bg-white/40 border-white/60'
+                }
+              `}
+            >
+              <div className="flex items-center gap-md">
+                <div
+                  className={`
+                    text-body-bold
+                    ${item.isCurrent ? 'text-primary' : 'text-muted'}
+                  `}
+                >
+                  {item.period}교시
+                </div>
+                <div className="text-body font-semibold text-text">
+                  {item.className}
+                </div>
+                {item.memo && (
+                  <div className="text-caption text-muted">· {item.memo}</div>
+                )}
+              </div>
+              {item.isCurrent && (
+                <div className="text-caption font-semibold text-primary">● 현재</div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="p-lg bg-white/40 rounded-lg text-center border border-white/60">
+          <div className="text-body text-muted mb-xs">
+            오늘은 등록된 수업이 없습니다
+          </div>
+          <Link to="/schedule" className="text-caption text-primary font-semibold">
+            시간표 등록하기 →
+          </Link>
+        </div>
+      )}
+    </div>
+  )
+}
