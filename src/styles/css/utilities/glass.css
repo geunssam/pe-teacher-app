@@ -1,0 +1,161 @@
+/* 리퀴드 글래스 이펙트 유틸리티 */
+
+/* 기본 글래스 */
+.glass {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.2)
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* 강한 글래스 */
+.glass-strong {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.3)
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* 약한 글래스 */
+.glass-light {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* 글래스 호버 효과 */
+.glass-hover {
+  transition: all var(--transition-base);
+}
+
+.glass-hover:hover {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.65),
+    rgba(255, 255, 255, 0.3)
+  );
+  box-shadow: var(--shadow-glass-strong);
+  transform: translateY(-2px);
+}
+
+/* 글래스 그림자 */
+.glass-shadow {
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-shadow-strong {
+  box-shadow: var(--shadow-glass-strong);
+}
+
+/* 색상 틴트 글래스 */
+.glass-tint-blue {
+  background: linear-gradient(
+    145deg,
+    rgba(124, 158, 245, 0.2),
+    rgba(124, 158, 245, 0.05)
+  );
+}
+
+.glass-tint-green {
+  background: linear-gradient(
+    145deg,
+    rgba(124, 224, 163, 0.2),
+    rgba(124, 224, 163, 0.05)
+  );
+}
+
+.glass-tint-orange {
+  background: linear-gradient(
+    145deg,
+    rgba(245, 166, 124, 0.2),
+    rgba(245, 166, 124, 0.05)
+  );
+}
+
+.glass-tint-purple {
+  background: linear-gradient(
+    145deg,
+    rgba(167, 139, 250, 0.2),
+    rgba(167, 139, 250, 0.05)
+  );
+}
+
+/* 탭별 글래스 */
+.glass-tab-home {
+  background: linear-gradient(
+    145deg,
+    rgba(124, 158, 245, 0.15),
+    rgba(124, 158, 245, 0.05)
+  );
+  border: 1px solid rgba(124, 158, 245, 0.3);
+}
+
+.glass-tab-weather {
+  background: linear-gradient(
+    145deg,
+    rgba(124, 224, 163, 0.15),
+    rgba(124, 224, 163, 0.05)
+  );
+  border: 1px solid rgba(124, 224, 163, 0.3);
+}
+
+.glass-tab-schedule {
+  background: linear-gradient(
+    145deg,
+    rgba(245, 224, 124, 0.15),
+    rgba(245, 224, 124, 0.05)
+  );
+  border: 1px solid rgba(245, 224, 124, 0.3);
+}
+
+.glass-tab-sketch {
+  background: linear-gradient(
+    145deg,
+    rgba(245, 166, 124, 0.15),
+    rgba(245, 166, 124, 0.05)
+  );
+  border: 1px solid rgba(245, 166, 124, 0.3);
+}
+
+.glass-tab-classes {
+  background: linear-gradient(
+    145deg,
+    rgba(167, 139, 250, 0.15),
+    rgba(167, 139, 250, 0.05)
+  );
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+/* 모바일에서 글래스 비활성화 */
+@media (max-width: 639px) {
+  .glass,
+  .glass-strong,
+  .glass-light,
+  .glass-hover,
+  .glass-tint-blue,
+  .glass-tint-green,
+  .glass-tint-orange,
+  .glass-tint-purple,
+  .glass-tab-home,
+  .glass-tab-weather,
+  .glass-tab-schedule,
+  .glass-tab-sketch,
+  .glass-tab-classes {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.85);
+  }
+}

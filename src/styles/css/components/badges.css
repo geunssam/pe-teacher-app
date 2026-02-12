@@ -1,0 +1,153 @@
+/* 배지 & 칩 스타일 */
+
+/* 기본 배지 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 4px var(--spacing-sm);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* Primary 배지 */
+.badge-primary {
+  background: rgba(124, 158, 245, 0.2);
+  color: var(--color-primary);
+}
+
+/* Success 배지 */
+.badge-success {
+  background: rgba(124, 224, 163, 0.2);
+  color: var(--color-success);
+}
+
+/* Warning 배지 */
+.badge-warning {
+  background: rgba(245, 224, 124, 0.3);
+  color: #D4A017;
+}
+
+/* Danger 배지 */
+.badge-danger {
+  background: rgba(245, 124, 124, 0.2);
+  color: var(--color-danger);
+}
+
+/* 영역 배지 */
+.badge-exercise {
+  background: rgba(245, 124, 124, 0.2);
+  color: var(--color-domain-exercise);
+}
+
+.badge-sports {
+  background: rgba(124, 158, 245, 0.2);
+  color: var(--color-domain-sports);
+}
+
+.badge-expression {
+  background: rgba(167, 139, 250, 0.2);
+  color: var(--color-domain-expression);
+}
+
+/* 스포츠 중영역 배지 */
+.badge-skill {
+  background: rgba(124, 158, 245, 0.2);
+  color: var(--color-subdomain-skill);
+}
+
+.badge-strategy {
+  background: rgba(129, 140, 248, 0.2);
+  color: var(--color-subdomain-strategy);
+}
+
+.badge-ecology {
+  background: rgba(124, 224, 163, 0.2);
+  color: var(--color-subdomain-ecology);
+}
+
+/* 칩 (더 큰 배지) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  white-space: nowrap;
+  transition: all var(--transition-base);
+}
+
+/* 클릭 가능한 칩 */
+.chip-clickable {
+  cursor: pointer;
+}
+
+.chip-clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glass);
+}
+
+.chip-clickable:active {
+  transform: scale(0.97);
+}
+
+/* 칩 제거 버튼 */
+.chip-close {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all var(--transition-fast);
+}
+
+.chip-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* 아이콘 배지 */
+.icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+}
+
+/* 도트 배지 (알림) */
+.dot-badge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  display: inline-block;
+}
+
+/* 카운트 배지 */
+.count-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  background: var(--color-danger);
+  color: white;
+}

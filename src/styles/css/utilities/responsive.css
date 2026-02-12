@@ -1,0 +1,205 @@
+/* 반응형 유틸리티 */
+
+/* 모바일 최적화 (<640px) */
+@media (max-width: 639px) {
+  /* 성능 최적화 - 트랜지션 간소화 */
+  * {
+    transition-duration: 0.15s !important;
+  }
+
+  /* 터치 타겟 최소 크기 */
+  button,
+  a,
+  .btn,
+  .clickable {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* 폰트 크기 조정 */
+  body {
+    font-size: 13px;
+  }
+
+  /* 패딩 간소화 */
+  .page-container {
+    padding: var(--spacing-lg);
+  }
+
+  /* 모바일에서 숨김 */
+  .hidden-mobile {
+    display: none !important;
+  }
+
+  /* 모바일에서만 표시 */
+  .show-mobile {
+    display: block !important;
+  }
+}
+
+/* 태블릿 (640px~1023px) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* 태블릿에서 숨김 */
+  .hidden-tablet {
+    display: none !important;
+  }
+
+  /* 태블릿에서만 표시 */
+  .show-tablet {
+    display: block !important;
+  }
+}
+
+/* 데스크톱 (1024px+) */
+@media (min-width: 1024px) {
+  /* 데스크톱에서 숨김 */
+  .hidden-desktop {
+    display: none !important;
+  }
+
+  /* 데스크톱에서만 표시 */
+  .show-desktop {
+    display: block !important;
+  }
+}
+
+/* 반응형 간격 */
+.responsive-padding {
+  padding: var(--spacing-lg);
+}
+
+@media (min-width: 640px) {
+  .responsive-padding {
+    padding: var(--spacing-xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-padding {
+    padding: var(--spacing-2xl);
+  }
+}
+
+/* 반응형 그리드 */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+@media (min-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xl);
+  }
+}
+
+/* 2컬럼 레이아웃 (데스크톱) */
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (min-width: 1024px) {
+  .two-column-layout {
+    grid-template-columns: 300px 1fr;
+    gap: var(--spacing-2xl);
+  }
+}
+
+/* 가로 스크롤 컨테이너 (모바일) */
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(124, 158, 245, 0.4);
+  border-radius: 2px;
+}
+
+/* 반응형 텍스트 크기 */
+.responsive-text-sm {
+  font-size: 12px;
+}
+
+@media (min-width: 640px) {
+  .responsive-text-sm {
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-text-sm {
+    font-size: 14px;
+  }
+}
+
+.responsive-text-base {
+  font-size: 13px;
+}
+
+@media (min-width: 640px) {
+  .responsive-text-base {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-text-base {
+    font-size: 15px;
+  }
+}
+
+.responsive-text-lg {
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  .responsive-text-lg {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-text-lg {
+    font-size: 20px;
+  }
+}
+
+/* 접근성: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 다크 모드 대응 (향후 확장) */
+@media (prefers-color-scheme: dark) {
+  /* 현재는 라이트 테마만 사용 */
+  /* 향후 다크 모드 구현 시 여기에 추가 */
+}

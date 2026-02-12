@@ -1,0 +1,74 @@
+/* classpet 기반 CSS 커스텀 속성 */
+
+:root {
+  /* 배경 계열 */
+  --color-bg: #FFF9F0;
+  --color-surface: rgba(255, 255, 255, 0.55);
+  --color-surface2: rgba(255, 255, 255, 0.3);
+  --color-border: rgba(255, 255, 255, 0.6);
+
+  /* 텍스트 계열 */
+  --color-text: #2D3748;
+  --color-text-muted: #718096;
+  --color-text-dim: #A0AEC0;
+
+  /* 액센트 계열 */
+  --color-primary: #7C9EF5;
+  --color-primary-light: #A78BFA;
+  --color-secondary: #F5A67C;
+  --color-secondary-light: #F5E07C;
+  --color-success: #7CE0A3;
+  --color-success-light: #7CF5D4;
+  --color-warning: #F5E07C;
+  --color-danger: #F57C7C;
+
+  /* 영역 전용 색상 */
+  --color-domain-exercise: #F57C7C;   /* 운동 💪 */
+  --color-domain-sports: #7C9EF5;      /* 스포츠 ⚽ */
+  --color-domain-expression: #A78BFA;  /* 표현 🎭 */
+
+  /* 스포츠 중영역 색상 */
+  --color-subdomain-skill: #7C9EF5;     /* 기술형 */
+  --color-subdomain-strategy: #818CF8;  /* 전략형 */
+  --color-subdomain-ecology: #7CE0A3;   /* 생태형 */
+
+  /* 탭별 고유 색상 */
+  --color-tab-home: #7C9EF5;      /* 🏠 오늘 */
+  --color-tab-weather: #7CE0A3;   /* 🌤️ 날씨 */
+  --color-tab-schedule: #F5E07C;  /* 📅 시간표 */
+  --color-tab-sketch: #F5A67C;    /* ✏️ 수업스케치 */
+  --color-tab-classes: #A78BFA;   /* 📋 학급 */
+
+  /* 간격 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+
+  /* 그림자 */
+  --shadow-glass: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-glass-strong: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  /* 트랜지션 */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+  /* Z-index */
+  --z-base: 1;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+}

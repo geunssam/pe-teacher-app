@@ -1,0 +1,130 @@
+/* 레이아웃 기본 구조 */
+
+/* 앱 컨테이너 */
+.app-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+}
+
+/* 메인 콘텐츠 영역 */
+.main-content {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 페이지 컨테이너 - 중앙 정렬 */
+.page-container {
+  width: 100%;
+  max-width: 100%;
+  padding: var(--spacing-lg);
+  margin: 0 auto;
+}
+
+/* 태블릿 (640px+) */
+@media (min-width: 640px) {
+  .page-container {
+    max-width: 576px;
+    padding: var(--spacing-xl);
+  }
+}
+
+/* 데스크톱 (1024px+) */
+@media (min-width: 1024px) {
+  .page-container {
+    max-width: 672px;
+    padding: var(--spacing-2xl);
+  }
+
+  /* 시간표 등 넓은 뷰 */
+  .page-container-wide {
+    max-width: 1000px;
+  }
+}
+
+/* 섹션 간격 */
+.section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text);
+}
+
+/* 그리드 레이아웃 */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+}
+
+/* 태블릿에서 그리드 확장 */
+@media (min-width: 640px) {
+  .grid-sm-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-sm-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Flexbox 유틸리티 */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-start {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+/* 간격 유틸리티 */
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+
+/* 패딩 유틸리티 */
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+
+/* 마진 유틸리티 */
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
