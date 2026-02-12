@@ -7,6 +7,7 @@ import { CITY_COORDS } from '../utils/gridConvert'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
 import GlassCard from '../components/common/GlassCard'
+import LocationMapPicker from '../components/settings/LocationMapPicker'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ export default function SettingsPage() {
 
   const [isDetecting, setIsDetecting] = useState(false)
   const [showCitySelect, setShowCitySelect] = useState(false)
+  const [showMapPicker, setShowMapPicker] = useState(false)
 
   // 현재 위치 자동 감지
   const handleAutoDetect = () => {
@@ -111,6 +113,34 @@ export default function SettingsPage() {
     }
   }
 
+  // 지도에서 위치 선택
+  const handleMapSelect = async (lat, lon) => {
+    toast.loading('측정소를 찾는 중...')
+    setShowMapPicker(false)
+
+    try {
+      const station = await findNearestStation(lat, lon)
+
+      updateLocation({
+        name: '선택한 위치',
+        address: `위도 ${lat.toFixed(4)}, 경도 ${lon.toFixed(4)}`,
+        lat,
+        lon,
+        stationName: station.stationName,
+      })
+
+      toast.dismiss()
+      toast.success(
+        `위치 설정 완료!\n대기질 측정소: ${station.stationName}${
+          station.distance ? ` (${station.distance.toFixed(1)}km)` : ''
+        }`
+      )
+    } catch (error) {
+      toast.dismiss()
+      toast.error('측정소 조회에 실패했습니다')
+    }
+  }
+
   // 학급 설정 초기화
   const handleResetClasses = async () => {
     const confirmed = await confirm(
@@ -199,6 +229,13 @@ export default function SettingsPage() {
             >
               🗺️ 주요 도시 선택
             </button>
+
+            <button
+              onClick={() => setShowMapPicker(true)}
+              className="w-full py-3 px-4 bg-white/60 rounded-xl font-semibold hover:bg-white/80 transition-all border border-white/80"
+            >
+              🗺️ 지도에서 직접 선택
+            </button>
           </div>
 
           {/* 도시 선택 패널 */}
@@ -273,6 +310,16 @@ export default function SettingsPage() {
           </div>
         </GlassCard>
       </div>
+
+      {/* 지도 모달 */}
+      {showMapPicker && (
+        <LocationMapPicker
+          initialLat={location.lat}
+          initialLon={location.lon}
+          onSelect={handleMapSelect}
+          onCancel={() => setShowMapPicker(false)}
+        />
+      )}
     </div>
   )
 }
