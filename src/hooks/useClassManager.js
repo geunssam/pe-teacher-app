@@ -6,9 +6,22 @@ import { generateClassId, generateStudentId } from '../utils/generateId'
  *
  * localStorage 스키마:
  * - pe_class_setup: { schoolLevel, grades: [{grade, count, studentCount}] }
- * - pe_classes: [{ id, grade, classNum, studentCount, ... }]
+ * - pe_classes: [{ id, grade, classNum, studentCount, color, ... }]
  * - pe_rosters: { classId: [{ id, num, name, gender, ... }] }
  */
+
+// 학급별 색상 프리셋
+export const CLASS_COLOR_PRESETS = [
+  { name: '분홍색', bg: '#FCE7F3', text: '#9F1239' },
+  { name: '파란색', bg: '#DBEAFE', text: '#1E40AF' },
+  { name: '초록색', bg: '#D1FAE5', text: '#065F46' },
+  { name: '노란색', bg: '#FEF3C7', text: '#92400E' },
+  { name: '보라색', bg: '#EDE9FE', text: '#5B21B6' },
+  { name: '주황색', bg: '#FFEDD5', text: '#9A3412' },
+  { name: '청록색', bg: '#CCFBF1', text: '#115E59' },
+  { name: '빨간색', bg: '#FEE2E2', text: '#991B1B' },
+]
+
 export function useClassManager() {
   const [classSetup, setClassSetup] = useLocalStorage('pe_class_setup', null)
   const [classes, setClasses] = useLocalStorage('pe_classes', [])
@@ -31,12 +44,13 @@ export function useClassManager() {
         const classId = generateClassId()
         const studentCount = studentCounts ? studentCounts[classNum - 1] : 25
 
-        // 학급 생성
+        // 학급 생성 (색상은 순환 할당)
         newClasses.push({
           id: classId,
           grade: grade,
           classNum: classNum,
           studentCount: studentCount,
+          color: CLASS_COLOR_PRESETS[(newClasses.length) % CLASS_COLOR_PRESETS.length],
           lastActivity: null,
           lastDomain: null,
           lastDate: null,
@@ -225,6 +239,25 @@ export function useClassManager() {
     setRosters({})
   }
 
+  /**
+   * 학급 색상 가져오기
+   */
+  const getClassColor = (classId) => {
+    const classInfo = classes.find((cls) => cls.id === classId)
+    return classInfo?.color || CLASS_COLOR_PRESETS[0]
+  }
+
+  /**
+   * 학급 색상 변경
+   */
+  const setClassColor = (classId, color) => {
+    setClasses((prev) =>
+      prev.map((cls) =>
+        cls.id === classId ? { ...cls, color } : cls
+      )
+    )
+  }
+
   return {
     // 상태
     classSetup,
@@ -240,6 +273,11 @@ export function useClassManager() {
     getClass,
     getRoster,
     getClassesByGrade,
+
+    // 색상 관리
+    getClassColor,
+    setClassColor,
+    CLASS_COLOR_PRESETS,
 
     // 명단 관리
     updateRoster,
