@@ -1,4 +1,6 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useClassManager } from '../../hooks/useClassManager'
+import toast from 'react-hot-toast'
 
 // SVG 아이콘 컴포넌트들
 const HomeIcon = () => (
@@ -65,9 +67,23 @@ const NAV_ITEMS = [
 
 export default function Header() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { resetClassSetup } = useClassManager()
 
   // TODO: 실제 학급 데이터에서 가져오기
   const currentClass = null // 예: "6학년 3반"
+
+  const handleSettings = () => {
+    const confirmed = window.confirm(
+      '학급 설정을 다시 하시겠습니까?\n기존 데이터는 모두 삭제됩니다.'
+    )
+
+    if (confirmed) {
+      resetClassSetup()
+      toast.success('학급 설정이 초기화되었습니다')
+      navigate('/setup')
+    }
+  }
 
   return (
     <header className="app-header">
@@ -119,7 +135,11 @@ export default function Header() {
             </div>
           )}
 
-          <button className="header-action-btn" title="설정">
+          <button
+            onClick={handleSettings}
+            className="header-action-btn"
+            title="설정"
+          >
             <SettingsIcon />
             <span className="hidden-mobile">설정</span>
           </button>
