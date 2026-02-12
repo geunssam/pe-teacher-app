@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useClassManager } from '../../hooks/useClassManager'
 import toast from 'react-hot-toast'
+import { confirm } from '../common/ConfirmDialog'
 
 // SVG 아이콘 컴포넌트들
 const HomeIcon = () => (
@@ -73,9 +74,11 @@ export default function Header() {
   // TODO: 실제 학급 데이터에서 가져오기
   const currentClass = null // 예: "6학년 3반"
 
-  const handleSettings = () => {
-    const confirmed = window.confirm(
-      '학급 설정을 다시 하시겠습니까?\n기존 데이터는 모두 삭제됩니다.'
+  const handleSettings = async () => {
+    const confirmed = await confirm(
+      '학급 설정을 다시 하시겠습니까?\n기존 데이터는 모두 삭제됩니다.',
+      '초기화',
+      '취소'
     )
 
     if (confirmed) {

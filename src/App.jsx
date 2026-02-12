@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast'
 import { useClassManager } from './hooks/useClassManager'
 import Header from './components/layout/Header'
+import { useConfirm } from './components/common/ConfirmDialog'
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -33,6 +34,7 @@ function App() {
 function AppContent() {
   const { isSetupComplete } = useClassManager()
   const setupComplete = isSetupComplete()
+  const { ConfirmDialog } = useConfirm()
 
   return (
     <div className="app-container">
@@ -106,6 +108,9 @@ function AppContent() {
           },
         }}
       />
+
+      {/* Confirm 다이얼로그 */}
+      <ConfirmDialog />
     </div>
   )
 }
