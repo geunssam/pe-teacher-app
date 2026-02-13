@@ -1,8 +1,20 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { useClassManager } from './hooks/useClassManager'
 import Header from './components/layout/Header'
 import { useConfirm } from './components/common/ConfirmDialog'
+
+// 페이지 이동 시 스크롤을 최상단으로
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -39,14 +51,17 @@ function App() {
 }
 
 function AppContent() {
-  const { isSetupComplete } = useClassManager()
-  const setupComplete = isSetupComplete()
+  const location = useLocation()
   const { ConfirmDialog } = useConfirm()
+  const shouldShowHeader = location.pathname !== '/setup'
 
   return (
     <div className="app-container">
+      {/* 페이지 이동 시 스크롤 초기화 */}
+      <ScrollToTop />
+
       {/* 헤더 + 네비게이션 (학급 설정 페이지에서는 숨김) */}
-      {setupComplete && <Header />}
+      {shouldShowHeader && <Header />}
 
       {/* 메인 콘텐츠 */}
       <main className="main-content">

@@ -3,19 +3,25 @@ import { useNavigate } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useClassManager } from '../hooks/useClassManager'
 import { findNearestStation } from '../services/weatherApi'
-import { CITY_COORDS } from '../utils/gridConvert'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
 import GlassCard from '../components/common/GlassCard'
 import LocationMapPicker from '../components/settings/LocationMapPicker'
 
+function buildNearestStationMessage(baseName, stationName, distanceKm = null) {
+  const safeBaseName = baseName || '선택 위치'
+  const safeStationName = stationName || '측정소'
+  const distanceText =
+    Number.isFinite(distanceKm) && distanceKm > 0 ? ` (${distanceKm.toFixed(1)}km)` : ''
+  return `${safeBaseName}에서 가장 가까운 측정소는 ${safeStationName}입니다!${distanceText}`
+}
+
 export default function SettingsPage() {
   const navigate = useNavigate()
-  const { location, updateLocation, resetSettings } = useSettings()
+  const { location, updateLocation } = useSettings()
   const { resetClassSetup } = useClassManager()
 
   const [isDetecting, setIsDetecting] = useState(false)
-  const [showCitySelect, setShowCitySelect] = useState(false)
   const [showMapPicker, setShowMapPicker] = useState(false)
 
   // 현재 위치 자동 감지
@@ -35,22 +41,19 @@ export default function SettingsPage() {
 
         try {
           // 가장 가까운 측정소 찾기
-          const station = await findNearestStation(lat, lon)
+          const station = await findNearestStation(lat, lon, '')
+          const baseName = '현재 위치'
 
           updateLocation({
-            name: '현재 위치',
-            address: `위도 ${lat.toFixed(4)}, 경도 ${lon.toFixed(4)}`,
+            name: baseName,
+            address: '현재 위치(자동 감지)',
             lat,
             lon,
             stationName: station.stationName,
           })
 
           toast.dismiss()
-          toast.success(
-            `위치 설정 완료!\n대기질 측정소: ${station.stationName}${
-              station.distance ? ` (${station.distance.toFixed(1)}km)` : ''
-            }`
-          )
+          toast.success(buildNearestStationMessage(baseName, station.stationName, station.distance))
         } catch (error) {
           toast.dismiss()
           toast.error('측정소 조회에 실패했습니다')
@@ -84,57 +87,28 @@ export default function SettingsPage() {
     )
   }
 
-  // 도시 선택
-  const handleSelectCity = async (cityName, coords) => {
-    toast.loading('측정소를 찾는 중...')
-
-    try {
-      const station = await findNearestStation(coords.lat, coords.lon)
-
-      updateLocation({
-        name: cityName,
-        address: cityName,
-        lat: coords.lat,
-        lon: coords.lon,
-        stationName: station.stationName,
-      })
-
-      toast.dismiss()
-      toast.success(
-        `${cityName} 설정 완료!\n대기질 측정소: ${station.stationName}${
-          station.distance ? ` (${station.distance.toFixed(1)}km)` : ''
-        }`
-      )
-
-      setShowCitySelect(false)
-    } catch (error) {
-      toast.dismiss()
-      toast.error('측정소 조회에 실패했습니다')
-    }
-  }
-
   // 지도에서 위치 선택
-  const handleMapSelect = async (lat, lon) => {
+  const handleMapSelect = async (lat, lon, placeInfo = null) => {
     toast.loading('측정소를 찾는 중...')
     setShowMapPicker(false)
 
     try {
-      const station = await findNearestStation(lat, lon)
+      const baseName = placeInfo?.name || '선택한 학교'
+      const addressLabel = placeInfo?.address || baseName || '지도에서 선택한 위치'
+      const jibunAddress = placeInfo?.jibunAddress || ''
+      const stationHint = [baseName, addressLabel, jibunAddress].filter(Boolean).join(' ')
+      const station = await findNearestStation(lat, lon, stationHint)
 
       updateLocation({
-        name: '선택한 위치',
-        address: `위도 ${lat.toFixed(4)}, 경도 ${lon.toFixed(4)}`,
+        name: baseName,
+        address: addressLabel,
         lat,
         lon,
         stationName: station.stationName,
       })
 
       toast.dismiss()
-      toast.success(
-        `위치 설정 완료!\n대기질 측정소: ${station.stationName}${
-          station.distance ? ` (${station.distance.toFixed(1)}km)` : ''
-        }`
-      )
+      toast.success(buildNearestStationMessage(baseName, station.stationName, station.distance))
     } catch (error) {
       toast.dismiss()
       toast.error('측정소 조회에 실패했습니다')
@@ -156,22 +130,6 @@ export default function SettingsPage() {
     }
   }
 
-  // 전체 설정 초기화
-  const handleResetAll = async () => {
-    const confirmed = await confirm(
-      '모든 설정을 초기화하시겠습니까?\n학급, 시간표, 위치 정보가 모두 삭제됩니다.',
-      '전체 초기화',
-      '취소'
-    )
-
-    if (confirmed) {
-      resetSettings()
-      resetClassSetup()
-      toast.success('모든 설정이 초기화되었습니다')
-      navigate('/setup')
-    }
-  }
-
   return (
     <div className="page-container">
       <div className="flex items-center justify-between mb-lg">
@@ -187,85 +145,45 @@ export default function SettingsPage() {
       <div className="space-y-xl">
         {/* 학교 위치 설정 */}
         <GlassCard>
-          <h2 className="text-card-title mb-md">📍 학교 위치 설정</h2>
-          <p className="text-body text-muted mb-md">
-            위치를 설정하면 날씨와 대기질 정보가 정확해집니다.
-          </p>
+          <div className="flex items-center justify-between gap-sm mb-md">
+            <h2 className="text-card-title m-0">📍 학교 위치 설정</h2>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleAutoDetect}
+                disabled={isDetecting}
+                className="py-2 px-3 rounded-lg font-semibold text-sm transition-all text-white disabled:opacity-60"
+                style={{ backgroundColor: '#7C9EF5' }}
+              >
+                {isDetecting ? '📍 확인중' : '📍 자동설정'}
+              </button>
+
+              <button
+                onClick={() => setShowMapPicker(true)}
+                className="py-2 px-3 bg-primary/10 text-primary rounded-lg font-semibold text-sm hover:bg-primary/20 transition-all border border-primary/30"
+              >
+                🗺️ 지도에서 찾기
+              </button>
+            </div>
+          </div>
 
           {/* 현재 설정된 위치 */}
           {location.address && (
             <div className="mb-lg p-md bg-success/10 rounded-xl border border-success/30">
-              <div className="flex items-start gap-2">
-                <span className="text-xl">✅</span>
-                <div className="flex-1">
-                  <div className="text-body-bold text-success mb-xs">
-                    {location.name}
-                  </div>
-                  <div className="text-caption text-text-muted">
-                    📍 {location.address}
-                  </div>
-                  <div className="text-caption text-text-muted">
-                    🌫️ 대기질 측정소: {location.stationName}
-                  </div>
+              <div className="flex items-center gap-3 overflow-x-auto whitespace-nowrap">
+                <span className="text-xl shrink-0">✅</span>
+                <div className="text-body-bold text-text shrink-0">
+                  {location.name}
+                </div>
+                <div className="text-caption text-text-muted shrink-0">
+                  📍 {location.address}
+                </div>
+                <div className="text-caption text-text-muted shrink-0">
+                  🌫️ {location.name} 기준 최근접 측정소: {location.stationName}
                 </div>
               </div>
             </div>
           )}
-
-          {/* 위치 설정 버튼 */}
-          <div className="space-y-sm">
-            <button
-              onClick={handleAutoDetect}
-              disabled={isDetecting}
-              className="w-full py-3 px-4 rounded-xl font-semibold transition-all text-white"
-              style={{ backgroundColor: '#7C9EF5' }}
-            >
-              {isDetecting ? '위치 확인 중...' : '📍 현재 위치로 자동 설정'}
-            </button>
-
-            <button
-              onClick={() => setShowCitySelect(!showCitySelect)}
-              className="w-full py-3 px-4 bg-white/60 rounded-xl font-semibold hover:bg-white/80 transition-all border border-white/80"
-            >
-              🗺️ 주요 도시 선택
-            </button>
-
-            <button
-              onClick={() => setShowMapPicker(true)}
-              className="w-full py-3 px-4 bg-white/60 rounded-xl font-semibold hover:bg-white/80 transition-all border border-white/80"
-            >
-              🗺️ 지도에서 직접 선택
-            </button>
-          </div>
-
-          {/* 도시 선택 패널 */}
-          {showCitySelect && (
-            <div className="mt-md p-md bg-white/60 rounded-xl border border-white/80">
-              <div className="text-body-bold mb-sm">주요 도시 선택</div>
-              <div className="grid grid-cols-2 gap-sm">
-                {Object.entries(CITY_COORDS).map(([cityName, coords]) => (
-                  <button
-                    key={cityName}
-                    onClick={() => handleSelectCity(cityName, coords)}
-                    className="py-2 px-3 bg-white/80 rounded-lg font-semibold hover:bg-primary/10 hover:text-primary transition-all border border-white/80"
-                  >
-                    {cityName}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 안내 메시지 */}
-          <div className="mt-md p-md bg-primary/10 rounded-xl border border-primary/30">
-            <div className="text-caption text-text-muted">
-              💡 <strong>자동 설정</strong>: 학교에서 버튼 클릭 → 자동으로 위치 감지
-              <br />
-              💡 <strong>도시 선택</strong>: 시청 위치 기준으로 날씨 정보 제공
-              <br />
-              💡 날씨는 도시 단위로 충분히 정확합니다
-            </div>
-          </div>
         </GlassCard>
 
         {/* 학급 설정 초기화 */}
@@ -280,21 +198,6 @@ export default function SettingsPage() {
             className="w-full py-3 px-4 bg-warning/20 text-warning rounded-lg font-semibold hover:bg-warning/30 transition-all border border-warning/30"
           >
             🔄 학급 설정 초기화
-          </button>
-        </GlassCard>
-
-        {/* 전체 초기화 */}
-        <GlassCard>
-          <h2 className="text-card-title mb-md">⚠️ 위험 영역</h2>
-          <p className="text-body text-muted mb-md">
-            모든 설정을 초기화합니다. 이 작업은 되돌릴 수 없습니다.
-          </p>
-
-          <button
-            onClick={handleResetAll}
-            className="w-full py-3 px-4 bg-danger/20 text-danger rounded-lg font-semibold hover:bg-danger/30 transition-all border border-danger/30"
-          >
-            🗑️ 전체 설정 초기화
           </button>
         </GlassCard>
 
@@ -316,6 +219,7 @@ export default function SettingsPage() {
         <LocationMapPicker
           initialLat={location.lat}
           initialLon={location.lon}
+          initialAddress={location.address || ''}
           onSelect={handleMapSelect}
           onCancel={() => setShowMapPicker(false)}
         />

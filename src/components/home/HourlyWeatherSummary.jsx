@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchHourlyForecast, fetchAirQualityData } from '../../services/weatherApi'
 import { PTY_CODE } from '../../data/mockWeather'
+import { useSettings } from '../../hooks/useSettings'
 
 /**
  * 홈 탭의 시간별 날씨 요약
  * 핵심 정보: 기온, 비, 미세먼지, 초미세먼지
  */
 export default function HourlyWeatherSummary() {
+  const { location } = useSettings()
   const [hourlyData, setHourlyData] = useState([])
   const [airData, setAirData] = useState(null)
+  const [forecastMeta, setForecastMeta] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,20 +24,40 @@ export default function HourlyWeatherSummary() {
     }, 60 * 60 * 1000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [location.lat, location.lon, location.stationName, location.address, location.name])
 
   const loadHourlyData = async () => {
     try {
-      const forecast = await fetchHourlyForecast()
-      const air = await fetchAirQualityData('대전')
+      const forecastResult = await fetchHourlyForecast(location)
+      const air = await fetchAirQualityData(location.stationName || '대전')
+
+      const forecast = Array.isArray(forecastResult) ? forecastResult : (forecastResult?.forecast || [])
+      const baseDate = Array.isArray(forecastResult) ? null : forecastResult?.baseDate
+      const baseTime = Array.isArray(forecastResult) ? null : forecastResult?.baseTime
 
       setHourlyData(forecast.slice(0, 4)) // 4개 시간대만 (3시간 간격 = 12시간)
       setAirData(air)
+      setForecastMeta({
+        baseDate,
+        baseTime,
+        locationLabel: location.address || location.name || '기본 위치',
+      })
       setLoading(false)
     } catch (error) {
       console.error('시간별 날씨 로드 실패:', error)
       setLoading(false)
     }
+  }
+
+  const formatBaseDateTime = (baseDate, baseTime) => {
+    if (!baseDate || !baseTime) {
+      return '기준 시각 확인 불가'
+    }
+
+    const month = baseDate.slice(4, 6)
+    const day = baseDate.slice(6, 8)
+    const hour = baseTime.slice(0, 2)
+    return `${month}/${day} ${hour}:00 발표`
   }
 
   if (loading) {
@@ -72,6 +95,10 @@ export default function HourlyWeatherSummary() {
         <Link to="/weather" className="btn btn-sm btn-ghost">
           상세보기 →
         </Link>
+      </div>
+
+      <div className="mb-sm text-caption text-muted">
+        기준 {formatBaseDateTime(forecastMeta?.baseDate, forecastMeta?.baseTime)} · 위치 {forecastMeta?.locationLabel || '기본 위치'}
       </div>
 
       {/* 대기질 현황 (상단 고정) */}

@@ -1,31 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWeatherData, fetchAirQualityData } from '../../services/weatherApi'
 import { judgeOutdoorClass } from '../../data/mockWeather'
+import { useSettings } from '../../hooks/useSettings'
 
 /**
  * 홈 탭의 날씨 미니 위젯
  * 한 줄 요약: 하늘상태 + 기온 + 미세먼지 + 야외 판정
  */
 export default function WeatherMiniWidget() {
+  const { location } = useSettings()
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadWeatherSummary()
-
-    // 1시간마다 자동 갱신
-    const interval = setInterval(() => {
-      loadWeatherSummary()
-    }, 60 * 60 * 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const loadWeatherSummary = async () => {
+  const loadWeatherSummary = useCallback(async () => {
     try {
-      const weather = await fetchWeatherData()
-      const air = await fetchAirQualityData('대전')
+      const weather = await fetchWeatherData(location)
+      const air = await fetchAirQualityData(location.stationName || '대전')
       const judgment = judgeOutdoorClass(weather, air)
 
       setSummary({
@@ -41,7 +32,18 @@ export default function WeatherMiniWidget() {
       console.error('날씨 요약 로드 실패:', error)
       setLoading(false)
     }
-  }
+  }, [location.lat, location.lon, location.stationName])
+
+  useEffect(() => {
+    loadWeatherSummary()
+
+    // 1시간마다 자동 갱신
+    const interval = setInterval(() => {
+      loadWeatherSummary()
+    }, 60 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [loadWeatherSummary])
 
   if (loading) {
     return (

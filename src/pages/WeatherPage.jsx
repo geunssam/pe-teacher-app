@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import WeatherDetail from '../components/weather/WeatherDetail'
 import AirQuality from '../components/weather/AirQuality'
 import HourlyForecast from '../components/weather/HourlyForecast'
 import OutdoorJudge from '../components/weather/OutdoorJudge'
-import { fetchWeatherData, fetchAirQualityData } from '../services/weatherApi'
-import { judgeOutdoorClass, getHourlyForecast } from '../data/mockWeather'
+import { fetchWeatherData, fetchAirQualityData, fetchHourlyForecast } from '../services/weatherApi'
+import { judgeOutdoorClass } from '../data/mockWeather'
 import { useSettings } from '../hooks/useSettings'
 import toast from 'react-hot-toast'
 
@@ -22,39 +22,50 @@ export default function WeatherPage() {
   const [judgment, setJudgment] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadWeatherData()
-
-    // 1시간마다 자동 갱신 (실제 API 연동 시에도 유용)
-    const interval = setInterval(() => {
-      loadWeatherData()
-    }, 60 * 60 * 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const loadWeatherData = async () => {
+  const loadWeatherData = useCallback(async (silent = false) => {
     setLoading(true)
 
     try {
       // 실제 API 호출 (저장된 위치 사용)
       const weatherData = await fetchWeatherData(location)
       const airData = await fetchAirQualityData(location.stationName)
-      const hourlyData = getHourlyForecast() // 시간별 예보는 Mock 사용 (단기예보 API로 확장 가능)
+      const hourlyResult = await fetchHourlyForecast(location)
+      const hourlyData = Array.isArray(hourlyResult)
+        ? hourlyResult
+        : hourlyResult?.forecast || []
+      const normalizedHourly = hourlyData.map((item) => ({
+        ...item,
+        time: `${String(item.time).slice(0, 2)}시`,
+      }))
       const judgmentData = judgeOutdoorClass(weatherData, airData)
 
       setWeather(weatherData)
       setAir(airData)
-      setHourly(hourlyData)
+      setHourly(normalizedHourly)
       setJudgment(judgmentData)
-      toast.success('날씨 정보를 업데이트했습니다')
+      if (!silent) {
+        toast.success('날씨 정보를 업데이트했습니다')
+      }
     } catch (error) {
       console.error('날씨 데이터 로드 실패:', error)
-      toast.error('날씨 정보를 불러오는데 실패했습니다')
+      if (!silent) {
+        toast.error('날씨 정보를 불러오는데 실패했습니다')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [location.lat, location.lon, location.stationName])
+
+  useEffect(() => {
+    loadWeatherData(true)
+
+    // 1시간마다 자동 갱신 (실제 API 연동 시에도 유용)
+    const interval = setInterval(() => {
+      loadWeatherData(true)
+    }, 60 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [loadWeatherData])
 
   if (loading) {
     return (
@@ -73,7 +84,7 @@ export default function WeatherPage() {
       <div className="flex items-center justify-between mb-lg">
         <h1 className="text-page-title">🌤️ 날씨</h1>
         <button
-          onClick={loadWeatherData}
+          onClick={() => loadWeatherData(false)}
           className="p-2 bg-white/60 hover:bg-white/80 rounded-lg transition-all border border-white/80"
           title="새로고침"
         >
@@ -110,6 +121,14 @@ export default function WeatherPage() {
                   </Link>
                 </>
               )}
+            </div>
+            <div className="mt-sm">
+              <Link
+                to="/settings"
+                className="inline-flex items-center gap-1 py-1 px-2 bg-primary/10 text-primary rounded-lg border border-primary/30 text-caption font-semibold hover:bg-primary/20 transition-all"
+              >
+                🗺️ 지도에서 위치 설정
+              </Link>
             </div>
             {location.address && (
               <div className="text-caption text-text-muted mt-xs">

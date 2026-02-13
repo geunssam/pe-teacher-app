@@ -130,14 +130,14 @@ export default function Header() {
 
           <button
             onClick={handleSettings}
-            className="header-action-btn"
+            className="header-action-btn header-settings-btn"
             title="설정"
           >
             <SettingsIcon />
             <span className="hidden-mobile">설정</span>
           </button>
 
-          <button className="header-action-btn" title="로그아웃">
+          <button className="header-action-btn header-logout-btn" title="로그아웃">
             <LogoutIcon />
             <span className="hidden-mobile">로그아웃</span>
           </button>

@@ -1,40 +1,99 @@
-const NAVER_MAPS_CLIENT_ID =
-  import.meta.env.VITE_NAVER_MAPS_CLIENT_ID || import.meta.env.VITE_NAVER_CLIENT_ID
+const NAVER_MAPS_KEY_ID =
+  import.meta.env.VITE_NAVER_MAPS_KEY_ID ||
+  import.meta.env.VITE_NAVER_KEY_ID ||
+  import.meta.env.VITE_NAVER_CLIENT_ID
 
 const NAVER_MAP_SCRIPT_ID = 'naver-map-sdk'
 
 let scriptLoadPromise = null
+let authValidationPromise = null
 
-function hasValidClientId() {
-  if (!NAVER_MAPS_CLIENT_ID) {
+function hasValidKeyId() {
+  if (!NAVER_MAPS_KEY_ID) {
     return false
   }
 
-  if (NAVER_MAPS_CLIENT_ID.includes('YOUR_')) {
+  if (NAVER_MAPS_KEY_ID.includes('YOUR_')) {
     return false
   }
 
   return true
 }
 
-function createAuthError() {
+function createAuthError(details = 'Invalid authentication information.') {
   return new Error(
-    `NAVER_MAP_AUTH_FAILED (${window.location.origin}) - 네이버 콘솔 웹 서비스 URL 설정을 확인하세요.`
+    `NAVER_MAP_AUTH_FAILED (${window.location.origin}) - ${details}`
   )
 }
 
-export function loadNaverMapScript() {
+function validateNaverMapAuth() {
   if (typeof window === 'undefined') {
     return Promise.reject(new Error('NAVER_MAP_BROWSER_ONLY'))
   }
 
-  if (window.naver?.maps) {
-    return Promise.resolve(window.naver.maps)
+  if (authValidationPromise) {
+    return authValidationPromise
   }
 
-  if (!hasValidClientId()) {
-    return Promise.reject(new Error('NAVER_MAP_CLIENT_ID_MISSING'))
+  authValidationPromise = new Promise((resolve, reject) => {
+    const callbackName = `__naverMapAuthCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`
+    const url = encodeURIComponent(window.location.href.split('#')[0])
+    const validateUrl =
+      `https://oapi.map.naver.com/v3/auth?ncpKeyId=${NAVER_MAPS_KEY_ID}` +
+      `&url=${url}&time=${Date.now()}&callback=${callbackName}`
+
+    let validateScript = null
+
+    const cleanup = () => {
+      if (validateScript && validateScript.parentNode) {
+        validateScript.parentNode.removeChild(validateScript)
+      }
+      delete window[callbackName]
+    }
+
+    window[callbackName] = (payload = {}) => {
+      cleanup()
+
+      if (payload.result) {
+        resolve(true)
+        return
+      }
+
+      authValidationPromise = null
+      const errorDetails = payload.error?.details || payload.error?.message
+      reject(createAuthError(errorDetails))
+    }
+
+    validateScript = document.createElement('script')
+    validateScript.async = true
+    validateScript.defer = true
+    validateScript.src = validateUrl
+    validateScript.onerror = () => {
+      cleanup()
+      authValidationPromise = null
+      reject(new Error('NAVER_MAP_VALIDATE_REQUEST_FAILED'))
+    }
+
+    document.head.appendChild(validateScript)
+  })
+
+  return authValidationPromise
+}
+
+export async function loadNaverMapScript() {
+  if (typeof window === 'undefined') {
+    throw new Error('NAVER_MAP_BROWSER_ONLY')
   }
+
+  if (window.naver?.maps) {
+    return window.naver.maps
+  }
+
+  if (!hasValidKeyId()) {
+    throw new Error('NAVER_MAP_KEY_ID_MISSING')
+  }
+
+  await validateNaverMapAuth()
 
   if (scriptLoadPromise) {
     return scriptLoadPromise
@@ -73,7 +132,7 @@ export function loadNaverMapScript() {
     script.id = NAVER_MAP_SCRIPT_ID
     script.async = true
     script.defer = true
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${NAVER_MAPS_CLIENT_ID}`
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${NAVER_MAPS_KEY_ID}&submodules=geocoder`
     script.onload = () => {
       script.dataset.loaded = 'true'
       handleLoaded()

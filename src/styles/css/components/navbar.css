@@ -226,6 +226,11 @@
     padding: var(--spacing-sm);
   }
 
+  /* 모바일에서 설정 버튼 우선 노출 */
+  .header-logout-btn {
+    display: none;
+  }
+
   .header-action-btn svg {
     width: 18px;
     height: 18px;
