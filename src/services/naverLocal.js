@@ -239,6 +239,82 @@ function rankSearchResults(items, query) {
   return [...items].sort((a, b) => scoreSearchResult(b, query) - scoreSearchResult(a, query))
 }
 
+async function waitForReverseGeocode(maxRetry = 30, intervalMs = 100) {
+  if (window.naver?.maps?.Service?.reverseGeocode) {
+    return true
+  }
+
+  await new Promise((resolve) => {
+    let count = 0
+    const timer = setInterval(() => {
+      count += 1
+      if (window.naver?.maps?.Service?.reverseGeocode || count >= maxRetry) {
+        clearInterval(timer)
+        resolve()
+      }
+    }, intervalMs)
+  })
+
+  return Boolean(window.naver?.maps?.Service?.reverseGeocode)
+}
+
+/**
+ * 좌표 -> 주소 reverse geocode
+ * 지도 SDK 로딩 실패 시 null 반환 (호출 측 fallback 유도)
+ */
+export async function reverseGeocodeLatLon(lat, lon) {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return null
+  }
+
+  try {
+    await loadNaverMapScript()
+    const ready = await waitForReverseGeocode()
+    if (!ready) {
+      return null
+    }
+
+    return await new Promise((resolve) => {
+      window.naver.maps.Service.reverseGeocode(
+        { coords: new window.naver.maps.LatLng(lat, lon) },
+        (status, response) => {
+          if (status !== window.naver.maps.Service.Status.OK) {
+            resolve(null)
+            return
+          }
+
+          const addr = response.v2?.address
+          if (addr?.roadAddress || addr?.jibunAddress) {
+            resolve(addr.roadAddress || addr.jibunAddress)
+            return
+          }
+
+          const region = response.v2?.results?.[0]?.region
+          if (region) {
+            const parts = [
+              region.area1?.name,
+              region.area2?.name,
+              region.area3?.name,
+              region.area4?.name,
+            ].filter(Boolean)
+            resolve(parts.length ? parts.join(' ') : null)
+            return
+          }
+
+          resolve(null)
+        }
+      )
+    })
+  } catch (error) {
+    console.warn('reverseGeocodeLatLon 실패:', error)
+    return null
+  }
+}
+
 /**
  * 네이버 지도 SDK geocoder로 검색 (클라이언트 사이드)
  * 주소 기반 검색이므로 장소명은 잘 안 될 수 있음

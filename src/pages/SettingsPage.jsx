@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useClassManager } from '../hooks/useClassManager'
-import { findNearestStation } from '../services/weatherApi'
+import { findNearbyStations } from '../services/weatherApi'
+import { reverseGeocodeLatLon } from '../services/naverLocal'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
 import GlassCard from '../components/common/GlassCard'
 import LocationMapPicker from '../components/settings/LocationMapPicker'
+import StationPicker from '../components/weather/StationPicker'
 
 function buildNearestStationMessage(baseName, stationName, distanceKm = null) {
   const safeBaseName = baseName || '선택 위치'
@@ -23,6 +25,22 @@ export default function SettingsPage() {
 
   const [isDetecting, setIsDetecting] = useState(false)
   const [showMapPicker, setShowMapPicker] = useState(false)
+  const [pendingLocation, setPendingLocation] = useState(null)
+  const [nearbyStations, setNearbyStations] = useState([])
+  const [stationPickerSource, setStationPickerSource] = useState('gps')
+
+  const findStationsWithFallback = async (lat, lon, hint = '') => {
+    try {
+      const primary = await findNearbyStations(lat, lon, hint, 3)
+      if (Array.isArray(primary) && primary.length > 0) {
+        return primary
+      }
+    } catch (error) {
+      console.warn('측정소 1차 조회 실패, fallback 시도:', error)
+    }
+
+    return findNearbyStations(lat, lon, '', 3)
+  }
 
   // 현재 위치 자동 감지
   const handleAutoDetect = () => {
@@ -40,22 +58,19 @@ export default function SettingsPage() {
         const lon = position.coords.longitude
 
         try {
-          const stationHint = location.address || ''
+          const stations = await findStationsWithFallback(lat, lon, '')
+          const baseAddress = '현재 위치(자동 감지)'
 
-          // 가장 가까운 측정소 찾기
-          const station = await findNearestStation(lat, lon, stationHint)
-          const baseName = '현재 위치'
-
-          updateLocation({
-            name: baseName,
-            address: '현재 위치(자동 감지)',
+          setPendingLocation({
+            name: '현재 위치',
+            address: baseAddress,
             lat,
             lon,
-            stationName: station.stationName,
           })
+          setNearbyStations(stations)
+          setStationPickerSource('gps')
 
           toast.dismiss()
-          toast.success(buildNearestStationMessage(baseName, station.stationName, station.distance))
         } catch (error) {
           toast.dismiss()
           toast.error('측정소 조회에 실패했습니다')
@@ -95,26 +110,64 @@ export default function SettingsPage() {
     setShowMapPicker(false)
 
     try {
-      const baseName = placeInfo?.name || '선택한 학교'
-      const addressLabel = placeInfo?.address || baseName || '지도에서 선택한 위치'
+      let baseName = placeInfo?.name || '선택한 학교'
+      let addressLabel = placeInfo?.address || baseName || '지도에서 선택한 위치'
       const jibunAddress = placeInfo?.jibunAddress || ''
+      if (!placeInfo) {
+        const detected = await reverseGeocodeLatLon(lat, lon)
+        if (detected) {
+          baseName = detected
+          addressLabel = detected
+        }
+      }
       const stationHint = [baseName, addressLabel, jibunAddress].filter(Boolean).join(' ')
-      const station = await findNearestStation(lat, lon, stationHint)
+      const stations = await findStationsWithFallback(lat, lon, stationHint)
 
-      updateLocation({
+      setPendingLocation({
         name: baseName,
         address: addressLabel,
         lat,
         lon,
-        stationName: station.stationName,
       })
+      setNearbyStations(stations)
+      setStationPickerSource('map')
 
       toast.dismiss()
-      toast.success(buildNearestStationMessage(baseName, station.stationName, station.distance))
     } catch (error) {
       toast.dismiss()
       toast.error('측정소 조회에 실패했습니다')
     }
+  }
+
+  const handleStationSelect = (station) => {
+    if (!pendingLocation) return
+
+    const shouldReplaceAutoDetectedAddress =
+      String(pendingLocation.address || '').includes('자동 감지') &&
+      String(station?.addr || '').trim()
+    const resolvedAddress = shouldReplaceAutoDetectedAddress
+      ? String(station.addr).trim()
+      : pendingLocation.address
+
+    updateLocation({
+      ...pendingLocation,
+      address: resolvedAddress,
+      stationName: station.stationName,
+    })
+    toast.success(
+      buildNearestStationMessage(
+        pendingLocation.name,
+        station.stationName,
+        station.distance
+      )
+    )
+    setPendingLocation(null)
+    setNearbyStations([])
+  }
+
+  const handleStationCancel = () => {
+    setPendingLocation(null)
+    setNearbyStations([])
   }
 
   // 학급 설정 초기화
@@ -176,7 +229,7 @@ export default function SettingsPage() {
                 <span className="text-lg">✅</span>
                 <span className="text-body font-semibold text-text">{location.name}</span>
               </div>
-              <div className="text-caption text-text-muted ml-7 space-y-0.5">
+              <div className="text-caption text-textMuted ml-7 space-y-0.5">
                 <div>📍 {location.address}</div>
                 <div>🌫️ 측정소: {location.stationName}</div>
               </div>
@@ -220,6 +273,18 @@ export default function SettingsPage() {
           initialAddress={location.address || ''}
           onSelect={handleMapSelect}
           onCancel={() => setShowMapPicker(false)}
+        />
+      )}
+
+      {pendingLocation && nearbyStations.length > 0 && (
+        <StationPicker
+          locationName={pendingLocation.address || pendingLocation.name}
+          source={stationPickerSource}
+          stations={nearbyStations}
+          centerLat={pendingLocation.lat}
+          centerLon={pendingLocation.lon}
+          onSelect={handleStationSelect}
+          onCancel={handleStationCancel}
         />
       )}
     </div>

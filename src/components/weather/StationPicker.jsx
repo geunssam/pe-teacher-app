@@ -70,7 +70,23 @@ function geocodeAddr(naver, addr) {
   )
 }
 
-async function resolveStationCoords(naver, station, locationHint = '') {
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const toRad = (v) => (v * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+async function resolveStationCoords(
+  naver,
+  station,
+  locationHint = '',
+  originLat = null,
+  originLon = null
+) {
   if (Number.isFinite(station?.lat) && Number.isFinite(station?.lon)) {
     return { lat: station.lat, lon: station.lon }
   }
@@ -81,23 +97,35 @@ async function resolveStationCoords(naver, station, locationHint = '') {
   const queries = []
   const seen = new Set()
 
-  const addQuery = (value) => {
+  const addQuery = (value, source = 'general') => {
     const query = String(value || '').trim()
     if (!query || seen.has(query)) {
       return
     }
     seen.add(query)
-    queries.push(query)
+    queries.push({ query, source })
   }
 
-  addQuery(addr)
-  if (stationName && hint) addQuery(`${hint} ${stationName}`)
-  if (stationName) addQuery(`${stationName} 측정소`)
-  if (stationName) addQuery(stationName)
+  addQuery(addr, 'addr')
+  if (stationName) addQuery(`${stationName} 측정소`, 'name')
+  if (stationName) addQuery(stationName, 'name')
+  if (stationName && hint) addQuery(`${hint} ${stationName}`, 'hint')
 
-  for (const query of queries) {
-    const coords = await geocodeAddr(naver, query)
+  for (const candidate of queries) {
+    const coords = await geocodeAddr(naver, candidate.query)
     if (coords) {
+      // 힌트 기반 쿼리가 현재 위치와 과도하게 가까운 좌표를 반환하면 오탐으로 간주
+      if (
+        candidate.source === 'hint' &&
+        Number.isFinite(originLat) &&
+        Number.isFinite(originLon)
+      ) {
+        const originDistance = haversineKm(originLat, originLon, coords.lat, coords.lon)
+        const expectedDistance = Number.parseFloat(station?.distance)
+        if (Number.isFinite(expectedDistance) && expectedDistance > 0.8 && originDistance < 0.2) {
+          continue
+        }
+      }
       return coords
     }
   }
@@ -138,8 +166,32 @@ export default function StationPicker({ locationName, source, stations, centerLa
   const isInitializingRef = useRef(true)
   const [focusedIndex, setFocusedIndex] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [focusError, setFocusError] = useState('')
 
   const hasCenter = Number.isFinite(centerLat) && Number.isFinite(centerLon)
+
+  const clearIdleListener = useCallback(() => {
+    if (idleListenerRef.current && naverRef.current?.maps?.Event) {
+      naverRef.current.maps.Event.removeListener(idleListenerRef.current)
+      idleListenerRef.current = null
+    }
+  }, [])
+
+  const runAfterMapIdle = useCallback((callback) => {
+    const naver = naverRef.current
+    const map = mapInstanceRef.current
+    if (!naver || !map || typeof callback !== 'function') {
+      callback?.()
+      return
+    }
+    clearIdleListener()
+    const listener = naver.maps.Event.addListener(map, 'idle', () => {
+      clearIdleListener()
+      callback()
+    })
+    idleListenerRef.current = listener
+  }, [clearIdleListener])
+
   const flushPendingFocus = useCallback(() => {
     if (pendingFocusIndexRef.current == null) {
       return
@@ -200,7 +252,7 @@ export default function StationPicker({ locationName, source, stations, centerLa
           zoomControl: true,
           zoomControlOptions: { position: naver.maps.Position.RIGHT_CENTER, style: naver.maps.ZoomControlStyle.SMALL },
           draggable: true,
-          scrollWheel: false,
+          scrollWheel: true,
           disableDoubleTapZoom: false,
           disableDoubleClickZoom: false,
         })
@@ -223,7 +275,13 @@ export default function StationPicker({ locationName, source, stations, centerLa
             let lat = station.lat
             let lon = station.lon
             if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-              const coords = await resolveStationCoords(naver, station, locationName)
+              const coords = await resolveStationCoords(
+                naver,
+                station,
+                locationName,
+                centerLat,
+                centerLon
+              )
               if (coords) {
                 lat = coords.lat
                 lon = coords.lon
@@ -264,14 +322,8 @@ export default function StationPicker({ locationName, source, stations, centerLa
 
         // fitBounds to show everything
         if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 })
-          const listener = naver.maps.Event.addListener(map, 'idle', () => {
-            naver.maps.Event.removeListener(listener)
-            idleListenerRef.current = null
-            if (map.getZoom() > 15) map.setZoom(15)
-            markMapReady()
-          })
-          idleListenerRef.current = listener
+          map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40, maxZoom: 15 })
+          runAfterMapIdle(markMapReady)
         } else {
           markMapReady()
         }
@@ -294,16 +346,13 @@ export default function StationPicker({ locationName, source, stations, centerLa
       markersReadyRef.current = false
       pendingFocusIndexRef.current = null
       isInitializingRef.current = false
-      if (idleListenerRef.current && naverRef.current?.maps?.Event) {
-        naverRef.current.maps.Event.removeListener(idleListenerRef.current)
-        idleListenerRef.current = null
-      }
+      clearIdleListener()
       if (mapInstanceRef.current) {
         mapInstanceRef.current.destroy()
         mapInstanceRef.current = null
       }
     }
-  }, [flushPendingFocus, hasCenter, locationName, markMapReady, stations])
+  }, [clearIdleListener, flushPendingFocus, hasCenter, locationName, markMapReady, runAfterMapIdle, stations])
 
   // Update marker styles when focusedIndex changes
   const updateMarkerStyles = useCallback((newIndex) => {
@@ -332,6 +381,7 @@ export default function StationPicker({ locationName, source, stations, centerLa
     focusedIndexRef.current = newIndex
     setFocusedIndex(newIndex)
     updateMarkerStyles(newIndex)
+    setFocusError('')
 
     const naver = naverRef.current
     const map = mapInstanceRef.current
@@ -353,15 +403,11 @@ export default function StationPicker({ locationName, source, stations, centerLa
       })
       if (!bounds.isEmpty()) {
         markersReadyRef.current = false
-        map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 })
-        const listener = naver.maps.Event.addListener(map, 'idle', () => {
-          naver.maps.Event.removeListener(listener)
-          idleListenerRef.current = null
-          if (map.getZoom() > 15) map.setZoom(15)
+        map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40, maxZoom: 15 })
+        runAfterMapIdle(() => {
           markersReadyRef.current = true
           flushPendingFocus()
         })
-        idleListenerRef.current = listener
       }
       return
     }
@@ -371,7 +417,13 @@ export default function StationPicker({ locationName, source, stations, centerLa
     // On-demand geocoding: if no marker was created during init, try now
     if (!entry?.coords) {
       const station = stations[newIndex]
-      const coords = await resolveStationCoords(naver, station, locationName)
+      const coords = await resolveStationCoords(
+        naver,
+        station,
+        locationName,
+        centerLat,
+        centerLon
+      )
       if (coords && focusedIndexRef.current === newIndex) {
         const pos = new naver.maps.LatLng(coords.lat, coords.lon)
         const marker = new naver.maps.Marker({
@@ -392,11 +444,18 @@ export default function StationPicker({ locationName, source, stations, centerLa
       }
     }
 
-    if (!entry?.coords) return
+    if (!entry?.coords) {
+      setFocusError('해당 측정소 위치를 찾지 못했습니다. 다른 측정소를 선택해 주세요.')
+      return
+    }
 
     // Zoom in close to the station (~500m radius = zoom 16)
-    map.panTo(entry.coords)
-    map.setZoom(16)
+    if (typeof map.morph === 'function') {
+      map.morph(entry.coords, 16)
+    } else {
+      map.panTo(entry.coords)
+      map.setZoom(16, true)
+    }
   }
 
   // Keep ref always pointing to the latest handler (for marker click closures)
@@ -447,8 +506,18 @@ export default function StationPicker({ locationName, source, stations, centerLa
                 const naver = naverRef.current
                 const map = mapInstanceRef.current
                 if (!naver || !map) return
-                map.panTo(new naver.maps.LatLng(centerLat, centerLon))
-                map.setZoom(14)
+                pendingFocusIndexRef.current = null
+                focusedIndexRef.current = null
+                setFocusedIndex(null)
+                setFocusError('')
+                updateMarkerStyles(null)
+                const centerPos = new naver.maps.LatLng(centerLat, centerLon)
+                if (typeof map.morph === 'function') {
+                  map.morph(centerPos, 14)
+                } else {
+                  map.panTo(centerPos)
+                  map.setZoom(14, true)
+                }
               }}
               className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center bg-white rounded-lg border border-gray-200 shadow-md hover:bg-gray-50 transition-all"
               title="선택한 위치로 이동"
@@ -471,6 +540,11 @@ export default function StationPicker({ locationName, source, stations, centerLa
                 <span style={{ width: 8, height: 8, background: '#E866A0', borderRadius: '50%', display: 'inline-block' }} /> 측정소
               </span>
             </div>
+          </div>
+        )}
+        {focusError && (
+          <div className="mb-3 px-2 py-1.5 rounded-lg bg-warning/20 border border-warning/30 text-[11px] text-text">
+            {focusError}
           </div>
         )}
 

@@ -255,7 +255,7 @@ export default function LocationMapPicker({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
-      <div className="w-full max-w-2xl bg-cream rounded-3xl overflow-hidden shadow-2xl">
+      <div className="w-full max-w-2xl bg-bg rounded-3xl overflow-hidden shadow-2xl">
         {/* 헤더 */}
         <div className="p-lg bg-gradient-to-r from-primary/90 to-primary/70 text-white">
           <h2 className="text-xl font-bold mb-xs">🗺️ 지도에서 위치 선택</h2>
@@ -301,7 +301,7 @@ export default function LocationMapPicker({
                       className="w-full text-left px-3 py-2 border-b last:border-b-0 border-white/60 hover:bg-primary/10 transition-all"
                     >
                       <div className="text-sm font-semibold text-text">{place.name}</div>
-                      <div className="text-xs text-text-muted truncate">
+                      <div className="text-xs text-textMuted truncate">
                         {place.roadAddress || place.address}
                       </div>
                     </button>
@@ -313,7 +313,7 @@ export default function LocationMapPicker({
 
           {isLoadingMap && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/85">
-              <div className="text-sm font-semibold text-text-muted">지도를 불러오는 중...</div>
+              <div className="text-sm font-semibold text-textMuted">지도를 불러오는 중...</div>
             </div>
           )}
 
@@ -321,8 +321,8 @@ export default function LocationMapPicker({
             <div className="absolute inset-0 flex items-center justify-center bg-white/90 p-lg">
               <div className="max-w-md text-center p-md rounded-xl border border-danger/30 bg-danger/10">
                 <div className="text-body-bold text-danger mb-xs">지도 인증 실패</div>
-                <div className="text-caption text-text-muted mb-sm">{mapInitError}</div>
-                <div className="text-caption text-text-muted">
+                <div className="text-caption text-textMuted mb-sm">{mapInitError}</div>
+                <div className="text-caption text-textMuted">
                   현재 주소: {window.location.origin}
                 </div>
               </div>
@@ -334,7 +334,7 @@ export default function LocationMapPicker({
             <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md border border-white/80 max-w-[280px]">
               <div className="text-xs text-muted">선택한 장소</div>
               <div className="text-sm font-semibold truncate">{selectedPlaceInfo.name}</div>
-              <div className="text-xs text-text-muted truncate">{selectedPlaceInfo.address}</div>
+              <div className="text-xs text-textMuted truncate">{selectedPlaceInfo.address}</div>
             </div>
           )}
         </div>
@@ -360,7 +360,7 @@ export default function LocationMapPicker({
         {/* 안내 메시지 */}
         <div className="px-lg pb-lg">
           <div className="p-md bg-primary/10 rounded-xl border border-primary/30">
-            <div className="text-caption text-text-muted">
+            <div className="text-caption text-textMuted">
               💡 지도를 클릭하거나 마커를 드래그하여 정확한 위치를 선택하세요
               <br />
               💡 확인 버튼을 누르면 자동으로 가장 가까운 대기질 측정소를 찾습니다

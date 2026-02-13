@@ -6,7 +6,7 @@ import HourlyForecast from '../components/weather/HourlyForecast'
 import StationPicker from '../components/weather/StationPicker'
 import LocationMapPicker from '../components/settings/LocationMapPicker'
 import { fetchWeatherData, fetchAirQualityData, fetchHourlyForecast, findNearbyStations } from '../services/weatherApi'
-import { loadNaverMapScript } from '../utils/loadNaverMapScript'
+import { reverseGeocodeLatLon } from '../services/naverLocal'
 import { judgeOutdoorClass } from '../data/mockWeather'
 import { useSettings } from '../hooks/useSettings'
 import toast from 'react-hot-toast'
@@ -24,48 +24,17 @@ export default function WeatherPage() {
   const [nearbyStations, setNearbyStations] = useState([])
   const [stationPickerSource, setStationPickerSource] = useState('gps')
 
-  const reverseGeocode = async (lat, lon) => {
+  const findStationsWithFallback = async (lat, lon, hint = '') => {
     try {
-      await loadNaverMapScript()
-    } catch {
-      return null
+      const primary = await findNearbyStations(lat, lon, hint, 3)
+      if (Array.isArray(primary) && primary.length > 0) {
+        return primary
+      }
+    } catch (error) {
+      console.warn('측정소 1차 조회 실패, fallback 시도:', error)
     }
-    // geocoder 서브모듈 초기화 대기 (최대 3초)
-    if (!window.naver?.maps?.Service?.reverseGeocode) {
-      await new Promise((r) => {
-        let n = 0
-        const id = setInterval(() => {
-          if (window.naver?.maps?.Service?.reverseGeocode || ++n >= 30) {
-            clearInterval(id)
-            r()
-          }
-        }, 100)
-      })
-    }
-    if (!window.naver?.maps?.Service?.reverseGeocode) return null
 
-    return new Promise((resolve) => {
-      naver.maps.Service.reverseGeocode(
-        { coords: new naver.maps.LatLng(lat, lon) },
-        (status, response) => {
-          if (status !== naver.maps.Service.Status.OK) {
-            resolve(null)
-            return
-          }
-          const addr = response.v2?.address
-          if (addr?.roadAddress || addr?.jibunAddress) {
-            resolve(addr.roadAddress || addr.jibunAddress)
-            return
-          }
-          const r = response.v2?.results?.[0]?.region
-          if (r) {
-            const parts = [r.area1?.name, r.area2?.name, r.area3?.name, r.area4?.name].filter(Boolean)
-            if (parts.length) { resolve(parts.join(' ')); return }
-          }
-          resolve(null)
-        }
-      )
-    })
+    return findNearbyStations(lat, lon, '', 3)
   }
 
   const handleCurrentLocation = () => {
@@ -81,8 +50,8 @@ export default function WeatherPage() {
         const lat = position.coords.latitude
         const lon = position.coords.longitude
         try {
-          const address = await reverseGeocode(lat, lon)
-          const stations = await findNearbyStations(lat, lon, address || '', 3)
+          const address = await reverseGeocodeLatLon(lat, lon)
+          const stations = await findStationsWithFallback(lat, lon, address || '')
           toast.dismiss()
           setPendingLocation({
             name: '현재 위치',
@@ -131,7 +100,7 @@ export default function WeatherPage() {
 
       // 마커 드래그/지도 클릭으로 선택 시 placeInfo 없음 → reverse geocode
       if (!placeInfo) {
-        const address = await reverseGeocode(lat, lon)
+        const address = await reverseGeocodeLatLon(lat, lon)
         if (address) {
           baseName = address
           addressLabel = address
@@ -142,7 +111,7 @@ export default function WeatherPage() {
       if (!addressLabel) addressLabel = baseName
 
       const stationHint = [baseName, addressLabel, jibunAddress].filter(Boolean).join(' ')
-      const stations = await findNearbyStations(lat, lon, stationHint, 3)
+      const stations = await findStationsWithFallback(lat, lon, stationHint)
 
       toast.dismiss()
       setPendingLocation({
@@ -161,8 +130,17 @@ export default function WeatherPage() {
 
   const handleStationSelect = (station) => {
     if (!pendingLocation) return
+
+    const shouldReplaceAutoDetectedAddress =
+      String(pendingLocation.address || '').includes('자동 감지') &&
+      String(station?.addr || '').trim()
+    const resolvedAddress = shouldReplaceAutoDetectedAddress
+      ? String(station.addr).trim()
+      : pendingLocation.address
+
     updateLocation({
       ...pendingLocation,
+      address: resolvedAddress,
       stationName: station.stationName,
     })
     toast.success(`위치 설정 완료 (측정소: ${station.stationName})`)
@@ -236,16 +214,16 @@ export default function WeatherPage() {
         <h1 className="text-page-title shrink-0">🌤️ 날씨</h1>
         <div className="flex items-center gap-2">
           {location.address ? (
-            <span className="text-caption text-text-muted truncate max-w-[240px]">
+            <span className="text-caption text-textMuted truncate max-w-[240px]">
               📍 {location.address} · 🌫️ {location.stationName} 기준
             </span>
           ) : (
-            <span className="text-caption text-text-muted">
+            <span className="text-caption text-textMuted">
               📍 위치 설정
             </span>
           )}
           {weather && (
-            <span className="text-caption text-text-muted">
+            <span className="text-caption text-textMuted">
               🕐 {weather.baseTime.slice(0, 2)}:{weather.baseTime.slice(2, 4)}
             </span>
           )}
