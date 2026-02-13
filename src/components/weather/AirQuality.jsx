@@ -16,7 +16,7 @@ function InfoCard({ bg, emoji, title, value, valueColor, detail }) {
     >
       <span className="text-2xl shrink-0 mr-2">{emoji}</span>
       <div>
-        <div className="text-sm font-semibold text-text/70">{title}</div>
+        <div className="text-sm font-bold text-text/70">{title}</div>
         <div className="text-base font-bold" style={{ color: valueColor }}>{value}</div>
         <div className="text-sm text-muted">{detail}</div>
       </div>
