@@ -162,13 +162,16 @@ export async function fetchAirQualityData(stationName = '대전') {
 
     const item = data.response?.body?.items?.[0] || {}
 
+    const pm10Val = parseInt(item.pm10Value) || 0
+    const pm25Val = parseInt(item.pm25Value) || 0
+
     const airData = {
       stationName: item.stationName || stationName,
       dataTime: item.dataTime || new Date().toISOString(),
-      pm10Value: parseInt(item.pm10Value) || 35,
-      pm10Grade: parseInt(item.pm10Grade1h) || 1,
-      pm25Value: parseInt(item.pm25Value) || 15,
-      pm25Grade: parseInt(item.pm25Grade1h) || 1,
+      pm10Value: pm10Val,
+      pm10Grade: calcPm10Grade(pm10Val),
+      pm25Value: pm25Val,
+      pm25Grade: calcPm25Grade(pm25Val),
       uvIndex: 5, // 에어코리아에서는 제공 안 함
       uvGrade: 2,
     }
@@ -183,6 +186,22 @@ export async function fetchAirQualityData(stationName = '대전') {
 /**
  * 유틸리티 함수들
  */
+
+// PM10 등급 계산 (환경부 기준: 0-30 좋음, 31-80 보통, 81-150 나쁨, 151+ 매우나쁨)
+function calcPm10Grade(value) {
+  if (value <= 30) return 1
+  if (value <= 80) return 2
+  if (value <= 150) return 3
+  return 4
+}
+
+// PM2.5 등급 계산 (환경부 기준: 0-15 좋음, 16-35 보통, 36-75 나쁨, 76+ 매우나쁨)
+function calcPm25Grade(value) {
+  if (value <= 15) return 1
+  if (value <= 35) return 2
+  if (value <= 75) return 3
+  return 4
+}
 
 // 날짜 포맷 (YYYYMMDD)
 function formatDate(date) {
@@ -300,12 +319,11 @@ function groupByTime(items) {
     }
   })
 
-  // 오늘+내일 12시간치만 (3시간 간격)
+  // 시간별 예보 (API가 이미 3시간 간격, 최대 8개 = 24시간)
   return Object.values(grouped)
     .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
     .filter((item) => item.temp !== null)
-    .slice(0, 12)
-    .filter((_, index) => index % 3 === 0) // 3시간 간격
+    .slice(0, 8)
 }
 
 function guessSidoName(address = '', lat, lon) {

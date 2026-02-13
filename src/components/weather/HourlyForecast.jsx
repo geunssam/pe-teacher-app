@@ -10,7 +10,7 @@ export default function HourlyForecast({ forecast }) {
     <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-xl border border-white/80 shadow-glass-strong">
       <h3 className="text-card-title mb-md">시간별 예보</h3>
 
-      <div className="overflow-x-auto -mx-xl px-xl">
+      <div className="overflow-x-auto -mx-xl px-xl scrollbar-hide">
         <div className="flex gap-sm min-w-max pb-xs">
           {forecast.map((hour, index) => {
             const skyInfo = SKY_CODE[hour.sky] || SKY_CODE[1]
@@ -38,14 +38,15 @@ export default function HourlyForecast({ forecast }) {
                 </div>
 
                 {/* 강수확률 */}
-                {hour.pop > 10 && (
-                  <div className="text-caption text-primary">💧 {hour.pop}%</div>
-                )}
+                <div className="text-caption text-primary">💧 {hour.pop ?? 0}%</div>
               </div>
             )
           })}
         </div>
       </div>
+
+      {/* 스크롤 인디케이터 */}
+      <div className="mt-md w-full h-1 rounded-full bg-gradient-to-r from-primary/20 via-primary/50 to-primary/20" />
     </div>
   )
 }

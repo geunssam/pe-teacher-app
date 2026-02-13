@@ -170,17 +170,13 @@ export default function SettingsPage() {
           {/* 현재 설정된 위치 */}
           {location.address && (
             <div className="mb-lg p-md bg-success/10 rounded-xl border border-success/30">
-              <div className="flex items-center gap-3 overflow-x-auto whitespace-nowrap">
-                <span className="text-xl shrink-0">✅</span>
-                <div className="text-body-bold text-text shrink-0">
-                  {location.name}
-                </div>
-                <div className="text-caption text-text-muted shrink-0">
-                  📍 {location.address}
-                </div>
-                <div className="text-caption text-text-muted shrink-0">
-                  🌫️ {location.name} 기준 최근접 측정소: {location.stationName}
-                </div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">✅</span>
+                <span className="text-body font-semibold text-text">{location.name}</span>
+              </div>
+              <div className="text-caption text-text-muted ml-7 space-y-0.5">
+                <div>📍 {location.address}</div>
+                <div>🌫️ 측정소: {location.stationName}</div>
               </div>
             </div>
           )}

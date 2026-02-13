@@ -35,7 +35,7 @@ export default function OutdoorJudge({ judgment }) {
           if (key === 'pm10Warning' && check.pass) return null // 통과면 표시 안 함
 
           const checkEmoji = check.pass ? '✅' : '❌'
-          const checkColor = check.pass ? '#7CE0A3' : '#F57C7C'
+          const checkColor = check.pass ? '#059669' : '#DC2626'
 
           return (
             <div

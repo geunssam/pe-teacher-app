@@ -7,9 +7,9 @@
 
 // 하늘상태 코드
 export const SKY_CODE = {
-  1: { text: '맑음', emoji: '☀️', color: '#F5E07C' },
-  3: { text: '구름많음', emoji: '⛅', color: '#A0AEC0' },
-  4: { text: '흐림', emoji: '☁️', color: '#718096' }
+  1: { text: '맑음', emoji: '☀️', color: '#D97706' },
+  3: { text: '구름많음', emoji: '⛅', color: '#64748B' },
+  4: { text: '흐림', emoji: '☁️', color: '#64748B' }
 }
 
 // 강수형태 코드
@@ -17,18 +17,18 @@ export const PTY_CODE = {
   0: { text: '없음', emoji: '', color: '' },
   1: { text: '비', emoji: '🌧️', color: '#7C9EF5' },
   2: { text: '비/눈', emoji: '🌨️', color: '#A78BFA' },
-  3: { text: '눈', emoji: '❄️', color: '#7CF5D4' },
+  3: { text: '눈', emoji: '❄️', color: '#0891B2' },
   5: { text: '빗방울', emoji: '💧', color: '#7C9EF5' },
   6: { text: '빗방울눈날림', emoji: '🌨️', color: '#A78BFA' },
-  7: { text: '눈날림', emoji: '❄️', color: '#7CF5D4' }
+  7: { text: '눈날림', emoji: '❄️', color: '#0891B2' }
 }
 
 // 미세먼지 등급
 export const PM_GRADE = {
-  1: { text: '좋음', emoji: '😊', color: '#7CE0A3', bg: 'rgba(124, 224, 163, 0.1)' },
-  2: { text: '보통', emoji: '😐', color: '#F5E07C', bg: 'rgba(245, 224, 124, 0.1)' },
-  3: { text: '나쁨', emoji: '😷', color: '#F5A67C', bg: 'rgba(245, 166, 124, 0.1)' },
-  4: { text: '매우나쁨', emoji: '🤢', color: '#F57C7C', bg: 'rgba(245, 124, 124, 0.1)' }
+  1: { text: '좋음', emoji: '😊', color: '#059669', bg: 'rgba(5, 150, 105, 0.08)' },
+  2: { text: '보통', emoji: '😐', color: '#D97706', bg: 'rgba(217, 119, 6, 0.08)' },
+  3: { text: '나쁨', emoji: '😷', color: '#DC2626', bg: 'rgba(220, 38, 38, 0.08)' },
+  4: { text: '매우나쁨', emoji: '🤢', color: '#991B1B', bg: 'rgba(153, 27, 27, 0.08)' }
 }
 
 /**
@@ -130,7 +130,7 @@ export const judgeOutdoorClass = (weather, air) => {
     status: 'optimal', // 'optimal', 'caution', 'not-recommended'
     emoji: '✅',
     text: '야외 수업 최적',
-    color: '#7CE0A3',
+    color: '#059669',
     reason: '',
     checks
   }
@@ -181,7 +181,7 @@ export const judgeOutdoorClass = (weather, air) => {
       status: 'caution',
       emoji: '⚠️',
       text: '야외 가능 (마스크 권장)',
-      color: '#F5E07C',
+      color: '#D97706',
       reason: '미세먼지 보통~나쁨 수준'
     }
     return result
