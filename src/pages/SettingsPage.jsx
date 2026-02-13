@@ -40,8 +40,10 @@ export default function SettingsPage() {
         const lon = position.coords.longitude
 
         try {
+          const stationHint = location.address || ''
+
           // 가장 가까운 측정소 찾기
-          const station = await findNearestStation(lat, lon, '')
+          const station = await findNearestStation(lat, lon, stationHint)
           const baseName = '현재 위치'
 
           updateLocation({

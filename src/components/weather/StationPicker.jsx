@@ -1,19 +1,45 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { loadNaverMapScript } from '../../utils/loadNaverMapScript'
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 /**
  * Geocode an address string via Naver Maps.
  * Tries the full address first, then a simplified version (road/jibun only).
  */
 function geocodeAddr(naver, addr) {
+  if (!naver?.maps?.Service?.geocode) {
+    return Promise.resolve(null)
+  }
+
+  const withTimeout = (promise, timeoutMs = 2000) =>
+    Promise.race([
+      promise,
+      new Promise((resolve) => {
+        setTimeout(() => resolve(null), timeoutMs)
+      }),
+    ])
+
   const tryGeocode = (query) =>
-    new Promise((resolve) => {
-      naver.maps.Service.geocode({ query }, (status, response) => {
-        if (status !== naver.maps.Service.Status.OK) { resolve(null); return }
-        const item = response.v2?.addresses?.[0]
-        resolve(item ? { lat: parseFloat(item.y), lon: parseFloat(item.x) } : null)
+    withTimeout(
+      new Promise((resolve) => {
+        naver.maps.Service.geocode({ query }, (status, response) => {
+          if (status !== naver.maps.Service.Status.OK) {
+            resolve(null)
+            return
+          }
+          const item = response.v2?.addresses?.[0]
+          resolve(item ? { lat: parseFloat(item.y), lon: parseFloat(item.x) } : null)
+        })
       })
-    })
+    )
 
   // Build candidate queries from most specific to least specific
   const candidates = [addr]
@@ -44,16 +70,52 @@ function geocodeAddr(naver, addr) {
   )
 }
 
+async function resolveStationCoords(naver, station, locationHint = '') {
+  if (Number.isFinite(station?.lat) && Number.isFinite(station?.lon)) {
+    return { lat: station.lat, lon: station.lon }
+  }
+
+  const stationName = String(station?.stationName || '').trim()
+  const addr = String(station?.addr || '').trim()
+  const hint = String(locationHint || '').trim()
+  const queries = []
+  const seen = new Set()
+
+  const addQuery = (value) => {
+    const query = String(value || '').trim()
+    if (!query || seen.has(query)) {
+      return
+    }
+    seen.add(query)
+    queries.push(query)
+  }
+
+  addQuery(addr)
+  if (stationName && hint) addQuery(`${hint} ${stationName}`)
+  if (stationName) addQuery(`${stationName} 측정소`)
+  if (stationName) addQuery(stationName)
+
+  for (const query of queries) {
+    const coords = await geocodeAddr(naver, query)
+    if (coords) {
+      return coords
+    }
+  }
+
+  return null
+}
+
 function makeMarkerIcon(name, focused) {
+  const safeName = escapeHtml(name)
   if (focused) {
     return `<div style="display:flex;flex-direction:column;align-items:center;pointer-events:auto;">
       <div style="width:28px;height:28px;background:#E866A0;border:3px solid #fff;border-radius:50%;box-shadow:0 3px 12px rgba(232,102,160,0.6);"></div>
-      <div style="margin-top:4px;font-size:13px;font-weight:700;color:#fff;background:#E866A0;padding:3px 10px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25);">${name}</div>
+      <div style="margin-top:4px;font-size:13px;font-weight:700;color:#fff;background:#E866A0;padding:3px 10px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25);">${safeName}</div>
     </div>`
   }
   return `<div style="display:flex;flex-direction:column;align-items:center;pointer-events:auto;">
     <div style="width:12px;height:12px;background:#E866A0;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(232,102,160,0.4);"></div>
-    <div style="margin-top:2px;font-size:9px;font-weight:600;color:#2D3748;background:rgba(255,255,255,0.85);padding:1px 4px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${name}</div>
+    <div style="margin-top:2px;font-size:9px;font-weight:600;color:#2D3748;background:rgba(255,255,255,0.85);padding:1px 4px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${safeName}</div>
   </div>`
 }
 
@@ -71,10 +133,32 @@ export default function StationPicker({ locationName, source, stations, centerLa
   const focusedIndexRef = useRef(null)
   const handleFocusRef = useRef(null)
   const idleListenerRef = useRef(null)
+  const markersReadyRef = useRef(false)
+  const pendingFocusIndexRef = useRef(null)
+  const isInitializingRef = useRef(true)
   const [focusedIndex, setFocusedIndex] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const hasCenter = Number.isFinite(centerLat) && Number.isFinite(centerLon)
+  const flushPendingFocus = useCallback(() => {
+    if (pendingFocusIndexRef.current == null) {
+      return
+    }
+
+    const pendingIndex = pendingFocusIndexRef.current
+    pendingFocusIndexRef.current = null
+
+    if (handleFocusRef.current) {
+      handleFocusRef.current(pendingIndex, { preserveSelection: true })
+    }
+  }, [])
+
+  const markMapReady = useCallback(() => {
+    isInitializingRef.current = false
+    markersReadyRef.current = true
+    setIsLoading(false)
+    flushPendingFocus()
+  }, [flushPendingFocus])
 
   // Initialize map + geocode all stations + place all markers
   useEffect(() => {
@@ -84,11 +168,18 @@ export default function StationPicker({ locationName, source, stations, centerLa
 
     const initMap = async () => {
       try {
+        isInitializingRef.current = true
+        markersReadyRef.current = false
+        pendingFocusIndexRef.current = null
+        setIsLoading(true)
+
         await loadNaverMapScript()
         if (unmounted) return
 
         const naver = window.naver
-        if (!naver?.maps) return
+        if (!naver?.maps) {
+          throw new Error('NAVER_MAP_API_UNAVAILABLE')
+        }
         naverRef.current = naver
 
         // Wait for geocoder submodule
@@ -132,9 +223,10 @@ export default function StationPicker({ locationName, source, stations, centerLa
             let lat = station.lat
             let lon = station.lon
             if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-              if (station.addr && naver.maps.Service?.geocode) {
-                const coords = await geocodeAddr(naver, station.addr)
-                if (coords) { lat = coords.lat; lon = coords.lon }
+              const coords = await resolveStationCoords(naver, station, locationName)
+              if (coords) {
+                lat = coords.lat
+                lon = coords.lon
               }
             }
             return { ...station, lat, lon }
@@ -177,13 +269,16 @@ export default function StationPicker({ locationName, source, stations, centerLa
             naver.maps.Event.removeListener(listener)
             idleListenerRef.current = null
             if (map.getZoom() > 15) map.setZoom(15)
+            markMapReady()
           })
           idleListenerRef.current = listener
+        } else {
+          markMapReady()
         }
 
-        setIsLoading(false)
       } catch (error) {
         console.warn('StationPicker 지도 로드 실패:', error)
+        isInitializingRef.current = false
         setIsLoading(false)
       }
     }
@@ -196,12 +291,19 @@ export default function StationPicker({ locationName, source, stations, centerLa
         if (entry?.marker) entry.marker.setMap(null)
       })
       stationMarkersRef.current = []
+      markersReadyRef.current = false
+      pendingFocusIndexRef.current = null
+      isInitializingRef.current = false
+      if (idleListenerRef.current && naverRef.current?.maps?.Event) {
+        naverRef.current.maps.Event.removeListener(idleListenerRef.current)
+        idleListenerRef.current = null
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.destroy()
         mapInstanceRef.current = null
       }
     }
-  }, [])
+  }, [flushPendingFocus, hasCenter, locationName, markMapReady, stations])
 
   // Update marker styles when focusedIndex changes
   const updateMarkerStyles = useCallback((newIndex) => {
@@ -220,8 +322,13 @@ export default function StationPicker({ locationName, source, stations, centerLa
     })
   }, [stations])
 
-  const handleStationFocus = async (index) => {
-    const newIndex = focusedIndexRef.current === index ? null : index
+  const handleStationFocus = async (index, options = {}) => {
+    const preserveSelection = Boolean(options.preserveSelection)
+    const newIndex = preserveSelection
+      ? index
+      : focusedIndexRef.current === index
+        ? null
+        : index
     focusedIndexRef.current = newIndex
     setFocusedIndex(newIndex)
     updateMarkerStyles(newIndex)
@@ -230,10 +337,9 @@ export default function StationPicker({ locationName, source, stations, centerLa
     const map = mapInstanceRef.current
     if (!naver || !map) return
 
-    // fitBounds idle 리스너가 남아있으면 즉시 제거 (첫 클릭 충돌 방지)
-    if (idleListenerRef.current) {
-      naver.maps.Event.removeListener(idleListenerRef.current)
-      idleListenerRef.current = null
+    if (isInitializingRef.current || !markersReadyRef.current) {
+      pendingFocusIndexRef.current = newIndex
+      return
     }
 
     if (newIndex == null) {
@@ -246,7 +352,16 @@ export default function StationPicker({ locationName, source, stations, centerLa
         if (entry?.coords) bounds.extend(entry.coords)
       })
       if (!bounds.isEmpty()) {
+        markersReadyRef.current = false
         map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 })
+        const listener = naver.maps.Event.addListener(map, 'idle', () => {
+          naver.maps.Event.removeListener(listener)
+          idleListenerRef.current = null
+          if (map.getZoom() > 15) map.setZoom(15)
+          markersReadyRef.current = true
+          flushPendingFocus()
+        })
+        idleListenerRef.current = listener
       }
       return
     }
@@ -256,26 +371,24 @@ export default function StationPicker({ locationName, source, stations, centerLa
     // On-demand geocoding: if no marker was created during init, try now
     if (!entry?.coords) {
       const station = stations[newIndex]
-      if (station?.addr && naver.maps.Service?.geocode) {
-        const coords = await geocodeAddr(naver, station.addr)
-        if (coords && focusedIndexRef.current === newIndex) {
-          const pos = new naver.maps.LatLng(coords.lat, coords.lon)
-          const marker = new naver.maps.Marker({
-            position: pos,
-            map,
-            icon: {
-              content: makeMarkerIcon(station.stationName, true),
-              anchor: new naver.maps.Point(14, 14),
-            },
-            clickable: true,
-            zIndex: 100,
-          })
-          naver.maps.Event.addListener(marker, 'click', () => {
-            if (handleFocusRef.current) handleFocusRef.current(newIndex)
-          })
-          entry = { marker, coords: pos }
-          stationMarkersRef.current[newIndex] = entry
-        }
+      const coords = await resolveStationCoords(naver, station, locationName)
+      if (coords && focusedIndexRef.current === newIndex) {
+        const pos = new naver.maps.LatLng(coords.lat, coords.lon)
+        const marker = new naver.maps.Marker({
+          position: pos,
+          map,
+          icon: {
+            content: makeMarkerIcon(station.stationName, true),
+            anchor: new naver.maps.Point(14, 14),
+          },
+          clickable: true,
+          zIndex: 100,
+        })
+        naver.maps.Event.addListener(marker, 'click', () => {
+          if (handleFocusRef.current) handleFocusRef.current(newIndex)
+        })
+        entry = { marker, coords: pos }
+        stationMarkersRef.current[newIndex] = entry
       }
     }
 

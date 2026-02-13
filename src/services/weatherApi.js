@@ -930,6 +930,13 @@ export async function findNearbyStations(lat, lon, addressHint = '', maxResults 
             existing.lon = s.lon
           }
         }
+        // 주소 보충: 기존 항목 주소가 없고 새 데이터에 있으면 병합
+        if (s.addr) {
+          const existing = allStations.find((e) => e.stationName === s.stationName)
+          if (existing && !existing.addr) {
+            existing.addr = s.addr
+          }
+        }
         // 거리 보충
         if (s.distance != null) {
           const existing = allStations.find((e) => e.stationName === s.stationName)
