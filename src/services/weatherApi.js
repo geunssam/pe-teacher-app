@@ -409,17 +409,25 @@ function getTmCoordsByNaver(lat, lon) {
 }
 
 function extractUmdName(addressHint = '') {
-  const tokens = String(addressHint || '')
+  const rawTokens = String(addressHint || '')
     .replace(/[,_]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .split(' ')
     .filter(Boolean)
+
+  // 원본 토큰에서 먼저 시도 (온천2동 등 숫자 보존)
+  const umdTokens = rawTokens.filter((token) => /(동|읍|면|리)$/.test(token))
+  if (umdTokens.length) {
+    return umdTokens[umdTokens.length - 1]
+  }
+
+  // fallback: 숫자 제거 후 재시도
+  const stripped = rawTokens
     .map((token) => token.replace(/[0-9.-]/g, ''))
     .filter(Boolean)
-
-  const umdTokens = tokens.filter((token) => /(동|읍|면|리)$/.test(token))
-  return umdTokens[umdTokens.length - 1] || ''
+  const strippedUmd = stripped.filter((token) => /(동|읍|면|리)$/.test(token))
+  return strippedUmd[strippedUmd.length - 1] || ''
 }
 
 async function fetchTmCoordByUmdName(umdName, addressHint = '') {
@@ -472,7 +480,7 @@ async function fetchTmCoordByUmdName(umdName, addressHint = '') {
 
   // 동일 읍면동이 여러 도시에 있을 수 있으므로 주소 힌트로 매칭
   let best = items[0]
-  if (items.length > 1 && addressHint) {
+  if (addressHint) {
     const hintLower = addressHint.toLowerCase()
     const matched = items.find((item) => {
       const sido = String(item.sidoName || '').toLowerCase()
@@ -481,6 +489,10 @@ async function fetchTmCoordByUmdName(umdName, addressHint = '') {
     })
     if (matched) {
       best = matched
+    } else {
+      // addressHint와 시도가 일치하는 결과가 없으면 null 반환 (다른 지역 방지)
+      UMD_TM_CACHE.set(cacheKey, null)
+      return null
     }
   }
 
@@ -526,29 +538,37 @@ async function fetchNearbyStationsByTm(tmX, tmY) {
   return data.response?.body?.items || []
 }
 
-async function findNearestStationByTm(tmX, tmY) {
+async function findStationsByTm(tmX, tmY) {
   if (!Number.isFinite(tmX) || !Number.isFinite(tmY)) {
-    return null
+    return []
   }
 
-  const cacheKey = `${Math.round(tmX)}:${Math.round(tmY)}`
+  const cacheKey = `tm:${Math.round(tmX)}:${Math.round(tmY)}`
   if (NEARBY_STATION_CACHE.has(cacheKey)) {
     return NEARBY_STATION_CACHE.get(cacheKey)
   }
 
   const nearbyItems = await fetchNearbyStationsByTm(tmX, tmY)
   if (!nearbyItems.length) {
-    NEARBY_STATION_CACHE.set(cacheKey, null)
-    return null
+    NEARBY_STATION_CACHE.set(cacheKey, [])
+    return []
   }
 
-  const nearest = nearbyItems[0]
-  const value = {
-    stationName: nearest.stationName,
-    distance: Number.isFinite(parseFloat(nearest.tm)) ? parseFloat(nearest.tm) : null,
-  }
-  NEARBY_STATION_CACHE.set(cacheKey, value)
-  return value
+  const stations = nearbyItems
+    .filter((item) => item.stationName)
+    .map((item) => {
+      const coord = parseStationCoord(item)
+      return {
+        stationName: String(item.stationName).trim(),
+        distance: Number.isFinite(parseFloat(item.tm)) ? parseFloat(item.tm) : null,
+        addr: String(item.addr || '').trim(),
+        lat: coord?.lat ?? null,
+        lon: coord?.lon ?? null,
+      }
+    })
+
+  NEARBY_STATION_CACHE.set(cacheKey, stations)
+  return stations
 }
 
 function isValidKoreaLatLon(lat, lon) {
@@ -733,16 +753,22 @@ async function fetchStationsByAddress(addrKeyword) {
   return items
 }
 
-function pickNearestStationByDistance(stations = [], lat, lon) {
-  const nearest = stations
+function rankStationsByDistance(stations = [], lat, lon) {
+  return stations
     .filter((item) => isValidKoreaLatLon(item.lat, item.lon))
     .map((item) => ({
       stationName: item.stationName,
       distance: haversineDistanceKm(lat, lon, item.lat, item.lon),
+      addr: item.addr || '',
+      lat: item.lat,
+      lon: item.lon,
     }))
-    .sort((a, b) => a.distance - b.distance)[0]
+    .sort((a, b) => a.distance - b.distance)
+}
 
-  return nearest || null
+function pickNearestStationByDistance(stations = [], lat, lon) {
+  const ranked = rankStationsByDistance(stations, lat, lon)
+  return ranked[0] || null
 }
 
 function scoreStationNameByAddress(stationName, addressHint = '') {
@@ -787,7 +813,7 @@ function pickNearestStationByName(stations = [], addressHint = '') {
   }
 }
 
-async function findNearestStationByAddressList(lat, lon, addressHint = '') {
+async function collectStationsByAddress(lat, lon, addressHint = '') {
   const keywords = buildStationSearchKeywords(addressHint, lat, lon)
   const merged = []
   const dedupe = new Set()
@@ -810,6 +836,12 @@ async function findNearestStationByAddressList(lat, lon, addressHint = '') {
       merged.push(item)
     })
   }
+
+  return merged
+}
+
+async function findNearestStationByAddressList(lat, lon, addressHint = '') {
+  const merged = await collectStationsByAddress(lat, lon, addressHint)
 
   if (!merged.length) {
     return null
@@ -874,48 +906,116 @@ async function inferNearestStationBySido(lat, lon, addressHint = '') {
 }
 
 /**
- * 좌표 기반 가장 가까운 측정소 찾기
+ * 좌표 기반 주변 측정소 목록 찾기 (거리순 정렬)
  * - 1순위: 에어코리아 근접 측정소 API (TM 좌표 필요)
- * - 2순위: 시도별 측정소 목록 + 위치 기반 추론
+ * - 2순위: 주소 기반 측정소 목록 + 거리 계산
+ * - 3순위: 시도별 측정소 목록 + 위치 기반 추론
+ * @returns {Promise<Array<{stationName: string, distance: number|null, addr: string}>>}
  */
-export async function findNearestStation(lat, lon, addressHint = '') {
+export async function findNearbyStations(lat, lon, addressHint = '', maxResults = 5) {
   const umdName = extractUmdName(addressHint)
+  const sidoName = guessSidoName(addressHint, lat, lon)
+  const allStations = []
+  const seen = new Set()
 
+  const addStations = (stations) => {
+    for (const s of stations) {
+      if (!s.stationName) continue
+      if (seen.has(s.stationName)) {
+        // 좌표 보충: 기존 항목에 좌표가 없고 새 데이터에 있으면 병합
+        if (s.lat != null && s.lon != null) {
+          const existing = allStations.find((e) => e.stationName === s.stationName)
+          if (existing && existing.lat == null) {
+            existing.lat = s.lat
+            existing.lon = s.lon
+          }
+        }
+        // 거리 보충
+        if (s.distance != null) {
+          const existing = allStations.find((e) => e.stationName === s.stationName)
+          if (existing && existing.distance == null) {
+            existing.distance = Math.round(s.distance * 10) / 10
+          }
+        }
+        continue
+      }
+      seen.add(s.stationName)
+      allStations.push({
+        stationName: s.stationName,
+        distance: s.distance != null ? Math.round(s.distance * 10) / 10 : null,
+        addr: s.addr || '',
+        lat: s.lat ?? null,
+        lon: s.lon ?? null,
+      })
+    }
+  }
+
+  // TM 결과를 시도(sido)로 필터링 (다른 지역 측정소 제거)
+  const filterBySido = (stations) => {
+    if (!sidoName) return stations
+    return stations.filter((s) => !s.addr || s.addr.includes(sidoName))
+  }
+
+  // 1순위: TM 좌표 기반 근접 측정소 API
   try {
     if (umdName) {
-      const tmCoord = await fetchTmCoordByUmdName(umdName, addressHint)
-      if (tmCoord) {
-        const nearestByUmd = await findNearestStationByTm(tmCoord.tmX, tmCoord.tmY)
-        if (nearestByUmd) {
-          return nearestByUmd
+      let tmCoord = await fetchTmCoordByUmdName(umdName, addressHint)
+      // "온천2동" 등 숫자 포함 이름으로 못 찾으면 숫자 제거 후 재시도
+      if (!tmCoord) {
+        const stripped = umdName.replace(/[0-9]/g, '')
+        if (stripped !== umdName && stripped.length > 1) {
+          tmCoord = await fetchTmCoordByUmdName(stripped, addressHint)
         }
+      }
+      if (tmCoord) {
+        const tmStations = await findStationsByTm(tmCoord.tmX, tmCoord.tmY)
+        addStations(filterBySido(tmStations))
       }
     }
   } catch (error) {
     console.warn('TM 기준좌표 변환 API fallback 전환:', error)
   }
 
-  // 참고: naver.maps.TransCoord는 TM128/UTMK만 지원하며
-  // 에어코리아 API가 기대하는 TM 중부원점 좌표계와 달라서 사용하지 않음.
-  // UMD 기반 검색(1순위)이나 주소 기반 검색(3순위)이 더 정확함.
-
+  // 2순위: 주소 기반 측정소 목록 + 거리 계산
   try {
-    const stationByList = await findNearestStationByAddressList(lat, lon, addressHint)
-    if (stationByList) {
-      return stationByList
-    }
+    const merged = await collectStationsByAddress(lat, lon, addressHint)
+    const ranked = rankStationsByDistance(merged, lat, lon)
+    addStations(ranked)
   } catch (error) {
     console.warn('주소 기반 측정소 조회 fallback 전환:', error)
   }
 
-  try {
-    const inferred = await inferNearestStationBySido(lat, lon, addressHint)
-    if (inferred) {
-      return inferred
+  // 3순위: 시도별 측정소 추론 (거리 없음)
+  if (allStations.length < maxResults) {
+    try {
+      const inferred = await inferNearestStationBySido(lat, lon, addressHint)
+      if (inferred) {
+        addStations([inferred])
+      }
+    } catch (error) {
+      console.error('시도 기반 측정소 추론 실패:', error)
     }
-  } catch (error) {
-    console.error('시도 기반 측정소 추론 실패:', error)
   }
 
-  return { stationName: guessSidoName(addressHint, lat, lon), distance: null }
+  if (!allStations.length) {
+    return [{ stationName: guessSidoName(addressHint, lat, lon), distance: null, addr: '' }]
+  }
+
+  // 거리 있는 항목 → 거리순, 거리 없는 항목 → 뒤쪽
+  allStations.sort((a, b) => {
+    if (a.distance != null && b.distance != null) return a.distance - b.distance
+    if (a.distance != null) return -1
+    if (b.distance != null) return 1
+    return 0
+  })
+
+  return allStations.slice(0, maxResults)
+}
+
+/**
+ * 좌표 기반 가장 가까운 측정소 찾기 (하위호환)
+ */
+export async function findNearestStation(lat, lon, addressHint = '') {
+  const stations = await findNearbyStations(lat, lon, addressHint, 1)
+  return stations[0] || { stationName: guessSidoName(addressHint, lat, lon), distance: null }
 }

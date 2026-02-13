@@ -1,20 +1,179 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+
 import WeatherDetail from '../components/weather/WeatherDetail'
 import AirQuality from '../components/weather/AirQuality'
 import HourlyForecast from '../components/weather/HourlyForecast'
-import { fetchWeatherData, fetchAirQualityData, fetchHourlyForecast } from '../services/weatherApi'
+import StationPicker from '../components/weather/StationPicker'
+import LocationMapPicker from '../components/settings/LocationMapPicker'
+import { fetchWeatherData, fetchAirQualityData, fetchHourlyForecast, findNearbyStations } from '../services/weatherApi'
+import { loadNaverMapScript } from '../utils/loadNaverMapScript'
 import { judgeOutdoorClass } from '../data/mockWeather'
 import { useSettings } from '../hooks/useSettings'
 import toast from 'react-hot-toast'
 
 export default function WeatherPage() {
-  const { location } = useSettings()
+  const { location, updateLocation } = useSettings()
   const [weather, setWeather] = useState(null)
   const [air, setAir] = useState(null)
   const [hourly, setHourly] = useState([])
   const [judgment, setJudgment] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [detecting, setDetecting] = useState(false)
+  const [showMapPicker, setShowMapPicker] = useState(false)
+  const [pendingLocation, setPendingLocation] = useState(null)
+  const [nearbyStations, setNearbyStations] = useState([])
+  const [stationPickerSource, setStationPickerSource] = useState('gps')
+
+  const reverseGeocode = async (lat, lon) => {
+    try {
+      await loadNaverMapScript()
+    } catch {
+      return null
+    }
+    // geocoder 서브모듈 초기화 대기 (최대 3초)
+    if (!window.naver?.maps?.Service?.reverseGeocode) {
+      await new Promise((r) => {
+        let n = 0
+        const id = setInterval(() => {
+          if (window.naver?.maps?.Service?.reverseGeocode || ++n >= 30) {
+            clearInterval(id)
+            r()
+          }
+        }, 100)
+      })
+    }
+    if (!window.naver?.maps?.Service?.reverseGeocode) return null
+
+    return new Promise((resolve) => {
+      naver.maps.Service.reverseGeocode(
+        { coords: new naver.maps.LatLng(lat, lon) },
+        (status, response) => {
+          if (status !== naver.maps.Service.Status.OK) {
+            resolve(null)
+            return
+          }
+          const addr = response.v2?.address
+          if (addr?.roadAddress || addr?.jibunAddress) {
+            resolve(addr.roadAddress || addr.jibunAddress)
+            return
+          }
+          const r = response.v2?.results?.[0]?.region
+          if (r) {
+            const parts = [r.area1?.name, r.area2?.name, r.area3?.name, r.area4?.name].filter(Boolean)
+            if (parts.length) { resolve(parts.join(' ')); return }
+          }
+          resolve(null)
+        }
+      )
+    })
+  }
+
+  const handleCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('위치 서비스를 지원하지 않는 브라우저입니다')
+      return
+    }
+    setDetecting(true)
+    toast.loading('현재 위치를 확인하는 중...')
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude
+        const lon = position.coords.longitude
+        try {
+          const address = await reverseGeocode(lat, lon)
+          const stations = await findNearbyStations(lat, lon, address || '', 3)
+          toast.dismiss()
+          setPendingLocation({
+            name: '현재 위치',
+            address: address || '현재 위치(자동 감지)',
+            lat,
+            lon,
+          })
+          setNearbyStations(stations)
+          setStationPickerSource('gps')
+        } catch {
+          toast.dismiss()
+          toast.error('측정소 조회에 실패했습니다')
+        } finally {
+          setDetecting(false)
+        }
+      },
+      (error) => {
+        toast.dismiss()
+        setDetecting(false)
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            toast.error('위치 권한이 거부되었습니다')
+            break
+          case error.POSITION_UNAVAILABLE:
+            toast.error('위치 정보를 사용할 수 없습니다')
+            break
+          case error.TIMEOUT:
+            toast.error('위치 확인 시간이 초과되었습니다')
+            break
+          default:
+            toast.error('위치 확인 중 오류가 발생했습니다')
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  }
+
+  const handleMapSelect = async (lat, lon, placeInfo = null) => {
+    toast.loading('측정소를 찾는 중...')
+    setShowMapPicker(false)
+
+    try {
+      let baseName = placeInfo?.name || ''
+      let addressLabel = placeInfo?.address || ''
+      let jibunAddress = placeInfo?.jibunAddress || ''
+
+      // 마커 드래그/지도 클릭으로 선택 시 placeInfo 없음 → reverse geocode
+      if (!placeInfo) {
+        const address = await reverseGeocode(lat, lon)
+        if (address) {
+          baseName = address
+          addressLabel = address
+        }
+      }
+
+      if (!baseName) baseName = '선택한 위치'
+      if (!addressLabel) addressLabel = baseName
+
+      const stationHint = [baseName, addressLabel, jibunAddress].filter(Boolean).join(' ')
+      const stations = await findNearbyStations(lat, lon, stationHint, 3)
+
+      toast.dismiss()
+      setPendingLocation({
+        name: baseName,
+        address: addressLabel,
+        lat,
+        lon,
+      })
+      setNearbyStations(stations)
+      setStationPickerSource('map')
+    } catch {
+      toast.dismiss()
+      toast.error('측정소 조회에 실패했습니다')
+    }
+  }
+
+  const handleStationSelect = (station) => {
+    if (!pendingLocation) return
+    updateLocation({
+      ...pendingLocation,
+      stationName: station.stationName,
+    })
+    toast.success(`위치 설정 완료 (측정소: ${station.stationName})`)
+    setPendingLocation(null)
+    setNearbyStations([])
+  }
+
+  const handleStationCancel = () => {
+    setPendingLocation(null)
+    setNearbyStations([])
+  }
 
   const loadWeatherData = useCallback(async (silent = false) => {
     setLoading(true)
@@ -77,17 +236,17 @@ export default function WeatherPage() {
         <h1 className="text-page-title shrink-0">🌤️ 날씨</h1>
         <div className="flex items-center gap-2">
           {location.address ? (
-            <span className="text-caption text-text-muted truncate max-w-[200px]">
-              {location.name} · {location.stationName}
+            <span className="text-caption text-text-muted truncate max-w-[240px]">
+              📍 {location.address} · 🌫️ {location.stationName} 기준
             </span>
           ) : (
-            <Link to="/settings" className="text-caption text-primary underline">
-              위치 설정
-            </Link>
+            <span className="text-caption text-text-muted">
+              📍 위치 설정
+            </span>
           )}
           {weather && (
             <span className="text-caption text-text-muted">
-              {weather.baseTime.slice(0, 2)}:{weather.baseTime.slice(2, 4)}
+              🕐 {weather.baseTime.slice(0, 2)}:{weather.baseTime.slice(2, 4)}
             </span>
           )}
           <button
@@ -108,6 +267,42 @@ export default function WeatherPage() {
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
             </svg>
           </button>
+          <button
+            onClick={handleCurrentLocation}
+            disabled={detecting}
+            className="p-2 bg-white/60 hover:bg-white/80 rounded-lg transition-all border border-white/80 shrink-0 disabled:opacity-50"
+            title="현재 위치로 설정"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </button>
+          <button
+            onClick={() => setShowMapPicker(true)}
+            className="p-2 bg-white/60 hover:bg-white/80 rounded-lg transition-all border border-white/80 shrink-0"
+            title="지도에서 위치 선택"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -117,6 +312,30 @@ export default function WeatherPage() {
         <HourlyForecast forecast={hourly} />
         <AirQuality air={air} />
       </div>
+
+      {/* 측정소 선택 모달 */}
+      {pendingLocation && nearbyStations.length > 0 && (
+        <StationPicker
+          locationName={pendingLocation.address || pendingLocation.name}
+          source={stationPickerSource}
+          stations={nearbyStations}
+          centerLat={pendingLocation.lat}
+          centerLon={pendingLocation.lon}
+          onSelect={handleStationSelect}
+          onCancel={handleStationCancel}
+        />
+      )}
+
+      {/* 지도 위치 선택 모달 */}
+      {showMapPicker && (
+        <LocationMapPicker
+          initialLat={location.lat}
+          initialLon={location.lon}
+          initialAddress={location.address || ''}
+          onSelect={handleMapSelect}
+          onCancel={() => setShowMapPicker(false)}
+        />
+      )}
     </div>
   )
 }
