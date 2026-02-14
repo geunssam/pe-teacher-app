@@ -1,0 +1,201 @@
+{
+  "이동": {
+    "description": "몸 전체가 한 지점에서 다른 지점으로 이동하는 운동",
+    "skills": [
+      {
+        "name": "달리기",
+        "aliases": ["뛰기", "전력질주", "조깅"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["축구", "농구", "피구", "발야구", "티볼", "플라잉디스크"]
+      },
+      {
+        "name": "점프",
+        "aliases": ["뛰어오르기", "점핑"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["줄넘기", "배구", "농구"]
+      },
+      {
+        "name": "갤로핑",
+        "aliases": ["말달리기"],
+        "gradeIntro": "3학년",
+        "gradeApply": "4학년",
+        "linkedSports": []
+      },
+      {
+        "name": "스키핑",
+        "aliases": ["깽깽이뛰기"],
+        "gradeIntro": "3학년",
+        "gradeApply": "4학년",
+        "linkedSports": []
+      },
+      {
+        "name": "슬라이딩",
+        "aliases": ["옆걸음"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["배구", "농구"]
+      },
+      {
+        "name": "방향전환",
+        "aliases": ["사이드스텝", "페인팅", "컷"],
+        "gradeIntro": "5학년",
+        "gradeApply": "6학년",
+        "linkedSports": ["축구", "농구", "피구"]
+      }
+    ]
+  },
+  "비이동": {
+    "description": "한 지점에서 몸의 부분을 움직이는 운동 (이동 없음)",
+    "skills": [
+      {
+        "name": "균형",
+        "aliases": ["밸런스", "한발서기"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["체력운동"]
+      },
+      {
+        "name": "구르기",
+        "aliases": ["롤링", "앞구르기"],
+        "gradeIntro": "3학년",
+        "gradeApply": "4학년",
+        "linkedSports": []
+      },
+      {
+        "name": "뻗기",
+        "aliases": ["스트레칭"],
+        "gradeIntro": "3학년",
+        "gradeApply": "4학년",
+        "linkedSports": ["체력운동"]
+      },
+      {
+        "name": "회전",
+        "aliases": ["돌기", "턴"],
+        "gradeIntro": "5학년",
+        "gradeApply": "6학년",
+        "linkedSports": []
+      },
+      {
+        "name": "타이밍",
+        "aliases": ["리듬", "박자맞추기"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["줄넘기"]
+      }
+    ]
+  },
+  "조작": {
+    "description": "도구나 물체를 다루는 운동",
+    "skills": [
+      {
+        "name": "공차기",
+        "aliases": ["킥", "차기"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["축구", "발야구", "족구"],
+        "relatedSkillsByGrade": {
+          "3학년": "제자리에서 공 차기",
+          "4학년": "이동하며 공 차기",
+          "5학년": "인사이드 패스, 트래핑",
+          "6학년": "드리블, 슈팅, 전략적 패스"
+        }
+      },
+      {
+        "name": "멈추기",
+        "aliases": ["트래핑", "스토핑"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["축구"],
+        "relatedSkillsByGrade": {
+          "3학년": "발바닥으로 멈추기",
+          "4학년": "굴러오는 공 멈추기",
+          "5학년": "트래핑 후 패스 연결",
+          "6학년": "이동 중 트래핑"
+        }
+      },
+      {
+        "name": "던지기",
+        "aliases": ["투척", "스로우"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["농구", "피구", "빅발리볼", "플라잉디스크", "핸드볼"],
+        "relatedSkillsByGrade": {
+          "3학년": "언더핸드 던지기",
+          "4학년": "오버핸드 던지기, 목표물 맞히기",
+          "5학년": "체스트패스, 바운스패스",
+          "6학년": "움직이며 패스, 전략적 패스"
+        }
+      },
+      {
+        "name": "받기",
+        "aliases": ["캐치", "잡기"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["농구", "피구", "빅발리볼", "플라잉디스크"],
+        "relatedSkillsByGrade": {
+          "3학년": "제자리에서 양손 받기",
+          "4학년": "다양한 높이의 공 받기",
+          "5학년": "이동하며 받기",
+          "6학년": "점프 캐치, 원핸드 캐치"
+        }
+      },
+      {
+        "name": "치기",
+        "aliases": ["배팅", "스트라이크"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["티볼", "배드민턴", "배구"],
+        "relatedSkillsByGrade": {
+          "3학년": "손바닥으로 치기",
+          "4학년": "도구로 정지된 공 치기",
+          "5학년": "배팅, 언더핸드 서브",
+          "6학년": "스파이크, 오버핸드 서브"
+        }
+      },
+      {
+        "name": "튀기기",
+        "aliases": ["바운스", "드리블"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["농구"],
+        "relatedSkillsByGrade": {
+          "3학년": "제자리 튀기기",
+          "4학년": "걸으며 튀기기",
+          "5학년": "손 드리블 (달리기)",
+          "6학년": "크로스오버 드리블"
+        }
+      },
+      {
+        "name": "굴리기",
+        "aliases": ["롤링"],
+        "gradeIntro": "3학년",
+        "gradeApply": "4학년",
+        "linkedSports": ["볼링", "발야구"],
+        "relatedSkillsByGrade": {
+          "3학년": "두 손으로 공 굴리기",
+          "4학년": "한 손으로 목표물 맞히기 굴리기"
+        }
+      },
+      {
+        "name": "피하기",
+        "aliases": ["회피", "닷지"],
+        "gradeIntro": "3학년",
+        "gradeApply": "5학년",
+        "linkedSports": ["피구"],
+        "relatedSkillsByGrade": {
+          "3학년": "옆으로 피하기",
+          "4학년": "숙여서 피하기",
+          "5학년": "방향전환 피하기",
+          "6학년": "페인트 후 피하기"
+        }
+      }
+    ]
+  },
+  "schoolLevelDuration": {
+    "초등": { "minutes": 40, "intro": 7, "main": 28, "closing": 5 },
+    "중등": { "minutes": 45, "intro": 7, "main": 33, "closing": 5 },
+    "고등": { "minutes": 50, "intro": 8, "main": 35, "closing": 7 }
+  }
+}

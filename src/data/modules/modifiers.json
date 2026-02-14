@@ -1,0 +1,152 @@
+[
+  {
+    "id": "mod_speed_game",
+    "name": "스피드 게임",
+    "description": "모둠 간 속도 경쟁으로 전환. 먼저 완료한 모둠이 승리한다.",
+    "ruleOverride": "모둠 간 경쟁, 먼저 미션 완료한 모둠이 승리",
+    "slotOverride": {},
+    "timeDelta": 0,
+    "difficultyDelta": 1,
+    "suitablePhase": "챌린지",
+    "incompatibleWith": [],
+    "space": ["교실", "체육관", "운동장"]
+  },
+  {
+    "id": "mod_squat_penalty",
+    "name": "스쿼트 벌칙",
+    "description": "실패/탈락 시 스쿼트 3회 수행 후 복귀한다.",
+    "ruleOverride": "실패하거나 잡히면 그 자리에서 스쿼트 3회 후 복귀",
+    "slotOverride": {
+      "벌칙동작": "스쿼트 3회"
+    },
+    "timeDelta": 2,
+    "difficultyDelta": 0,
+    "suitablePhase": "응용",
+    "incompatibleWith": [],
+    "space": ["교실", "체육관", "운동장"]
+  },
+  {
+    "id": "mod_jumping_jack_penalty",
+    "name": "점핑잭 벌칙",
+    "description": "실패/탈락 시 점핑잭 5회 수행 후 복귀한다.",
+    "ruleOverride": "실패하거나 잡히면 점핑잭 5회 후 복귀",
+    "slotOverride": {
+      "벌칙동작": "점핑잭 5회"
+    },
+    "timeDelta": 2,
+    "difficultyDelta": 0,
+    "suitablePhase": "응용",
+    "incompatibleWith": ["mod_squat_penalty"],
+    "space": ["체육관", "운동장"]
+  },
+  {
+    "id": "mod_add_defender",
+    "name": "수비 추가",
+    "description": "활동에 수비 1~2명을 추가한다. 패스/드리블을 방해한다.",
+    "ruleOverride": "수비 1~2명 추가, 패스 또는 이동을 방해할 수 있다",
+    "slotOverride": {},
+    "timeDelta": 3,
+    "difficultyDelta": 2,
+    "suitablePhase": "응용",
+    "incompatibleWith": [],
+    "space": ["체육관", "운동장"]
+  },
+  {
+    "id": "mod_point_system",
+    "name": "점수제",
+    "description": "성공 시 1점, 목표 점수 먼저 달성한 팀 승리.",
+    "ruleOverride": "성공 시 1점, 10점 먼저 달성한 팀 승리",
+    "slotOverride": {},
+    "timeDelta": 0,
+    "difficultyDelta": 1,
+    "suitablePhase": "챌린지",
+    "incompatibleWith": ["mod_speed_game"],
+    "space": ["교실", "체육관", "운동장"]
+  },
+  {
+    "id": "mod_obstacle",
+    "name": "장애물 추가",
+    "description": "콘/허들 사이를 지나가며 활동을 수행한다.",
+    "ruleOverride": "이동 경로에 콘/허들 장애물을 배치, 사이를 지나가며 수행",
+    "slotOverride": {},
+    "timeDelta": 2,
+    "difficultyDelta": 1,
+    "suitablePhase": "응용",
+    "incompatibleWith": [],
+    "space": ["체육관", "운동장"]
+  },
+  {
+    "id": "mod_time_limit",
+    "name": "시간 제한",
+    "description": "제한 시간 내에 미션을 완료해야 한다.",
+    "ruleOverride": "30초(또는 1분) 안에 미션을 완료해야 한다",
+    "slotOverride": {},
+    "timeDelta": -2,
+    "difficultyDelta": 2,
+    "suitablePhase": "챌린지",
+    "incompatibleWith": [],
+    "space": ["교실", "체육관", "운동장"]
+  },
+  {
+    "id": "mod_direction_change",
+    "name": "방향 전환",
+    "description": "활동 중간에 방향(시계→반시계)을 바꾼다.",
+    "ruleOverride": "교사 신호에 맞춰 패스/이동 방향을 반대로 전환",
+    "slotOverride": {},
+    "timeDelta": 0,
+    "difficultyDelta": 1,
+    "suitablePhase": "응용",
+    "incompatibleWith": [],
+    "space": ["교실", "체육관", "운동장"]
+  },
+  {
+    "id": "mod_color_signal",
+    "name": "색깔 신호",
+    "description": "교사가 든 색깔 카드에 따라 행동이 달라진다.",
+    "ruleOverride": "교사가 든 색깔 카드에 따라 다른 동작 수행 (빨강=패스, 파랑=드리블 등)",
+    "slotOverride": {},
+    "timeDelta": 2,
+    "difficultyDelta": 1,
+    "suitablePhase": "응용",
+    "incompatibleWith": [],
+    "space": ["교실", "체육관", "운동장"],
+    "equipmentNeeded": ["색카드"]
+  },
+  {
+    "id": "mod_double_ball",
+    "name": "공 2개",
+    "description": "공을 2개 사용하여 동시에 진행한다. 집중력과 난이도가 크게 상승.",
+    "ruleOverride": "공 2개를 동시에 사용, 반대 방향으로 순환하거나 동시에 패스",
+    "slotOverride": {},
+    "timeDelta": 0,
+    "difficultyDelta": 2,
+    "suitablePhase": "챌린지",
+    "incompatibleWith": [],
+    "space": ["체육관", "운동장"]
+  },
+  {
+    "id": "mod_seated",
+    "name": "앉아서 활동",
+    "description": "의자에 앉은 상태에서 활동을 수행한다. 교실 수업에 적합.",
+    "ruleOverride": "의자에 앉은 상태로 상체만 사용하여 활동 수행",
+    "slotOverride": {},
+    "timeDelta": 0,
+    "difficultyDelta": -1,
+    "suitablePhase": "기본",
+    "incompatibleWith": ["mod_obstacle", "mod_add_defender"],
+    "space": ["교실"]
+  },
+  {
+    "id": "mod_music_stop",
+    "name": "음악 정지",
+    "description": "음악이 나오다가 멈추면 동작을 멈추거나 미션을 수행한다.",
+    "ruleOverride": "음악 재생 중 활동, 음악 정지 시 즉시 멈추고 미션 수행",
+    "slotOverride": {},
+    "timeDelta": 0,
+    "difficultyDelta": 0,
+    "suitablePhase": "기본",
+    "incompatibleWith": [],
+    "space": ["교실", "체육관", "운동장"],
+    "equipmentNeeded": ["블루투스 스피커"]
+  }
+]
