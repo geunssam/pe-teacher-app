@@ -1,4 +1,4 @@
-import { findNearbyStations } from '../services/weatherApi'
+import { findNearbyStations } from '../services/weather'
 
 /**
  * 측정소 검색 with fallback

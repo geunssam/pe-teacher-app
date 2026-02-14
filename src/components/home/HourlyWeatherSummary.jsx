@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchHourlyForecast, fetchAirQualityData } from '../../services/weatherApi'
+import { fetchHourlyForecast, fetchAirQualityData } from '../../services/weather'
 import { PTY_CODE } from '../../data/mockWeather'
 import { useSettings } from '../../hooks/useSettings'
 

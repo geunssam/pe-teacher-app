@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchWeatherData, fetchAirQualityData } from '../../services/weatherApi'
+import { fetchWeatherData, fetchAirQualityData } from '../../services/weather'
 import { judgeOutdoorClass } from '../../data/mockWeather'
 import { useSettings } from '../../hooks/useSettings'
 

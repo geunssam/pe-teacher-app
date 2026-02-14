@@ -3,6 +3,7 @@ import { useSchedule, getWeekRange } from '../hooks/useSchedule'
 import { useClassManager, CLASS_COLOR_PRESETS } from '../hooks/useClassManager'
 import ScheduleGrid from '../components/schedule/ScheduleGrid'
 import BulkScheduleSetup from '../components/schedule/BulkScheduleSetup'
+import Modal from '../components/common/Modal'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
 
@@ -252,8 +253,7 @@ export default function SchedulePage() {
 
       {/* 학급 선택 모달 */}
       {showClassSelect && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-glass-strong max-w-3xl w-full p-6 border border-white/60">
+        <Modal onClose={() => { setShowClassSelect(false); setSelectedCell(null); setMemoText('') }} maxWidth="max-w-3xl">
             <h2 className="text-xl font-bold mb-4 text-text">학급 선택</h2>
 
             <div className="grid grid-cols-4 gap-3 mb-4 max-h-80 overflow-y-auto">
@@ -304,14 +304,12 @@ export default function SchedulePage() {
             >
               취소
             </button>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* 메모 입력 모달 */}
       {showMemoInput && selectedClass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-glass-strong max-w-md w-full p-6 border border-white/60">
+        <Modal onClose={() => { setShowMemoInput(false); setSelectedClass(null); setMemoText('') }}>
             <h2 className="text-xl font-bold mb-2 text-text">
               {selectedClass.grade}학년 {selectedClass.classNum}반
             </h2>
@@ -345,8 +343,7 @@ export default function SchedulePage() {
                 취소
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* 기본 시간표 일괄 설정 모달 */}
@@ -361,8 +358,7 @@ export default function SchedulePage() {
 
       {/* 색상 피커 모달 */}
       {showColorPicker && colorEditingClass && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-glass-strong max-w-md w-full p-6 border border-white/60">
+        <Modal onClose={() => { setShowColorPicker(false); setColorEditingClass(null) }} zIndex="z-[60]">
             <h2 className="text-xl font-bold mb-4 text-text text-center">
               {colorEditingClass.grade}학년 {colorEditingClass.classNum}반 색상 선택
             </h2>
@@ -416,14 +412,12 @@ export default function SchedulePage() {
             >
               닫기
             </button>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* 저장 방식 선택 모달 (기본 시간표 vs 이번 주만) */}
       {showSaveTypeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-glass-strong max-w-sm w-full p-6 border border-white/60">
+        <Modal onClose={resetState} maxWidth="max-w-sm">
             <h2 className="text-lg font-bold mb-3 text-text text-center">
               {pendingPeriodData ? '어디에 저장할까요?' : '어디에서 삭제할까요?'}
             </h2>
@@ -464,8 +458,7 @@ export default function SchedulePage() {
                 취소
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   )
