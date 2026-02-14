@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { useSchedule, getWeekRange } from '../hooks/useSchedule'
 import { useClassManager, CLASS_COLOR_PRESETS } from '../hooks/useClassManager'
 import ScheduleGrid from '../components/schedule/ScheduleGrid'
@@ -6,6 +6,108 @@ import BulkScheduleSetup from '../components/schedule/BulkScheduleSetup'
 import Modal from '../components/common/Modal'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
+
+const initialState = {
+  weekOffset: 0,
+  isEditing: false,
+  showClassSelect: false,
+  showMemoInput: false,
+  showSaveTypeModal: false,
+  showBulkSetup: false,
+  showColorPicker: false,
+  selectedCell: null,
+  selectedClass: null,
+  memoText: '',
+  colorEditingClass: null,
+  refreshKey: 0,
+  pendingPeriodData: null,
+}
+
+function scheduleReducer(state, action) {
+  switch (action.type) {
+    case 'SET_WEEK_OFFSET':
+      return { ...state, weekOffset: action.payload }
+    case 'TOGGLE_EDITING':
+      return { ...state, isEditing: !state.isEditing }
+    case 'OPEN_CLASS_SELECT':
+      return {
+        ...state,
+        showClassSelect: true,
+        selectedCell: action.payload.cell,
+        memoText: action.payload.memo || '',
+      }
+    case 'CLOSE_CLASS_SELECT':
+      return {
+        ...state,
+        showClassSelect: false,
+        selectedCell: null,
+        memoText: '',
+      }
+    case 'SELECT_CLASS':
+      return {
+        ...state,
+        showClassSelect: false,
+        showMemoInput: true,
+        selectedClass: action.payload,
+      }
+    case 'CLOSE_MEMO_INPUT':
+      return {
+        ...state,
+        showMemoInput: false,
+        selectedClass: null,
+        memoText: '',
+      }
+    case 'SET_MEMO_TEXT':
+      return { ...state, memoText: action.payload }
+    case 'SAVE_PERIOD':
+      return {
+        ...state,
+        showMemoInput: false,
+        pendingPeriodData: action.payload.periodData,
+        showSaveTypeModal: action.payload.showSaveType,
+      }
+    case 'OPEN_REMOVE_PERIOD':
+      return {
+        ...state,
+        selectedCell: action.payload.cell,
+        selectedClass: null,
+        showSaveTypeModal: action.payload.showSaveType,
+      }
+    case 'OPEN_BULK_SETUP':
+      return { ...state, showBulkSetup: true }
+    case 'CLOSE_BULK_SETUP':
+      return {
+        ...state,
+        showBulkSetup: false,
+        refreshKey: state.refreshKey + 1,
+      }
+    case 'OPEN_COLOR_PICKER':
+      return {
+        ...state,
+        showColorPicker: true,
+        colorEditingClass: action.payload,
+      }
+    case 'CLOSE_COLOR_PICKER':
+      return {
+        ...state,
+        showColorPicker: false,
+        colorEditingClass: null,
+      }
+    case 'RESET_STATE':
+      return {
+        ...state,
+        showMemoInput: false,
+        showSaveTypeModal: false,
+        selectedCell: null,
+        selectedClass: null,
+        memoText: '',
+        pendingPeriodData: null,
+        refreshKey: state.refreshKey + 1,
+      }
+    default:
+      return state
+  }
+}
 
 export default function SchedulePage() {
   const {
@@ -18,76 +120,54 @@ export default function SchedulePage() {
   } = useSchedule()
   const { classes, setClassColor } = useClassManager()
 
-  const [weekOffset, setWeekOffset] = useState(0)
-  const [isEditing, setIsEditing] = useState(false)
-  const [showClassSelect, setShowClassSelect] = useState(false)
-  const [showMemoInput, setShowMemoInput] = useState(false)
-  const [showSaveTypeModal, setShowSaveTypeModal] = useState(false)
-  const [showBulkSetup, setShowBulkSetup] = useState(false)
-  const [showColorPicker, setShowColorPicker] = useState(false)
-  const [selectedCell, setSelectedCell] = useState(null) // { day, period }
-  const [selectedClass, setSelectedClass] = useState(null)
-  const [memoText, setMemoText] = useState('')
-  const [colorEditingClass, setColorEditingClass] = useState(null)
-  const [refreshKey, setRefreshKey] = useState(0)
-  const [pendingPeriodData, setPendingPeriodData] = useState(null)
+  const [state, dispatch] = useReducer(scheduleReducer, initialState)
 
-  const weekInfo = getWeekRange(weekOffset)
+  const weekInfo = getWeekRange(state.weekOffset)
   const { timetable } = getTimetableForWeek(weekInfo.weekKey)
 
   const handleEditPeriod = (day, period) => {
-    setSelectedCell({ day, period })
-
-    // 기존 데이터 불러오기 (있으면)
     const cellKey = `${day}-${period}`
     const existingData = timetable[cellKey]
-    if (existingData) {
-      setMemoText(existingData.memo || '')
-    } else {
-      setMemoText('')
-    }
 
-    setShowClassSelect(true)
+    dispatch({
+      type: 'OPEN_CLASS_SELECT',
+      payload: {
+        cell: { day, period },
+        memo: existingData?.memo || '',
+      },
+    })
   }
 
   const handleSelectClass = (classInfo) => {
-    setSelectedClass(classInfo)
-    setShowClassSelect(false)
-
-    // 메모 입력 모달로 이동
-    setShowMemoInput(true)
+    dispatch({ type: 'SELECT_CLASS', payload: classInfo })
   }
 
   const handleSavePeriod = () => {
-    if (!selectedClass || !selectedCell) return
+    if (!state.selectedClass || !state.selectedCell) return
 
     const periodData = {
-      classId: selectedClass.id,
-      className: `${selectedClass.grade}학년 ${selectedClass.classNum}반`,
+      classId: state.selectedClass.id,
+      className: `${state.selectedClass.grade}학년 ${state.selectedClass.classNum}반`,
       subject: '체육',
-      memo: memoText.trim()
+      memo: state.memoText.trim()
     }
 
-    // periodData를 state에 저장
-    setPendingPeriodData(periodData)
-
-    // 메모 입력 모달 닫기
-    setShowMemoInput(false)
-
-    // 기본 시간표인지 특정 주인지 선택
     if (!weekInfo.isCurrentWeek) {
       // 다른 주를 보고 있으면 바로 해당 주만 변경
       handleSaveToWeek(periodData)
     } else {
       // 현재 주면 선택 모달 표시
-      setShowSaveTypeModal(true)
+      dispatch({
+        type: 'SAVE_PERIOD',
+        payload: { periodData, showSaveType: true },
+      })
     }
   }
 
   const handleSaveToBase = (periodData) => {
-    if (!selectedCell) return
+    if (!state.selectedCell) return
 
-    const cellKey = `${selectedCell.day}-${selectedCell.period}`
+    const cellKey = `${state.selectedCell.day}-${state.selectedCell.period}`
 
     if (periodData) {
       updateBaseCell(cellKey, periodData)
@@ -99,14 +179,14 @@ export default function SchedulePage() {
 
     // localStorage 업데이트 후 상태 리셋
     setTimeout(() => {
-      resetState()
+      dispatch({ type: 'RESET_STATE' })
     }, 100)
   }
 
   const handleSaveToWeek = (periodData) => {
-    if (!selectedCell) return
+    if (!state.selectedCell) return
 
-    const cellKey = `${selectedCell.day}-${selectedCell.period}`
+    const cellKey = `${state.selectedCell.day}-${state.selectedCell.period}`
 
     if (periodData) {
       setWeekOverride(weekInfo.weekKey, cellKey, periodData)
@@ -118,34 +198,30 @@ export default function SchedulePage() {
 
     // localStorage 업데이트 후 상태 리셋
     setTimeout(() => {
-      resetState()
+      dispatch({ type: 'RESET_STATE' })
     }, 100)
   }
 
   const handleRemovePeriod = (day, period) => {
-    setSelectedCell({ day, period })
-    setSelectedClass(null)
-
     if (!weekInfo.isCurrentWeek) {
-      handleSaveToWeek(null)
+      // 다른 주: selectedCell을 설정하고 바로 주간 저장 (null = 삭제)
+      // handleSaveToWeek는 state.selectedCell을 참조하므로 직접 처리
+      const cellKey = `${day}-${period}`
+      setWeekOverride(weekInfo.weekKey, cellKey, null)
+      toast.success('이번 주만 삭제되었습니다')
+      setTimeout(() => {
+        dispatch({ type: 'RESET_STATE' })
+      }, 100)
     } else {
-      setShowSaveTypeModal(true)
+      dispatch({
+        type: 'OPEN_REMOVE_PERIOD',
+        payload: { cell: { day, period }, showSaveType: true },
+      })
     }
   }
 
   const resetState = () => {
-    // 먼저 리렌더링 트리거
-    setRefreshKey(prev => prev + 1)
-
-    // 약간의 지연 후 상태 리셋
-    setTimeout(() => {
-      setShowMemoInput(false)
-      setShowSaveTypeModal(false)
-      setSelectedCell(null)
-      setSelectedClass(null)
-      setMemoText('')
-      setPendingPeriodData(null)
-    }, 100)
+    dispatch({ type: 'RESET_STATE' })
   }
 
   const handleClearSchedule = async () => {
@@ -171,7 +247,7 @@ export default function SchedulePage() {
 
         <div className="flex gap-sm">
           <button
-            onClick={() => setShowBulkSetup(true)}
+            onClick={() => dispatch({ type: 'OPEN_BULK_SETUP' })}
             className="py-2 px-4 rounded-lg font-semibold hover:opacity-90 transition-all text-sm"
             style={{ backgroundColor: '#EDE9FE', color: '#5B21B6' }}
           >
@@ -186,14 +262,14 @@ export default function SchedulePage() {
             </button>
           )}
           <button
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={() => dispatch({ type: 'TOGGLE_EDITING' })}
             className="py-2 px-4 rounded-lg font-semibold hover:opacity-90 transition-all text-sm"
             style={{
-              backgroundColor: isEditing ? '#B3D9FF' : '#FFF9C4',
-              color: isEditing ? '#1E5A9E' : '#8B7D00',
+              backgroundColor: state.isEditing ? '#B3D9FF' : '#FFF9C4',
+              color: state.isEditing ? '#1E5A9E' : '#8B7D00',
             }}
           >
-            {isEditing ? '✓ 편집 완료' : '✏️ 편집'}
+            {state.isEditing ? '✓ 편집 완료' : '✏️ 편집'}
           </button>
         </div>
       </div>
@@ -201,7 +277,7 @@ export default function SchedulePage() {
       {/* 주차 네비게이션 */}
       <div className="flex items-center justify-between mb-md bg-white/60 backdrop-blur-sm rounded-xl p-md border border-white/80">
         <button
-          onClick={() => setWeekOffset(weekOffset - 1)}
+          onClick={() => dispatch({ type: 'SET_WEEK_OFFSET', payload: state.weekOffset - 1 })}
           className="p-2 hover:bg-white/60 rounded-lg transition-all"
           aria-label="이전 주"
         >
@@ -220,7 +296,7 @@ export default function SchedulePage() {
         </div>
 
         <button
-          onClick={() => setWeekOffset(weekOffset + 1)}
+          onClick={() => dispatch({ type: 'SET_WEEK_OFFSET', payload: state.weekOffset + 1 })}
           className="p-2 hover:bg-white/60 rounded-lg transition-all"
           aria-label="다음 주"
         >
@@ -233,16 +309,16 @@ export default function SchedulePage() {
       {/* 시간표 그리드 */}
       <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-lg border border-white/80">
         <ScheduleGrid
-          key={`${weekInfo.weekKey}-${refreshKey}`}
+          key={`${weekInfo.weekKey}-${state.refreshKey}`}
           weekKey={weekInfo.weekKey}
-          isEditing={isEditing}
+          isEditing={state.isEditing}
           onEditPeriod={handleEditPeriod}
           onRemovePeriod={handleRemovePeriod}
         />
       </div>
 
       {/* 안내 메시지 */}
-      {scheduleIsEmpty && !isEditing && (
+      {scheduleIsEmpty && !state.isEditing && (
         <div className="mt-md p-lg bg-white/60 backdrop-blur-sm rounded-xl border border-white/80 text-center">
           <p className="text-textMuted">
             시간표가 비어있습니다. <br />
@@ -252,8 +328,8 @@ export default function SchedulePage() {
       )}
 
       {/* 학급 선택 모달 */}
-      {showClassSelect && (
-        <Modal onClose={() => { setShowClassSelect(false); setSelectedCell(null); setMemoText('') }} maxWidth="max-w-3xl">
+      {state.showClassSelect && (
+        <Modal onClose={() => dispatch({ type: 'CLOSE_CLASS_SELECT' })} maxWidth="max-w-3xl">
             <h2 className="text-xl font-bold mb-4 text-text">학급 선택</h2>
 
             <div className="grid grid-cols-4 gap-3 mb-4 max-h-80 overflow-y-auto">
@@ -272,8 +348,7 @@ export default function SchedulePage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      setColorEditingClass(classInfo)
-                      setShowColorPicker(true)
+                      dispatch({ type: 'OPEN_COLOR_PICKER', payload: classInfo })
                     }}
                     className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-lg hover:bg-black/10 transition-all"
                     title="색상 변경"
@@ -295,11 +370,7 @@ export default function SchedulePage() {
             </div>
 
             <button
-              onClick={() => {
-                setShowClassSelect(false)
-                setSelectedCell(null)
-                setMemoText('')
-              }}
+              onClick={() => dispatch({ type: 'CLOSE_CLASS_SELECT' })}
               className="w-full py-2 px-4 bg-white/60 text-text rounded-lg font-medium hover:bg-white/80 transition-all border border-white/80"
             >
               취소
@@ -308,18 +379,18 @@ export default function SchedulePage() {
       )}
 
       {/* 메모 입력 모달 */}
-      {showMemoInput && selectedClass && (
-        <Modal onClose={() => { setShowMemoInput(false); setSelectedClass(null); setMemoText('') }}>
+      {state.showMemoInput && state.selectedClass && (
+        <Modal onClose={() => dispatch({ type: 'CLOSE_MEMO_INPUT' })}>
             <h2 className="text-xl font-bold mb-2 text-text">
-              {selectedClass.grade}학년 {selectedClass.classNum}반
+              {state.selectedClass.grade}학년 {state.selectedClass.classNum}반
             </h2>
             <p className="text-sm text-textMuted mb-4">
               수업 내용을 간단히 메모해보세요 (선택)
             </p>
 
             <textarea
-              value={memoText}
-              onChange={(e) => setMemoText(e.target.value)}
+              value={state.memoText}
+              onChange={(e) => dispatch({ type: 'SET_MEMO_TEXT', payload: e.target.value })}
               placeholder="예: 티볼, 피구, 줄넘기 등"
               className="w-full h-24 mb-4 resize-none p-3 bg-white/80 border border-white/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
             />
@@ -333,11 +404,7 @@ export default function SchedulePage() {
                 저장
               </button>
               <button
-                onClick={() => {
-                  setShowMemoInput(false)
-                  setSelectedClass(null)
-                  setMemoText('')
-                }}
+                onClick={() => dispatch({ type: 'CLOSE_MEMO_INPUT' })}
                 className="flex-1 py-2 px-4 bg-white/60 text-text rounded-lg font-medium hover:bg-white/80 transition-all border border-white/80"
               >
                 취소
@@ -347,32 +414,29 @@ export default function SchedulePage() {
       )}
 
       {/* 기본 시간표 일괄 설정 모달 */}
-      {showBulkSetup && (
+      {state.showBulkSetup && (
         <BulkScheduleSetup
-          onClose={() => {
-            setShowBulkSetup(false)
-            setRefreshKey(prev => prev + 1) // 저장 후 리렌더링
-          }}
+          onClose={() => dispatch({ type: 'CLOSE_BULK_SETUP' })}
         />
       )}
 
       {/* 색상 피커 모달 */}
-      {showColorPicker && colorEditingClass && (
-        <Modal onClose={() => { setShowColorPicker(false); setColorEditingClass(null) }} zIndex="z-[60]">
+      {state.showColorPicker && state.colorEditingClass && (
+        <Modal onClose={() => dispatch({ type: 'CLOSE_COLOR_PICKER' })} zIndex="z-[60]">
             <h2 className="text-xl font-bold mb-4 text-text text-center">
-              {colorEditingClass.grade}학년 {colorEditingClass.classNum}반 색상 선택
+              {state.colorEditingClass.grade}학년 {state.colorEditingClass.classNum}반 색상 선택
             </h2>
 
             {/* 미리보기 */}
             <div
               className="mb-4 p-4 rounded-xl text-center"
-              style={{ backgroundColor: colorEditingClass.color?.bg || CLASS_COLOR_PRESETS[0].bg }}
+              style={{ backgroundColor: state.colorEditingClass.color?.bg || CLASS_COLOR_PRESETS[0].bg }}
             >
               <div
                 className="font-bold"
-                style={{ color: colorEditingClass.color?.text || CLASS_COLOR_PRESETS[0].text }}
+                style={{ color: state.colorEditingClass.color?.text || CLASS_COLOR_PRESETS[0].text }}
               >
-                {colorEditingClass.grade}학년 {colorEditingClass.classNum}반
+                {state.colorEditingClass.grade}학년 {state.colorEditingClass.classNum}반
               </div>
             </div>
 
@@ -382,15 +446,14 @@ export default function SchedulePage() {
                 <button
                   key={index}
                   onClick={() => {
-                    setClassColor(colorEditingClass.id, color)
+                    setClassColor(state.colorEditingClass.id, color)
                     toast.success('색상이 변경되었습니다')
-                    setShowColorPicker(false)
-                    setColorEditingClass(null)
+                    dispatch({ type: 'CLOSE_COLOR_PICKER' })
                   }}
                   className="p-3 rounded-xl hover:scale-105 transition-all border-4"
                   style={{
                     backgroundColor: color.bg,
-                    borderColor: colorEditingClass.color?.bg === color.bg ? color.text : 'transparent'
+                    borderColor: state.colorEditingClass.color?.bg === color.bg ? color.text : 'transparent'
                   }}
                 >
                   <div
@@ -404,10 +467,7 @@ export default function SchedulePage() {
             </div>
 
             <button
-              onClick={() => {
-                setShowColorPicker(false)
-                setColorEditingClass(null)
-              }}
+              onClick={() => dispatch({ type: 'CLOSE_COLOR_PICKER' })}
               className="w-full py-2 px-4 bg-white/60 text-text rounded-lg font-medium hover:bg-white/80 transition-all border border-white/80"
             >
               닫기
@@ -416,21 +476,21 @@ export default function SchedulePage() {
       )}
 
       {/* 저장 방식 선택 모달 (기본 시간표 vs 이번 주만) */}
-      {showSaveTypeModal && (
+      {state.showSaveTypeModal && (
         <Modal onClose={resetState} maxWidth="max-w-sm">
             <h2 className="text-lg font-bold mb-3 text-text text-center">
-              {pendingPeriodData ? '어디에 저장할까요?' : '어디에서 삭제할까요?'}
+              {state.pendingPeriodData ? '어디에 저장할까요?' : '어디에서 삭제할까요?'}
             </h2>
 
             <p className="text-sm text-textMuted text-center mb-6">
-              {pendingPeriodData
-                ? `${pendingPeriodData.className} 수업을 추가합니다`
+              {state.pendingPeriodData
+                ? `${state.pendingPeriodData.className} 수업을 추가합니다`
                 : '수업을 삭제합니다'}
             </p>
 
             <div className="space-y-3">
               <button
-                onClick={() => handleSaveToBase(pendingPeriodData)}
+                onClick={() => handleSaveToBase(state.pendingPeriodData)}
                 className="w-full py-3 px-4 rounded-xl font-semibold transition-all"
                 style={{ backgroundColor: '#B3D9FF', color: '#1E5A9E' }}
               >
@@ -441,7 +501,7 @@ export default function SchedulePage() {
               </button>
 
               <button
-                onClick={() => handleSaveToWeek(pendingPeriodData)}
+                onClick={() => handleSaveToWeek(state.pendingPeriodData)}
                 className="w-full py-3 px-4 rounded-xl font-semibold transition-all"
                 style={{ backgroundColor: '#FFF9C4', color: '#8B7D00' }}
               >

@@ -6,140 +6,31 @@ import HourlyForecast from '../components/weather/HourlyForecast'
 import StationPicker from '../components/weather/StationPicker'
 import LocationMapPicker from '../components/settings/LocationMapPicker'
 import { fetchWeatherData, fetchAirQualityData, fetchHourlyForecast } from '../services/weather'
-import { findStationsWithFallback } from '../utils/stationFinder'
-import { reverseGeocodeLatLon } from '../services/naverLocal'
 import { judgeOutdoorClass } from '../data/mockWeather'
-import { useSettings } from '../hooks/useSettings'
+import { useLocationPicker } from '../hooks/useLocationPicker'
 import toast from 'react-hot-toast'
 
 export default function WeatherPage() {
-  const { location, updateLocation } = useSettings()
+  const {
+    location,
+    detecting,
+    showMapPicker,
+    pendingLocation,
+    nearbyStations,
+    stationPickerSource,
+    detectCurrentLocation,
+    selectFromMap,
+    confirmStation,
+    cancelStationPicker,
+    openMapPicker,
+    closeMapPicker,
+  } = useLocationPicker()
+
   const [weather, setWeather] = useState(null)
   const [air, setAir] = useState(null)
   const [hourly, setHourly] = useState([])
   const [judgment, setJudgment] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [detecting, setDetecting] = useState(false)
-  const [showMapPicker, setShowMapPicker] = useState(false)
-  const [pendingLocation, setPendingLocation] = useState(null)
-  const [nearbyStations, setNearbyStations] = useState([])
-  const [stationPickerSource, setStationPickerSource] = useState('gps')
-
-  const handleCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error('위치 서비스를 지원하지 않는 브라우저입니다')
-      return
-    }
-    setDetecting(true)
-    toast.loading('현재 위치를 확인하는 중...')
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude
-        const lon = position.coords.longitude
-        try {
-          const address = await reverseGeocodeLatLon(lat, lon)
-          const stations = await findStationsWithFallback(lat, lon, address || '')
-          toast.dismiss()
-          setPendingLocation({
-            name: '현재 위치',
-            address: address || '현재 위치(자동 감지)',
-            lat,
-            lon,
-          })
-          setNearbyStations(stations)
-          setStationPickerSource('gps')
-        } catch {
-          toast.dismiss()
-          toast.error('측정소 조회에 실패했습니다')
-        } finally {
-          setDetecting(false)
-        }
-      },
-      (error) => {
-        toast.dismiss()
-        setDetecting(false)
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            toast.error('위치 권한이 거부되었습니다')
-            break
-          case error.POSITION_UNAVAILABLE:
-            toast.error('위치 정보를 사용할 수 없습니다')
-            break
-          case error.TIMEOUT:
-            toast.error('위치 확인 시간이 초과되었습니다')
-            break
-          default:
-            toast.error('위치 확인 중 오류가 발생했습니다')
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    )
-  }
-
-  const handleMapSelect = async (lat, lon, placeInfo = null) => {
-    toast.loading('측정소를 찾는 중...')
-    setShowMapPicker(false)
-
-    try {
-      let baseName = placeInfo?.name || ''
-      let addressLabel = placeInfo?.address || ''
-      let jibunAddress = placeInfo?.jibunAddress || ''
-
-      // 마커 드래그/지도 클릭으로 선택 시 placeInfo 없음 → reverse geocode
-      if (!placeInfo) {
-        const address = await reverseGeocodeLatLon(lat, lon)
-        if (address) {
-          baseName = address
-          addressLabel = address
-        }
-      }
-
-      if (!baseName) baseName = '선택한 위치'
-      if (!addressLabel) addressLabel = baseName
-
-      const stationHint = [baseName, addressLabel, jibunAddress].filter(Boolean).join(' ')
-      const stations = await findStationsWithFallback(lat, lon, stationHint)
-
-      toast.dismiss()
-      setPendingLocation({
-        name: baseName,
-        address: addressLabel,
-        lat,
-        lon,
-      })
-      setNearbyStations(stations)
-      setStationPickerSource('map')
-    } catch {
-      toast.dismiss()
-      toast.error('측정소 조회에 실패했습니다')
-    }
-  }
-
-  const handleStationSelect = (station) => {
-    if (!pendingLocation) return
-
-    const shouldReplaceAutoDetectedAddress =
-      String(pendingLocation.address || '').includes('자동 감지') &&
-      String(station?.addr || '').trim()
-    const resolvedAddress = shouldReplaceAutoDetectedAddress
-      ? String(station.addr).trim()
-      : pendingLocation.address
-
-    updateLocation({
-      ...pendingLocation,
-      address: resolvedAddress,
-      stationName: station.stationName,
-    })
-    toast.success(`위치 설정 완료 (측정소: ${station.stationName})`)
-    setPendingLocation(null)
-    setNearbyStations([])
-  }
-
-  const handleStationCancel = () => {
-    setPendingLocation(null)
-    setNearbyStations([])
-  }
 
   const loadWeatherData = useCallback(async (silent = false) => {
     setLoading(true)
@@ -234,7 +125,7 @@ export default function WeatherPage() {
             </svg>
           </button>
           <button
-            onClick={handleCurrentLocation}
+            onClick={detectCurrentLocation}
             disabled={detecting}
             className="p-2 bg-white/60 hover:bg-white/80 rounded-lg transition-all border border-white/80 shrink-0 disabled:opacity-50"
             title="현재 위치로 설정"
@@ -252,7 +143,7 @@ export default function WeatherPage() {
             </svg>
           </button>
           <button
-            onClick={() => setShowMapPicker(true)}
+            onClick={openMapPicker}
             className="p-2 bg-white/60 hover:bg-white/80 rounded-lg transition-all border border-white/80 shrink-0"
             title="지도에서 위치 선택"
           >
@@ -287,8 +178,8 @@ export default function WeatherPage() {
           stations={nearbyStations}
           centerLat={pendingLocation.lat}
           centerLon={pendingLocation.lon}
-          onSelect={handleStationSelect}
-          onCancel={handleStationCancel}
+          onSelect={(station) => confirmStation(station)}
+          onCancel={cancelStationPicker}
         />
       )}
 
@@ -298,8 +189,8 @@ export default function WeatherPage() {
           initialLat={location.lat}
           initialLon={location.lon}
           initialAddress={location.address || ''}
-          onSelect={handleMapSelect}
-          onCancel={() => setShowMapPicker(false)}
+          onSelect={selectFromMap}
+          onCancel={closeMapPicker}
         />
       )}
     </div>
