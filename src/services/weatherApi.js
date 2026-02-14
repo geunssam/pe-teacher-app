@@ -1,4 +1,5 @@
 import { latLonToGrid, DEFAULT_LOCATION, CITY_COORDS } from '../utils/gridConvert'
+import { haversineDistanceKm } from '../utils/haversine'
 
 const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY
 const WEATHER_ENDPOINT = import.meta.env.VITE_WEATHER_API_ENDPOINT
@@ -371,18 +372,6 @@ function guessSidoName(address = '', lat, lon) {
   }
 
   return '대전'
-}
-
-function haversineDistanceKm(lat1, lon1, lat2, lon2) {
-  const toRad = (v) => (v * Math.PI) / 180
-  const R = 6371
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c
 }
 
 function getTmCoordsByNaver(lat, lon) {

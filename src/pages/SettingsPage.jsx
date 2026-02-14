@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useClassManager } from '../hooks/useClassManager'
-import { findNearbyStations } from '../services/weatherApi'
+import { findStationsWithFallback } from '../utils/stationFinder'
 import { reverseGeocodeLatLon } from '../services/naverLocal'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
@@ -28,19 +28,6 @@ export default function SettingsPage() {
   const [pendingLocation, setPendingLocation] = useState(null)
   const [nearbyStations, setNearbyStations] = useState([])
   const [stationPickerSource, setStationPickerSource] = useState('gps')
-
-  const findStationsWithFallback = async (lat, lon, hint = '') => {
-    try {
-      const primary = await findNearbyStations(lat, lon, hint, 3)
-      if (Array.isArray(primary) && primary.length > 0) {
-        return primary
-      }
-    } catch (error) {
-      console.warn('측정소 1차 조회 실패, fallback 시도:', error)
-    }
-
-    return findNearbyStations(lat, lon, '', 3)
-  }
 
   // 현재 위치 자동 감지
   const handleAutoDetect = () => {

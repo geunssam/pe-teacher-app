@@ -5,7 +5,8 @@ import AirQuality from '../components/weather/AirQuality'
 import HourlyForecast from '../components/weather/HourlyForecast'
 import StationPicker from '../components/weather/StationPicker'
 import LocationMapPicker from '../components/settings/LocationMapPicker'
-import { fetchWeatherData, fetchAirQualityData, fetchHourlyForecast, findNearbyStations } from '../services/weatherApi'
+import { fetchWeatherData, fetchAirQualityData, fetchHourlyForecast } from '../services/weatherApi'
+import { findStationsWithFallback } from '../utils/stationFinder'
 import { reverseGeocodeLatLon } from '../services/naverLocal'
 import { judgeOutdoorClass } from '../data/mockWeather'
 import { useSettings } from '../hooks/useSettings'
@@ -23,19 +24,6 @@ export default function WeatherPage() {
   const [pendingLocation, setPendingLocation] = useState(null)
   const [nearbyStations, setNearbyStations] = useState([])
   const [stationPickerSource, setStationPickerSource] = useState('gps')
-
-  const findStationsWithFallback = async (lat, lon, hint = '') => {
-    try {
-      const primary = await findNearbyStations(lat, lon, hint, 3)
-      if (Array.isArray(primary) && primary.length > 0) {
-        return primary
-      }
-    } catch (error) {
-      console.warn('측정소 1차 조회 실패, fallback 시도:', error)
-    }
-
-    return findNearbyStations(lat, lon, '', 3)
-  }
 
   const handleCurrentLocation = () => {
     if (!navigator.geolocation) {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { loadNaverMapScript } from '../../utils/loadNaverMapScript'
+import { haversineDistanceKm } from '../../utils/haversine'
 
 function escapeHtml(value = '') {
   return String(value)
@@ -70,16 +71,6 @@ function geocodeAddr(naver, addr) {
   )
 }
 
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const toRad = (v) => (v * Math.PI) / 180
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
-  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
 async function resolveStationCoords(
   naver,
   station,
@@ -120,7 +111,7 @@ async function resolveStationCoords(
         Number.isFinite(originLat) &&
         Number.isFinite(originLon)
       ) {
-        const originDistance = haversineKm(originLat, originLon, coords.lat, coords.lon)
+        const originDistance = haversineDistanceKm(originLat, originLon, coords.lat, coords.lon)
         const expectedDistance = Number.parseFloat(station?.distance)
         if (Number.isFinite(expectedDistance) && expectedDistance > 0.8 && originDistance < 0.2) {
           continue

@@ -1,12 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-
-const NAV_ITEMS = [
-  { path: '/', label: '🏠 오늘', tab: 'home' },
-  { path: '/weather', label: '🌤️ 날씨', tab: 'weather' },
-  { path: '/schedule', label: '📅 시간표', tab: 'schedule' },
-  { path: '/sketch', label: '✏️ 수업스케치', tab: 'sketch' },
-  { path: '/classes', label: '📋 학급', tab: 'classes' },
-]
+import { NAV_ITEMS } from '../../constants/navigation'
 
 export default function TopNav() {
   const location = useLocation()
@@ -20,7 +13,7 @@ export default function TopNav() {
           className={`top-nav-item ${location.pathname === item.path ? 'active' : ''}`}
           data-tab={item.tab}
         >
-          {item.label}
+          {`${item.emoji} ${item.label}`}
         </Link>
       ))}
     </nav>

@@ -1,4 +1,10 @@
 /**
+ * @status DORMANT
+ * @reason YouTube Data API v3 미구현 (Phase 5 예정)
+ * @usage 현재 어디서도 import되지 않음. Phase 5에서 활성화 예정.
+ */
+
+/**
  * 양수쌤 유튜브 영상 섹션
  * Mock: 채널 내 검색 URL 생성
  * Phase 2: YouTube Data API v3 연동 예정
