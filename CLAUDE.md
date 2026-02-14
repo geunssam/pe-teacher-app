@@ -48,22 +48,29 @@ pnpm deploy       # GitHub Pages 배포 (gh-pages -d dist)
 │   │   ├── layout/            # Header, TopNav(상단 탭바), HamburgerMenu(모바일)
 │   │   ├── common/            # GlassCard, ConfirmDialog, Modal
 │   │   ├── home/              # HourlyWeatherSummary, TodaySchedule, RecentLessons
-│   │   ├── weather/           # WeatherDetail, AirQuality, HourlyForecast, OutdoorJudge, StationPicker
+│   │   ├── weather/           # WeatherDetail, AirQuality, HourlyForecast, StationPicker(+Map/List)
 │   │   ├── schedule/          # ScheduleGrid, PeriodCell, BulkScheduleSetup
 │   │   ├── sketch/            # FilterPanel, ResultCard, LessonMemo
 │   │   ├── classes/           # RosterEditor
 │   │   └── settings/          # LocationMapPicker
 │   ├── pages/                 # HomePage, WeatherPage, SchedulePage, SketchPage,
 │   │                          # ClassesPage, SettingsPage, SetupWizard
+│   ├── constants/
+│   │   └── navigation.jsx     # NAV_ITEMS + SVG 아이콘 (Header/TopNav/HamburgerMenu 공용)
 │   ├── hooks/
 │   │   ├── useLocalStorage.js # localStorage <-> React 상태 동기화 (CustomEvent 크로스탭)
 │   │   ├── useClassManager.js # 학급/학생/수업기록 CRUD (뚝뚝한 훅)
 │   │   ├── useSchedule.js     # 시간표 CRUD (기본 + 주차별 오버라이드)
-│   │   ├── useSettings.js     # 위치/환경 설정
+│   │   ├── useSettings.js     # 위치/환경 설정 (useLocalStorage 기반)
+│   │   ├── useLocationPicker.js # 위치/측정소 선택 공통 로직 (WeatherPage/SettingsPage 공유)
 │   │   ├── useRecommend.js    # 활동 추천 엔진 (필터 + 후보 생성)
 │   │   └── useCurrentPeriod.js # 현재 교시 계산
 │   ├── services/
-│   │   ├── weatherApi.js      # 기상청 + 에어코리아 + 측정소 검색 API
+│   │   ├── weather/           # 날씨 API 모듈 (분할됨)
+│   │   │   ├── index.js       # 하위호환 re-export
+│   │   │   ├── weatherFetch.js    # 기상청 단기예보 API
+│   │   │   ├── airQualityFetch.js # 에어코리아 대기오염 API
+│   │   │   └── stationSearch.js   # 측정소 검색 로직
 │   │   └── naverLocal.js      # 네이버 지도 역지오코딩 + 로컬 검색
 │   ├── data/
 │   │   ├── activities.json    # 활동 데이터베이스
@@ -75,6 +82,8 @@ pnpm deploy       # GitHub Pages 배포 (gh-pages -d dist)
 │   ├── utils/
 │   │   ├── gridConvert.js     # WGS84 ↔ 기상청 격자 좌표 변환
 │   │   ├── generateId.js      # 고유 ID 생성기
+│   │   ├── haversine.js       # 두 좌표 간 거리 계산 (Haversine 공식)
+│   │   ├── stationFinder.js   # 측정소 검색 with fallback
 │   │   ├── loadNaverMapScript.js # 네이버 지도 SDK 동적 로더
 │   │   └── recommend/         # 활동 추천 알고리즘
 │   │       ├── generateCandidates.js  # 후보 생성
@@ -133,7 +142,8 @@ pnpm deploy       # GitHub Pages 배포 (gh-pages -d dist)
 학교 업무에 비유하면, 각 훅은 **담당 업무 담당자**:
 - `useClassManager` = **학급담임**: 학급 목록, 학생 명단, 수업 기록 모두 관리
 - `useSchedule` = **교무부장**: 시간표 작성, 주차별 변경 관리
-- `useSettings` = **행정실장**: 학교 위치, 환경설정 관리
+- `useSettings` = **행정실장**: 학교 위치, 환경설정 관리 (useLocalStorage 기반)
+- `useLocationPicker` = **시설관리**: GPS 감지, 지도 선택, 측정소 확정 (WeatherPage/SettingsPage 공유)
 - `useRecommend` = **체육부장**: 활동 추천, 필터링
 - `useLocalStorage` = **서류함**: 모든 데이터 보관 캐비넷
 
@@ -210,6 +220,8 @@ css/utilities/  → animations.css, glass.css, responsive.css
 ### React 패턴
 - 함수형 컴포넌트 + hooks (클래스 컴포넌트 사용하지 않음)
 - 상태관리: 커스텀 훅 + useLocalStorage (향후 Firestore onSnapshot)
+- 복잡 상태: useReducer 활용 (SchedulePage 등 상태 5개+ 시)
+- 모달: `<Modal>` 공통 컴포넌트 (glassmorphism backdrop + onClose)
 - 스타일: Tailwind 유틸리티 클래스 + 커스텀 CSS
 - 알림: react-hot-toast (하단 중앙, 3초)
 - 확인 다이얼로그: window.showConfirm (전역 패턴)
@@ -308,7 +320,7 @@ NAVER_SEARCH_CLIENT_SECRET=xxx      # Netlify Function용
 - 트랜지션 간소화 (0.15s)
 - blob 애니메이션 제거
 - Pretendard 폰트 CDN (로컬 폰트 아님)
-- API 응답은 인메모리 Map 캐싱 (weatherApi.js의 STATION_LIST_CACHE 등)
+- API 응답은 인메모리 Map 캐싱 (stationSearch.js의 STATION_LIST_CACHE 등)
 
 ### 한국어 처리
 - UTF-8 인코딩 필수
