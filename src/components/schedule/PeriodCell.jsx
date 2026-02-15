@@ -10,12 +10,18 @@ export default function PeriodCell({
   isCurrent,
   onEdit,
   onRemove,
+  onOpenLessonLog,
 }) {
   const { getClassColor } = useClassManager()
 
   const handleCellClick = () => {
     if (isEditing) {
       onEdit(day, period)
+      return
+    }
+
+    if (periodData?.classId && onOpenLessonLog) {
+      onOpenLessonLog(day, period, periodData)
     }
   }
 
@@ -49,7 +55,7 @@ export default function PeriodCell({
       className={`
         p-2 rounded-lg transition-all min-h-[50px] flex flex-col items-center justify-center relative
         ${className}
-        ${isEditing ? 'cursor-pointer' : ''}
+        ${(isEditing || periodData?.classId) ? 'cursor-pointer' : ''}
         border border-white/60
       `}
       style={style}
@@ -77,6 +83,11 @@ export default function PeriodCell({
           {isCurrent && (
             <div className="text-[10px] text-primary font-semibold mt-0.5">
               ● 현재
+            </div>
+          )}
+          {!isEditing && (
+            <div className="text-[10px] text-primary font-semibold mt-0.5">
+              기록
             </div>
           )}
         </>

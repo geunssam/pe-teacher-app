@@ -3,11 +3,23 @@ import { useState } from 'react'
 import { useClassManager } from '../hooks/useClassManager'
 import GlassCard from '../components/common/GlassCard'
 import RosterEditor from '../components/classes/RosterEditor'
+import { formatRecordDate } from '../utils/recordDate'
 
 export default function ClassesPage() {
-  const { classes, getClassesByGrade, rosters } = useClassManager()
+  const {
+    classes,
+    getClassesByGrade,
+    getClassRecords,
+    getClassRecordCount,
+    getNextLessonSequence,
+    rosters,
+  } = useClassManager()
   const classesByGrade = getClassesByGrade()
   const [selectedClass, setSelectedClass] = useState(null)
+
+  const getRecordDateLabel = (recordDate) => {
+    return formatRecordDate(recordDate)
+  }
 
   return (
     <div className="page-container">
@@ -27,6 +39,18 @@ export default function ClassesPage() {
                 {classList.map((classItem) => {
                   const roster = rosters[classItem.id] || []
                   const filledRoster = roster.filter((s) => s.name).length
+                  const records = getClassRecords(classItem.id)
+                  const latestRecord = records?.[0]
+                  const latestDate = latestRecord?.date || latestRecord?.createdAt
+                  const latestPeriod = latestRecord?.period
+                  const latestDomain = latestRecord?.domain || classItem.lastDomain || '-'
+                  const totalRecords = records.length
+                  const latestDomainCount = latestDomain && latestDomain !== '-'
+                    ? getClassRecordCount(classItem.id, latestDomain)
+                    : totalRecords
+                  const nextSequenceInDomain = latestDomain && latestDomain !== '-'
+                    ? getNextLessonSequence(classItem.id, latestDomain)
+                    : totalRecords + 1
 
                   return (
                     <GlassCard
@@ -57,14 +81,40 @@ export default function ClassesPage() {
                         </span>
                       </div>
 
-                      {classItem.lastActivity && (
+                      {latestRecord ? (
                         <div className="pt-md border-t border-border">
                           <p className="text-caption text-muted">
-                            최근 수업: {classItem.lastActivity}
+                            최근 수업: {latestRecord.activity || classItem.lastActivity}
+                            {latestPeriod ? ` · ${latestPeriod}교시` : ''}
                           </p>
                           <p className="text-caption text-muted">
-                            {classItem.lastDate}
+                            {latestDomain} · {latestRecord.sequence || latestDomainCount}차시
                           </p>
+                          <p className="text-caption text-muted">
+                            {getRecordDateLabel(latestDate)}
+                          </p>
+                          {latestRecord.variation && (
+                            <p className="text-caption text-muted">
+                              변형: {latestRecord.variation}
+                            </p>
+                          )}
+                          {latestRecord.memo && (
+                            <p className="text-caption text-muted">
+                              메모: {latestRecord.memo}
+                            </p>
+                          )}
+                          {latestRecord.performance && (
+                            <p className="text-caption text-muted">
+                              평가: {latestRecord.performance}
+                            </p>
+                          )}
+                          <p className="text-caption text-muted mt-1">
+                            총 {totalRecords}차시 · 다음차시 {latestDomain}: {nextSequenceInDomain}차시
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="pt-md border-t border-border">
+                          <p className="text-caption text-muted">아직 수업 기록이 없습니다</p>
                         </div>
                       )}
                     </GlassCard>

@@ -11,7 +11,12 @@ export default function TodaySchedule() {
   const { WEEKDAYS, WEEKDAY_LABELS, getTimetableForWeek } = useSchedule()
   const { currentDay, isCurrentPeriod } = useCurrentPeriod()
 
-  const today = currentDay || 'monday' // null일 경우 월요일 기본값
+  const getTodayFallback = () => {
+    const dayOfWeek = new Date().getDay()
+    return dayOfWeek >= 1 && dayOfWeek <= 5 ? WEEKDAYS[dayOfWeek - 1] : WEEKDAYS[0]
+  }
+
+  const today = WEEKDAYS.includes(currentDay) ? currentDay : getTodayFallback()
   const { timetable } = getTimetableForWeek()
 
   // 오늘 요일의 시간표만 필터링
@@ -23,7 +28,7 @@ export default function TodaySchedule() {
       todaySchedule.push({
         period,
         ...periodData,
-        isCurrent: isCurrentPeriod(today, period)
+        isCurrent: isCurrentPeriod(today, period),
       })
     }
   }
@@ -69,9 +74,18 @@ export default function TodaySchedule() {
                   <div className="text-caption text-muted">· {item.memo}</div>
                 )}
               </div>
-              {item.isCurrent && (
-                <div className="text-caption font-semibold text-primary">● 현재</div>
-              )}
+
+              <div className="flex items-center gap-sm">
+                <Link
+                  to={`/schedule?day=${today}&period=${item.period}&classId=${item.classId}`}
+                  className="text-caption font-semibold text-primary"
+                >
+                  기록하기 →
+                </Link>
+                {item.isCurrent && (
+                  <div className="text-caption font-semibold text-primary">● 현재</div>
+                )}
+              </div>
             </div>
           ))}
         </div>

@@ -7,7 +7,8 @@ export default function ScheduleGrid({
   weekKey,
   isEditing,
   onEditPeriod,
-  onRemovePeriod
+  onRemovePeriod,
+  onOpenLessonLog
 }) {
   const { WEEKDAYS, WEEKDAY_LABELS, MAX_PERIODS, getTimetableForWeek } = useSchedule()
   const { isCurrentPeriod } = useCurrentPeriod()
@@ -55,6 +56,7 @@ export default function ScheduleGrid({
                   isCurrent={isCurrent}
                   onEdit={onEditPeriod}
                   onRemove={onRemovePeriod}
+                  onOpenLessonLog={onOpenLessonLog}
                 />
               )
             })}

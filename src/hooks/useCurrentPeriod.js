@@ -26,11 +26,11 @@ const PERIOD_TIMES = [
 ]
 
 const WEEKDAY_MAP = {
-  1: 'monday',
-  2: 'tuesday',
-  3: 'wednesday',
-  4: 'thursday',
-  5: 'friday',
+  1: 'mon',
+  2: 'tue',
+  3: 'wed',
+  4: 'thu',
+  5: 'fri',
 }
 
 /**

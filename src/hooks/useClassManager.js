@@ -1,6 +1,6 @@
 // 학급담임 훅 — 학급 목록, 학생 명단, 수업 기록 CRUD (localStorage 기반) | 사용처→ClassesPage/SchedulePage/HomePage, 저장소→useLocalStorage.js
 import { useLocalStorage } from './useLocalStorage'
-import { generateClassId, generateStudentId } from '../utils/generateId'
+import { generateClassId, generateRecordId, generateStudentId } from '../utils/generateId'
 
 /**
  * 학급 관리 Hook
@@ -22,6 +22,28 @@ export const CLASS_COLOR_PRESETS = [
   { name: '청록색', bg: '#CCFBF1', text: '#115E59' },
   { name: '빨간색', bg: '#FEE2E2', text: '#991B1B' },
 ]
+
+const toLocalDateString = (value) => {
+  if (!value) return ''
+
+  if (value instanceof Date) {
+    const year = value.getFullYear()
+    const month = String(value.getMonth() + 1).padStart(2, '0')
+    const day = String(value.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  if (typeof value === 'string') {
+    return value.slice(0, 10)
+  }
+
+  const fallback = new Date(value)
+  if (Number.isNaN(fallback.getTime())) {
+    return ''
+  }
+
+  return toLocalDateString(fallback)
+}
 
 export function useClassManager() {
   const [classSetup, setClassSetup] = useLocalStorage('pe_class_setup', null)
@@ -122,13 +144,70 @@ export function useClassManager() {
   }
 
   /**
+   * 특정 학급의 수업 기록 수 조회
+   */
+  const getClassRecordCount = (classId, domain = null) => {
+    const classRecords = getClassRecords(classId)
+
+    if (!domain) {
+      return classRecords.length
+    }
+
+    return classRecords.filter((record) => (record.domain || '스포츠') === domain).length
+  }
+
+  /**
+   * 특정 학급의 다음 차시 번호 계산
+   */
+  const getNextLessonSequence = (classId, domain = '스포츠') => {
+    return getClassRecordCount(classId, domain) + 1
+  }
+
+  /**
    * 수업 기록 추가
    */
   const addClassRecord = (classId, record) => {
+    const now = new Date().toISOString()
+    const normalizedDomain = record?.domain || '스포츠'
+    const nextSequence = record?.sequence
+      ? Number(record.sequence)
+      : getNextLessonSequence(classId, normalizedDomain)
+    const nextDate = (() => {
+      if (!record?.date) return toLocalDateString(now)
+      return toLocalDateString(record.date)
+    })()
+
+    const nextRecord = {
+      id: record?.id || generateRecordId(),
+      date: nextDate,
+      createdAt: now,
+      classId,
+      activity: '수업 활동',
+      domain: '스포츠',
+      sequence: nextSequence,
+      ...record,
+      sequence: Number.isFinite(nextSequence) ? nextSequence : getNextLessonSequence(classId, normalizedDomain),
+      domain: normalizedDomain,
+    }
+
     setRecords((prev) => ({
       ...prev,
-      [classId]: [record, ...(prev[classId] || [])],
+      [classId]: [nextRecord, ...(prev[classId] || [])],
     }))
+
+    setClasses((prev) =>
+      prev.map((cls) =>
+        cls.id === classId
+          ? {
+              ...cls,
+              lastActivity: nextRecord.activity || cls.lastActivity,
+              lastDomain: nextRecord.domain || cls.lastDomain,
+              lastSequence: nextRecord.sequence || cls.lastSequence || 0,
+              lastDate: nextRecord.date || cls.lastDate,
+            }
+          : cls
+      )
+    )
   }
 
   /**
@@ -311,6 +390,8 @@ export function useClassManager() {
     updateClass,
     getRoster,
     getClassRecords,
+    getClassRecordCount,
+    getNextLessonSequence,
     addClassRecord,
     getClassesByGrade,
 

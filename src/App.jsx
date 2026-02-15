@@ -25,7 +25,6 @@ import SchedulePage from './pages/SchedulePage'
 import ClassesPage from './pages/ClassesPage'
 import SetupWizard from './pages/SetupWizard'
 import SettingsPage from './pages/SettingsPage'
-import CurriculumPage from './pages/CurriculumPage'
 
 // 보호된 라우트 (학급 설정 필요)
 function ProtectedRoute({ children }) {
@@ -110,14 +109,6 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/curriculum"
-            element={
-              <ProtectedRoute>
-                <CurriculumPage />
               </ProtectedRoute>
             }
           />

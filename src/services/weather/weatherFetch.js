@@ -6,6 +6,12 @@ const WEATHER_ENDPOINT = import.meta.env.VITE_WEATHER_API_ENDPOINT
 const ULTRA_SRT_NCST_DELAY_MIN = 40
 const VILAGE_FCST_DELAY_MIN = 10
 const VILAGE_BASE_HOURS = [2, 5, 8, 11, 14, 17, 20, 23]
+const WEATHER_CACHE_TTL_MS = 1000 * 60 * 3
+const WEATHER_CACHE = new Map()
+const WEATHER_INFLIGHT = new Map()
+
+const limitText = (value, length = 180) =>
+  String(value).slice(0, length)
 
 /**
  * 기상청 단기예보 API 호출
@@ -200,14 +206,51 @@ function isNoDataError(error) {
 async function fetchWeatherEndpoint(path, query) {
   const params = new URLSearchParams(query)
   const url = `${WEATHER_ENDPOINT}/${path}?${params}`
-  const response = await fetch(url)
-  const data = await response.json()
+  const cacheKey = url
 
-  if (data.response?.header?.resultCode !== '00') {
-    throw new Error(data.response?.header?.resultMsg || 'API 호출 실패')
+  const cachedItem = WEATHER_CACHE.get(cacheKey)
+  if (cachedItem && Date.now() - cachedItem.updatedAt < WEATHER_CACHE_TTL_MS) {
+    return cachedItem.data
   }
 
-  return data
+  const inFlight = WEATHER_INFLIGHT.get(cacheKey)
+  if (inFlight) {
+    return inFlight
+  }
+
+  const request = (async () => {
+    const response = await fetch(url)
+    const responseText = await response.text()
+
+    if (!response.ok) {
+      const preview = limitText(responseText || response.statusText || '요청 실패')
+      throw new Error(`HTTP ${response.status}: ${preview}`)
+    }
+
+    let data
+    try {
+      data = JSON.parse(responseText)
+    } catch (error) {
+      const preview = limitText(responseText)
+      throw new Error(`API 응답 형식 오류: ${preview}`)
+    }
+
+    if (data.response?.header?.resultCode !== '00') {
+      const resultCode = data.response?.header?.resultCode || 'UNKNOWN'
+      const resultMsg = data.response?.header?.resultMsg || 'API 호출 실패'
+      throw new Error(`API 호출 실패 [${resultCode}] ${resultMsg}`)
+    }
+
+    WEATHER_CACHE.set(cacheKey, { data, updatedAt: Date.now() })
+    return data
+  })()
+
+  WEATHER_INFLIGHT.set(cacheKey, request)
+  try {
+    return await request
+  } finally {
+    WEATHER_INFLIGHT.delete(cacheKey)
+  }
 }
 
 // 시간별로 그룹핑

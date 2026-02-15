@@ -31,7 +31,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* 중앙: 메인 네비게이션 (5개 탭) */}
+        {/* 중앙: 메인 네비게이션 (PEhub 핵심 4개 탭) */}
         <nav className="main-nav">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
