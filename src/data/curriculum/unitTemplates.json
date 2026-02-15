@@ -1,0 +1,391 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "단원 계획 템플릿 — 교육과정 기반 ACE 단계별 차시 배분",
+    "scope": "pilot"
+  },
+  "templates": [
+    {
+      "id": "unit_g3_fitness",
+      "title": "운동으로 체력을 길러요",
+      "gradeBand": "3-4학년군",
+      "grade": "3학년",
+      "domain": "운동",
+      "subDomain": "체력운동",
+      "standardCodes": ["[4체01-01]", "[4체01-02]", "[4체01-05]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["걷기와 달리기", "매달리기", "버티기와 굽히기", "밀기와 당기기"],
+      "totalLessons": 8,
+      "aceDistribution": {
+        "A": {
+          "lessons": [1, 2, 3, 4, 5],
+          "focus": "기본 체력운동 방법 탐색 및 시도"
+        },
+        "C": {
+          "lessons": [6, 7],
+          "focus": "체력운동을 활용한 게임 활동"
+        },
+        "E": {
+          "lessons": [8],
+          "focus": "나의 체력 확인 및 운동 계획 세우기"
+        }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1,
+          "acePhase": "A",
+          "title": "운동과 체력 알아보기",
+          "activityIds": ["g3m_exercise_fitness_meaning"],
+          "fmsFocus": [],
+          "description": "운동과 체력의 의미를 이해하고 관계를 파악한다.",
+          "standardCodes": ["[4체01-01]"]
+        },
+        {
+          "lesson": 2,
+          "acePhase": "A",
+          "title": "걷기와 달리기로 체력 기르기",
+          "activityIds": ["g3m_walk_run_explore"],
+          "fmsFocus": ["걷기", "달리기"],
+          "description": "다양한 속도와 방향으로 걷기와 달리기를 하며 심폐지구력을 기른다.",
+          "standardCodes": ["[4체01-02]"]
+        },
+        {
+          "lesson": 3,
+          "acePhase": "A",
+          "title": "매달리기로 체력 기르기",
+          "activityIds": ["g3m_hanging"],
+          "fmsFocus": ["매달리기"],
+          "description": "다양한 방법으로 매달리기를 하며 팔과 다리의 힘을 기른다.",
+          "standardCodes": ["[4체01-02]"]
+        },
+        {
+          "lesson": 4,
+          "acePhase": "A",
+          "title": "버티기와 굽히기로 체력 기르기",
+          "activityIds": ["g3m_balance_bend"],
+          "fmsFocus": ["버티기", "굽히기"],
+          "description": "다양한 자세로 버티기와 굽히기를 하며 균형감각과 유연성을 기른다.",
+          "standardCodes": ["[4체01-02]"]
+        },
+        {
+          "lesson": 5,
+          "acePhase": "A",
+          "title": "밀기와 당기기로 체력 기르기",
+          "activityIds": ["g3m_push_pull"],
+          "fmsFocus": ["밀기", "당기기"],
+          "description": "짝과 함께 밀기와 당기기를 하며 근력을 기른다.",
+          "standardCodes": ["[4체01-02]"]
+        },
+        {
+          "lesson": 6,
+          "acePhase": "C",
+          "title": "체력 게임 (1) — 술래놀이로 체력 기르기",
+          "activityIds": ["g3m_sup_rainbow_tag", "g3m_sup_fruit_monster"],
+          "fmsFocus": ["달리기", "점프", "방향전환"],
+          "description": "술래놀이 게임을 하며 달리기, 점프 등 기본 체력을 활용한다.",
+          "standardCodes": ["[4체01-02]"],
+          "alternativeActivityIds": ["g3m_sup_zombie_tag", "g3m_sup_secret_tag"]
+        },
+        {
+          "lesson": 7,
+          "acePhase": "C",
+          "title": "체력 게임 (2) — 운동 과제 술래놀이",
+          "activityIds": ["g3m_sup_exercise_tag", "g3m_sup_dice_tag"],
+          "fmsFocus": ["달리기", "다양한 체력운동"],
+          "description": "체력운동과 술래놀이를 결합하여 즐겁게 체력을 기른다.",
+          "standardCodes": ["[4체01-02]", "[4체01-05]"],
+          "alternativeActivityIds": ["g3m_sup_gagaball"]
+        },
+        {
+          "lesson": 8,
+          "acePhase": "E",
+          "title": "나의 체력 확인 및 운동 계획",
+          "activityIds": ["g3m_fitness_plan"],
+          "fmsFocus": [],
+          "description": "나의 체력을 확인하고, 체력을 기르기 위한 운동 계획을 세운다.",
+          "standardCodes": ["[4체01-05]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g3_healthy_habits",
+      "title": "건강한 생활 습관을 길러요",
+      "gradeBand": "3-4학년군",
+      "grade": "3학년",
+      "domain": "운동",
+      "subDomain": "건강활동",
+      "standardCodes": ["[4체01-03]", "[4체01-04]", "[4체01-06]"],
+      "fmsCategories": [],
+      "relatedActivities": ["마음 건강", "몸 건강", "생활 습관 실천"],
+      "totalLessons": 5,
+      "aceDistribution": {
+        "A": {
+          "lessons": [1, 2, 3],
+          "focus": "건강한 생활 습관 탐색"
+        },
+        "C": {
+          "lessons": [4],
+          "focus": "건강 지키기 게임 활동"
+        },
+        "E": {
+          "lessons": [5],
+          "focus": "건강한 생활 습관 실천 계획 및 성찰"
+        }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1,
+          "acePhase": "A",
+          "title": "운동과 건강의 관계 알아보기",
+          "activityIds": ["g3m_exercise_fitness_meaning"],
+          "fmsFocus": [],
+          "description": "운동과 건강의 의미를 이해하고 관계를 파악한다.",
+          "standardCodes": ["[4체01-03]"]
+        },
+        {
+          "lesson": 2,
+          "acePhase": "A",
+          "title": "마음이 건강해요",
+          "activityIds": ["g3m_healthy_mind"],
+          "fmsFocus": [],
+          "description": "정서적 건강의 중요성을 알고 감정을 다스리는 방법을 탐색한다.",
+          "standardCodes": ["[4체01-03]", "[4체01-04]"]
+        },
+        {
+          "lesson": 3,
+          "acePhase": "A",
+          "title": "몸이 건강해요",
+          "activityIds": ["g3m_healthy_body"],
+          "fmsFocus": [],
+          "description": "바른 자세, 위생, 식습관 등 건강한 생활 습관을 알아본다.",
+          "standardCodes": ["[4체01-03]", "[4체01-04]"]
+        },
+        {
+          "lesson": 4,
+          "acePhase": "C",
+          "title": "건강 지키기 실내 게임",
+          "activityIds": ["g3m_sup_cup_flip_tic_tac_toe", "g3m_sup_walking_bingo"],
+          "fmsFocus": ["협응성", "걷기"],
+          "description": "교실에서 건강 관련 게임 활동을 하며 건강 지식과 체력을 동시에 기른다.",
+          "standardCodes": ["[4체01-04]"],
+          "alternativeActivityIds": ["g3m_sup_pearl_shell", "g3m_sup_classroom_dodgeball"]
+        },
+        {
+          "lesson": 5,
+          "acePhase": "E",
+          "title": "건강한 생활 습관 실천 계획",
+          "activityIds": ["g3m_healthy_habit_plan"],
+          "fmsFocus": [],
+          "description": "건강한 생활 습관을 점검하고 실천 계획을 세워 건강 지킴이 활동을 한다.",
+          "standardCodes": ["[4체01-04]", "[4체01-06]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g3_movement_skills",
+      "title": "다양하게 움직여요",
+      "gradeBand": "3-4학년군",
+      "grade": "3학년",
+      "domain": "스포츠",
+      "subDomain": "기본움직임",
+      "standardCodes": ["[4체02-01]", "[4체02-02]", "[4체02-03]", "[4체02-04]", "[4체02-05]", "[4체02-08]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["이동 움직임", "비이동 움직임", "복합 움직임", "기술형 스포츠"],
+      "totalLessons": 8,
+      "aceDistribution": {
+        "A": {
+          "lessons": [1, 2, 3, 4, 5],
+          "focus": "이동 · 비이동 움직임 기술 탐색 및 시도"
+        },
+        "C": {
+          "lessons": [6, 7],
+          "focus": "움직임 기술을 활용한 게임 활동"
+        },
+        "E": {
+          "lessons": [8],
+          "focus": "나의 움직임 기술 확인하기"
+        }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1,
+          "acePhase": "A",
+          "title": "스포츠와 움직임 기술 알아보기",
+          "activityIds": ["g3s_sports_meaning"],
+          "fmsFocus": [],
+          "description": "스포츠의 의미와 유형을 파악하고, 기본 움직임 기술의 종류를 이해한다.",
+          "standardCodes": ["[4체02-01]", "[4체02-02]"]
+        },
+        {
+          "lesson": 2,
+          "acePhase": "A",
+          "title": "다양한 방향으로 이동하기",
+          "activityIds": ["g3s_locomotor_explore"],
+          "fmsFocus": ["걷기", "달리기", "호핑", "스키핑", "갤러핑", "슬라이딩"],
+          "description": "이동 움직임 기술의 종류를 익히고, 다양한 방향과 속도로 시도한다.",
+          "standardCodes": ["[4체02-02]", "[4체02-03]"]
+        },
+        {
+          "lesson": 3,
+          "acePhase": "A",
+          "title": "균형 잡기와 구르기",
+          "activityIds": ["g3s_balance_roll"],
+          "fmsFocus": ["균형 잡기", "구르기", "회전하기"],
+          "description": "다양한 자세에서 균형을 잡고, 앞구르기와 옆돌기를 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-05]"]
+        },
+        {
+          "lesson": 4,
+          "acePhase": "A",
+          "title": "움직임 요소 변화시키기",
+          "activityIds": ["g3s_movement_elements"],
+          "fmsFocus": ["신체", "노력", "공간", "관계"],
+          "description": "움직임 요소(신체 · 노력 · 공간 · 관계)에 변화를 주어 움직임을 수행한다.",
+          "standardCodes": ["[4체02-03]"]
+        },
+        {
+          "lesson": 5,
+          "acePhase": "A",
+          "title": "복합 움직임 기술 시도하기",
+          "activityIds": ["g3s_combined_movement"],
+          "fmsFocus": ["호핑+스키핑", "달리기+점프"],
+          "description": "기본 움직임 기술을 연결한 복합 움직임을 서킷 코스에서 시도한다.",
+          "standardCodes": ["[4체02-04]"]
+        },
+        {
+          "lesson": 6,
+          "acePhase": "C",
+          "title": "움직임 릴레이 게임",
+          "activityIds": ["g3s_sup_movement_relay"],
+          "fmsFocus": ["달리기", "호핑", "구르기", "점프"],
+          "description": "다양한 이동 움직임을 릴레이 게임에서 활용한다.",
+          "standardCodes": ["[4체02-04]", "[4체02-08]"],
+          "alternativeActivityIds": ["g3s_sup_balance_tag", "g3s_sup_shuttle_run"]
+        },
+        {
+          "lesson": 7,
+          "acePhase": "C",
+          "title": "장애물 달리기 게임",
+          "activityIds": ["g3s_sup_obstacle_run"],
+          "fmsFocus": ["달리기", "점프", "구르기", "균형"],
+          "description": "장애물 코스에서 복합 움직임 기술을 적용하며 기술형 스포츠를 체험한다.",
+          "standardCodes": ["[4체02-05]", "[4체02-08]"],
+          "alternativeActivityIds": ["g3s_sup_balance_tag"]
+        },
+        {
+          "lesson": 8,
+          "acePhase": "E",
+          "title": "나의 움직임 기술 확인하기",
+          "activityIds": ["g3s_movement_skill_check"],
+          "fmsFocus": [],
+          "description": "이동 · 비이동 움직임 기술을 스스로 점검하고 향상 계획을 세운다.",
+          "standardCodes": ["[4체02-08]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g3_ball_games",
+      "title": "공을 다루며 게임해요",
+      "gradeBand": "3-4학년군",
+      "grade": "3학년",
+      "domain": "스포츠",
+      "subDomain": "전략형스포츠",
+      "standardCodes": ["[4체02-03]", "[4체02-04]", "[4체02-06]", "[4체02-08]", "[4체02-09]"],
+      "fmsCategories": ["조작", "이동"],
+      "relatedActivities": ["던지기와 받기", "차기와 멈추기", "튀기기와 몰기", "치기와 받기"],
+      "totalLessons": 8,
+      "aceDistribution": {
+        "A": {
+          "lessons": [1, 2, 3, 4],
+          "focus": "조작 움직임 기술(공 다루기) 탐색 및 시도"
+        },
+        "C": {
+          "lessons": [5, 6, 7],
+          "focus": "공 다루기 기술을 활용한 간이 게임"
+        },
+        "E": {
+          "lessons": [8],
+          "focus": "공 다루기 기술 복합 수행 및 성찰"
+        }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1,
+          "acePhase": "A",
+          "title": "공 던지기와 받기",
+          "activityIds": ["g3s_throw_catch"],
+          "fmsFocus": ["던지기", "잡기"],
+          "description": "다양한 방법(오버핸드 · 언더핸드)으로 공을 던지고 받는 기술을 익힌다.",
+          "standardCodes": ["[4체02-03]", "[4체02-06]"],
+          "alternativeActivityIds": ["g3s_throw_catch_marker_quest"]
+        },
+        {
+          "lesson": 2,
+          "acePhase": "A",
+          "title": "공 차기와 멈추기",
+          "activityIds": ["g3s_kick_stop"],
+          "fmsFocus": ["차기", "멈추기"],
+          "description": "인사이드 킥으로 공을 차고, 발바닥으로 멈추는 기술을 익힌다.",
+          "standardCodes": ["[4체02-03]", "[4체02-06]"]
+        },
+        {
+          "lesson": 3,
+          "acePhase": "A",
+          "title": "공 튀기기와 몰기",
+          "activityIds": ["g3s_dribble_bounce"],
+          "fmsFocus": ["튀기기", "몰기"],
+          "description": "제자리 · 이동하며 공을 튀기고 몰아보며 드리블 기초를 익힌다.",
+          "standardCodes": ["[4체02-03]", "[4체02-06]"]
+        },
+        {
+          "lesson": 4,
+          "acePhase": "A",
+          "title": "공 치기와 받기",
+          "activityIds": ["g3s_strike_receive"],
+          "fmsFocus": ["치기", "받기"],
+          "description": "풍선과 라켓을 활용해 치기 기초를 익히고, 정지된 공을 타격한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-06]"]
+        },
+        {
+          "lesson": 5,
+          "acePhase": "C",
+          "title": "간이 피구 — 던지기와 받기 게임",
+          "activityIds": ["g3s_sup_dodgeball_simple"],
+          "fmsFocus": ["던지기", "잡기", "사이드 스텝"],
+          "description": "폼볼을 활용한 간이 피구 게임에서 던지기와 받기 기술을 적용한다.",
+          "standardCodes": ["[4체02-06]", "[4체02-09]"],
+          "alternativeActivityIds": ["g3s_sup_kickball"]
+        },
+        {
+          "lesson": 6,
+          "acePhase": "C",
+          "title": "콘 넘기기 축구 — 차기와 몰기 게임",
+          "activityIds": ["g3s_sup_cone_soccer"],
+          "fmsFocus": ["차기", "멈추기", "몰기"],
+          "description": "콘을 표적으로 한 간이 축구 게임에서 차기와 몰기 기술을 적용한다.",
+          "standardCodes": ["[4체02-06]", "[4체02-09]"],
+          "alternativeActivityIds": ["g3s_sup_kickball"]
+        },
+        {
+          "lesson": 7,
+          "acePhase": "C",
+          "title": "미니 농구 게임 — 튀기기와 던지기 게임",
+          "activityIds": ["g3s_sup_mini_basketball"],
+          "fmsFocus": ["튀기기", "몰기", "던지기"],
+          "description": "훌라후프 골대를 활용한 미니 농구에서 드리블과 패스 기술을 적용한다.",
+          "standardCodes": ["[4체02-06]", "[4체02-09]"],
+          "alternativeActivityIds": ["g3s_sup_treasure_island"]
+        },
+        {
+          "lesson": 8,
+          "acePhase": "E",
+          "title": "공 다루기 기술 복합 수행",
+          "activityIds": ["g3s_ball_skill_check"],
+          "fmsFocus": [],
+          "description": "서킷 코스에서 다양한 공 다루기 기술을 종합적으로 수행하고 성찰한다.",
+          "standardCodes": ["[4체02-04]", "[4체02-08]"]
+        }
+      ]
+    }
+  ]
+}
