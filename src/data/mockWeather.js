@@ -56,8 +56,9 @@ const fallback = {
 }
 
 const getPmGrade = (value) => {
-  const safeValue = Math.max(1, Math.min(4, Math.floor(getNumber(value, 1))))
-  const grade = PM_GRADE[safeValue]
+  const safeValue = getNumber(value, 1)
+  const clampedValue = Math.max(1, Math.min(4, Math.floor(safeValue)))
+  const grade = PM_GRADE[clampedValue]
   return grade || fallback
 }
 
