@@ -1,5 +1,5 @@
 // 최근 수업 — 홈 탭에서 최근 수업 기록 목록 | 부모→pages/HomePage.jsx, 데이터→hooks/useClassManager.js
-import { Link } from 'react-router-dom'
+
 import { useClassManager } from '../../hooks/useClassManager'
 
 /**
@@ -33,9 +33,6 @@ export default function RecentLessons() {
     <div>
       <div className="flex items-center justify-between mb-md">
         <h2 className="text-card-title">최근 수업</h2>
-        <Link to="/sketch" className="btn btn-sm btn-ghost">
-          수업스케치 →
-        </Link>
       </div>
 
       {hasLessons ? (
@@ -84,9 +81,9 @@ export default function RecentLessons() {
           <div className="text-body text-muted mb-xs">
             아직 수업 기록이 없습니다
           </div>
-          <Link to="/sketch" className="text-caption text-primary font-semibold">
-            수업 설계하기 →
-          </Link>
+          <span className="text-caption text-muted">
+            수업 기록은 학급 탭에서 확인할 수 있습니다
+          </span>
         </div>
       )}
     </div>

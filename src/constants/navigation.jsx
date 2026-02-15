@@ -58,6 +58,7 @@ export const NAV_ITEMS = [
   { path: '/', label: '오늘', emoji: '🏠', icon: HomeIcon, tab: 'home' },
   { path: '/weather', label: '날씨', emoji: '🌤️', icon: WeatherIcon, tab: 'weather' },
   { path: '/schedule', label: '시간표', emoji: '📅', icon: CalendarIcon, tab: 'schedule' },
-  { path: '/sketch', label: '수업스케치', emoji: '✏️', icon: PencilIcon, tab: 'sketch' },
+
+  { path: '/curriculum', label: '수업설계', emoji: '✏️', icon: PencilIcon, tab: 'curriculum' },
   { path: '/classes', label: '학급', emoji: '📋', icon: UsersIcon, tab: 'classes' },
 ]
