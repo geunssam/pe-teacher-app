@@ -37,7 +37,6 @@ export default function FilterPanel({
   recommendAvailability,
   compatibleModuleCounts,
   fmsCurriculumGuide = [],
-  isSixthSoccerSingleMode = false,
   GRADES,
   DOMAINS,
   SUB_DOMAINS_BY_DOMAIN,
@@ -88,11 +87,6 @@ export default function FilterPanel({
       {/* ─── Header ─── */}
       <div className="px-4 pt-3 pb-1 flex items-center justify-between gap-2">
         <h3 className="text-body-bold text-text">추천 조건</h3>
-        {isSixthSoccerSingleMode && (
-          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-            6학년 축구 전용 모드
-          </span>
-        )}
       </div>
 
       <div className="px-4 pb-1 space-y-3">

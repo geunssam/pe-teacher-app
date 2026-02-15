@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from 'react'
 import activitiesData from '../data/activities.json'
 import fmsTaxonomyData from '../data/fmsTaxonomy.json'
 import sportsData from '../data/modules/sports.json'
+import skillsData from '../data/modules/skills.json'
 import sportCoreRulesData from '../data/sportCoreRules.json'
 import fmsCurriculumData from '../data/modules/fmsCurriculum.json'
 import { generateActivityCandidates, hasActivitiesForSport } from '../utils/recommend/activityEngine'
 import { generateModularCandidates } from '../utils/recommend/generateModularCandidates'
 import { generateCandidates } from '../utils/recommend/generateCandidates'
-import { generateNLessonSequence } from '../utils/recommend/generateNLessonSequence'
 import { filterCompatibleModules } from '../utils/recommend/moduleCompiler'
 
 const ACTIVITIES = activitiesData.activities
@@ -20,11 +20,13 @@ const SUB_DOMAINS_BY_DOMAIN = {
   스포츠: ['영역형', '필드형', '네트형'],
   놀이: ['추격형', '민속형', '조작형'],
 }
-const SPORTS = ['축구', '농구', '피구', '배구', '티볼', '발야구', '빅발리볼', '플라잉디스크', '줄넘기', '공 터치 피구', '컵 배구', '손족구', '가가볼', '핑거 베이스볼', '핑거 발리볼', '술래 놀이', '전래 놀이', '컵 스태킹 놀이']
+const SPORTS = sportsData.sports.map((s) => s.name)
 const SPACES = ['운동장', '체육관', '교실']
 const FMS_CATEGORIES = ['이동', '비이동', '조작']
+const MAX_RECOMMENDATION_COUNT = Math.max(1, ACTIVITIES.length)
 
 const DURATION_OPTIONS = [30, 35, 40, 45, 50]
+const DEFAULT_GRADE = GRADES[0]
 
 const FMS_OPTIONS_BY_CATEGORY = FMS_CATEGORIES.reduce((acc, category) => {
   const categoryInfo = fmsTaxonomyData.taxonomy.find((item) => item.category === category)
@@ -32,46 +34,46 @@ const FMS_OPTIONS_BY_CATEGORY = FMS_CATEGORIES.reduce((acc, category) => {
   return acc
 }, {})
 
-const SPORT_SKILLS_BY_SPORT = {
-  축구: ['패스', '드리블', '슛', '트래핑', '침투', '압박 수비'],
-  농구: ['패스', '드리블', '슛', '리바운드', '컷인', '도움 수비'],
-  피구: ['패스', '던지기', '받기', '회피', '더블팀', '협력 수비'],
-  배구: ['리시브', '토스', '서브', '스파이크', '커버', '로테이션'],
-  티볼: ['배팅', '송구', '플라이볼 받기', '주루', '수비 위치'],
-  발야구: ['굴림킥', '플라이킥', '수비 송구', '주루', '수비 위치'],
-  빅발리볼: ['쳐올리기', '토스', '팀 리시브', '서브', '커버'],
-  플라잉디스크: ['백핸드 스로', '포핸드 스로', '클랩 캐치', '피벗', '빈 공간 이동'],
-  줄넘기: ['양발 모아뛰기', '이중뛰기', '긴줄넘기', '교차뛰기', '리듬 맞추기'],
-  '공 터치 피구': ['공 터치 패스', '피하기 이동'],
-  '컵 배구': ['컵 배구 받기'],
-  '손족구': ['언더토스 서브', '올터치 연결'],
-  '가가볼': ['원바운드 타구'],
-  '핑거 베이스볼': ['핑거 타격', '핑거 수비 전개'],
-  '핑거 발리볼': ['핑거 탭 연결'],
-  '술래 놀이': ['도망 반응', '태그 추격'],
-  '전래 놀이': ['한 발 뛰기'],
-  '컵 스태킹 놀이': ['컵 플립', '스피드 스태킹', '컵 탁구 스매시'],
+function getSportByName(sportName) {
+  return sportsData.sports.find((sport) => sport.name === sportName)
 }
 
-const DEFAULT_EQUIPMENT_BY_SPORT = {
-  축구: '축구공, 콘, 조끼, 호루라기',
-  농구: '농구공, 콘, 조끼, 호루라기',
-  피구: '피구공, 콘, 조끼, 팀조끼, 호루라기',
-  배구: '배구공, 네트, 콘, 조끼',
-  티볼: '티볼공, 티, 배트, 글러브, 콘',
-  발야구: '발야구공, 콘, 팀조끼',
-  빅발리볼: '비치볼, 네트, 콘',
-  플라잉디스크: '프리스비, 콘, 팀조끼',
-  줄넘기: '줄넘기줄, 긴줄',
-  '공 터치 피구': '폼볼, 팀조끼, 원마커',
-  '컵 배구': '스태킹컵, 풍선공, 네트',
-  '손족구': '폼볼, 네트, 원마커',
-  '가가볼': '풍선공, 원마커',
-  '핑거 베이스볼': '보드판, 미니볼, 카드',
-  '핑거 발리볼': '보드판, 미니볼, 네트선',
-  '술래 놀이': '팀조끼, 펀스틱, 콘',
-  '전래 놀이': '분필, 콘, 원마커',
-  '컵 스태킹 놀이': '스태킹컵, 탁구공',
+function getSportSkillsForContext(sportName, grade = '3학년', space = '운동장') {
+  const sportData = getSportByName(sportName)
+  if (!sportData?.skills?.length) {
+    return []
+  }
+
+  const skillIds = new Set(sportData.skills)
+  return skillsData.skills
+    .filter((skill) => {
+      if (!skillIds.has(skill.id)) return false
+      if (!skill.gradeRange.includes(grade)) return false
+      if (!skill.spaceNeeded.includes(space)) return false
+      return true
+    })
+    .map((skill) => skill.name)
+}
+
+function getSportDefaultEquipmentText(sportName) {
+  const sportData = getSportByName(sportName)
+  if (!sportData?.defaultEquipment?.length) {
+    return '공, 콘'
+  }
+  return sportData.defaultEquipment.join(', ')
+}
+
+function getDefaultSportSkills(sportName, grade = '3학년', space = '운동장') {
+  const options = getSportSkillsForContext(sportName, grade, space)
+  if (options.length === 0) {
+    return []
+  }
+
+  if (sportName === '축구') {
+    const passSkill = options.find((skill) => skill === '패스') || options[0]
+    return passSkill ? [passSkill] : []
+  }
+  return options.slice(0, 2)
 }
 
 function uniq(items) {
@@ -83,15 +85,6 @@ function parseEquipmentText(value) {
     .split(/[\n,]/)
     .map((item) => item.trim())
     .filter(Boolean)
-}
-
-function getDefaultSportSkills(sport) {
-  const options = SPORT_SKILLS_BY_SPORT[sport] || []
-  if (sport === '축구') {
-    const passSkill = options.find((skill) => skill === '패스') || options[0]
-    return passSkill ? [passSkill] : []
-  }
-  return options.slice(0, 2)
 }
 
 function buildDefaultFmsByCategory() {
@@ -132,31 +125,25 @@ function getSportsByDomain(domain, subDomain) {
 }
 
 export function useRecommend() {
-  const [selectedGrade, setSelectedGrade] = useState('6학년')
+  const [selectedGrade, setSelectedGrade] = useState(DEFAULT_GRADE)
   const [selectedDomain, setSelectedDomain] = useState('스포츠')
   const [selectedSub, setSelectedSub] = useState('영역형')
   const [selectedSport, setSelectedSport] = useState('축구')
   const [selectedFmsByCategory, setSelectedFmsByCategory] = useState(() => buildDefaultFmsByCategory())
-  const [selectedSportSkills, setSelectedSportSkills] = useState(() => getDefaultSportSkills('축구'))
+  const [selectedSportSkills, setSelectedSportSkills] = useState(() => getDefaultSportSkills('축구', DEFAULT_GRADE, '운동장'))
   const [selectedSpace, setSelectedSpace] = useState('운동장')
   const [durationMin, setDurationMin] = useState(40)
-  const [availableEquipmentText, setAvailableEquipmentText] = useState('축구공, 콘, 조끼, 호루라기')
+  const [availableEquipmentText, setAvailableEquipmentText] = useState(() => getSportDefaultEquipmentText('축구'))
 
   const [generatedCandidates, setGeneratedCandidates] = useState([])
   const [generateMeta, setGenerateMeta] = useState(null)
 
   const [recommendedActivity, setRecommendedActivity] = useState(null)
 
-  // N차시 모드
-  const [nLessonMode, setNLessonMode] = useState(false)
-  const [nLessonCount, setNLessonCount] = useState(3)
-  const [generatedLessonSequence, setGeneratedLessonSequence] = useState(null)
-
   const selectedFmsFocus = useMemo(
     () => uniq(FMS_CATEGORIES.flatMap((category) => selectedFmsByCategory[category] || [])),
     [selectedFmsByCategory]
   )
-  const isSixthSoccerSingleMode = selectedGrade === '6학년' && selectedSport === '축구' && !nLessonMode
   const primaryFmsFocus = selectedFmsFocus[0] || '받기'
   const primarySportSkill = selectedSportSkills[0] || '패스'
 
@@ -211,8 +198,8 @@ export function useRecommend() {
   }
 
   const sportSkillOptions = useMemo(
-    () => SPORT_SKILLS_BY_SPORT[selectedSport] || [],
-    [selectedSport]
+    () => getSportSkillsForContext(selectedSport, selectedGrade, selectedSpace),
+    [selectedSport, selectedGrade, selectedSpace]
   )
 
   const legacyFilteredActivities = useMemo(() => {
@@ -260,13 +247,13 @@ export function useRecommend() {
   }, [selectedDomain, selectedSub]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    setAvailableEquipmentText(DEFAULT_EQUIPMENT_BY_SPORT[selectedSport] || '공, 콘')
+    setAvailableEquipmentText(getSportDefaultEquipmentText(selectedSport) || '공, 콘')
     setSelectedSportSkills((prev) => {
-      const available = SPORT_SKILLS_BY_SPORT[selectedSport] || []
+      const available = getSportSkillsForContext(selectedSport, selectedGrade, selectedSpace)
       const kept = (prev || []).filter((skill) => available.includes(skill))
-      return kept.length > 0 ? kept : getDefaultSportSkills(selectedSport)
+      return kept.length > 0 ? kept : getDefaultSportSkills(selectedSport, selectedGrade, selectedSpace)
     })
-  }, [selectedSport])
+  }, [selectedSport, selectedGrade, selectedSpace])
 
   const toggleFmsFocus = (category, skill) => {
     setSelectedFmsByCategory((prev) => {
@@ -329,7 +316,7 @@ export function useRecommend() {
   }
 
   const getGeneratedRecommendations = ({ classSize = 24, lessonHistory = [] } = {}) => {
-    const maxCandidates = isSixthSoccerSingleMode ? 1 : 3
+    const maxCandidates = MAX_RECOMMENDATION_COUNT
 
     const baseRequest = {
       grade: selectedGrade,
@@ -351,7 +338,7 @@ export function useRecommend() {
     const activityResult = generateActivityCandidates(baseRequest)
 
     if (activityResult.candidates.length > 0) {
-      const finalCandidates = activityResult.candidates.slice(0, maxCandidates)
+      const finalCandidates = activityResult.candidates
       setGenerateMeta(activityResult.meta)
       setGeneratedCandidates(finalCandidates)
       setRecommendedActivity(null)
@@ -367,7 +354,7 @@ export function useRecommend() {
     const modularResult = generateModularCandidates(baseRequest)
 
     if (modularResult.candidates.length > 0) {
-      const finalCandidates = modularResult.candidates.slice(0, maxCandidates)
+      const finalCandidates = modularResult.candidates
       setGenerateMeta(modularResult.meta)
       setGeneratedCandidates(finalCandidates)
       setRecommendedActivity(null)
@@ -386,7 +373,7 @@ export function useRecommend() {
     }
 
     const legacyResult = generateCandidates(legacyRequest)
-    const legacyCandidates = legacyResult.candidates.slice(0, maxCandidates)
+    const legacyCandidates = legacyResult.candidates
     setGenerateMeta({ ...legacyResult.meta, engine: 'legacy-fallback' })
     setGeneratedCandidates(legacyCandidates)
 
@@ -413,28 +400,6 @@ export function useRecommend() {
     }
   }
 
-  const getGeneratedNLessonRecommendations = ({ classSize = 24, lessonHistory = [] } = {}) => {
-    const request = {
-      grade: selectedGrade,
-      domain: selectedDomain,
-      subDomain: selectedSub,
-      sport: selectedSport,
-      space: selectedSpace,
-      fmsFocus: selectedFmsFocus,
-      sportSkills: selectedSportSkills,
-      durationMin,
-      classSize,
-      availableEquipment: parseEquipmentText(availableEquipmentText),
-      lessonHistory,
-      preferredStructureIds: selectedStructureIds,
-    }
-
-    const result = generateNLessonSequence(request, nLessonCount)
-    setGeneratedLessonSequence(result)
-    setGenerateMeta(result.meta)
-    return result
-  }
-
   // FMS curriculum guide for current grade
   const fmsCurriculumGuide = useMemo(() => {
     const guide = fmsCurriculumData.fmsGuide || []
@@ -459,10 +424,6 @@ export function useRecommend() {
     generatedCandidates,
     generateMeta,
     recommendedActivity,
-    nLessonMode,
-    nLessonCount,
-    generatedLessonSequence,
-    isSixthSoccerSingleMode,
     primaryFmsFocus,
     primarySportSkill,
     fmsCurriculumGuide,
@@ -483,9 +444,7 @@ export function useRecommend() {
     getSubDomains,
     getRandomRecommendation,
     getGeneratedRecommendations,
-    getGeneratedNLessonRecommendations,
-    setNLessonMode,
-    setNLessonCount,
+    
     filteredSports,
 
     ACTIVITIES,
@@ -498,7 +457,6 @@ export function useRecommend() {
     DURATION_OPTIONS,
     FMS_CATEGORIES,
     FMS_OPTIONS_BY_CATEGORY,
-    SPORT_SKILLS_BY_SPORT,
     sportSkillOptions,
   }
 }

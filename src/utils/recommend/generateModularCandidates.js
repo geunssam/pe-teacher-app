@@ -81,14 +81,11 @@ function pickModifiers(modifierPool, maxCount) {
  */
 export function generateModularCandidates(request) {
   const { structures: allStructures, skills, modifiers, sport: sportData, gradeConfig } = filterCompatibleModules(request)
-  const isSixthSoccer = request.grade === '6학년' && request.sport === '축구'
   const requestedSportSkills = (request.sportSkills || []).filter(Boolean)
-  const maxCandidates = Math.max(1, Math.min(3, Number(request.maxCandidates || 3)))
-  const soccerPriority = (candidate) => {
-    if (candidate.skillId === 'soccer_inside_pass') return 2
-    if (candidate.skillId === 'soccer_trapping') return 1
-    return 0
-  }
+  const requestedMaxCandidates = Number(request.maxCandidates)
+  const maxCandidates = Number.isFinite(requestedMaxCandidates) && requestedMaxCandidates > 0
+    ? requestedMaxCandidates
+    : 20
 
   // Apply preferred structure filter if provided
   let structures = allStructures
@@ -169,7 +166,7 @@ export function generateModularCandidates(request) {
   const candidates = []
   const seen = new Set()
   const failureReasonCounts = {}
-  const maxAttempts = Math.min(pairs.length * 4, 60)
+  const maxAttempts = Math.max(1, pairs.length * 4)
   let attempts = 0
 
   // Build a coreRule-compatible object for validateCandidate
@@ -243,15 +240,7 @@ export function generateModularCandidates(request) {
 
   // Sort by score and take top 3
   const topCandidates = candidates
-    .sort((a, b) => {
-      if (isSixthSoccer) {
-        const priorityDelta = soccerPriority(b) - soccerPriority(a)
-        if (priorityDelta !== 0) {
-          return priorityDelta
-        }
-      }
-      return b.score - a.score
-    })
+    .sort((a, b) => b.score - a.score)
     .slice(0, maxCandidates)
     .map((candidate, index) => {
       const rendered = renderTemplate(candidate, index + 1)

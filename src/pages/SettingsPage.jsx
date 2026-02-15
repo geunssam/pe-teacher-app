@@ -1,12 +1,16 @@
 // ⚙️ 설정 — 학교 위치, 측정소 선택, 앱 환경설정 | 지도→components/settings/LocationMapPicker.jsx, 위치로직→hooks/useLocationPicker.js, 저장→hooks/useSettings.js
+import { lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLocationPicker } from '../hooks/useLocationPicker'
 import { useClassManager } from '../hooks/useClassManager'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
 import GlassCard from '../components/common/GlassCard'
-import LocationMapPicker from '../components/settings/LocationMapPicker'
-import StationPicker from '../components/weather/StationPicker'
+
+const LocationMapPicker = lazy(
+  () => import('../components/settings/LocationMapPicker')
+)
+const StationPicker = lazy(() => import('../components/weather/StationPicker'))
 
 function buildNearestStationMessage(baseName, stationName, distanceKm = null) {
   const safeBaseName = baseName || '선택 위치'
@@ -141,25 +145,29 @@ export default function SettingsPage() {
 
       {/* 지도 모달 */}
       {showMapPicker && (
-        <LocationMapPicker
-          initialLat={location.lat}
-          initialLon={location.lon}
-          initialAddress={location.address || ''}
-          onSelect={selectFromMap}
-          onCancel={closeMapPicker}
-        />
+        <Suspense fallback={<div className="text-caption text-textMuted">지도를 불러오는 중...</div>}>
+          <LocationMapPicker
+            initialLat={location.lat}
+            initialLon={location.lon}
+            initialAddress={location.address || ''}
+            onSelect={selectFromMap}
+            onCancel={closeMapPicker}
+          />
+        </Suspense>
       )}
 
       {pendingLocation && nearbyStations.length > 0 && (
-        <StationPicker
-          locationName={pendingLocation.address || pendingLocation.name}
-          source={stationPickerSource}
-          stations={nearbyStations}
-          centerLat={pendingLocation.lat}
-          centerLon={pendingLocation.lon}
-          onSelect={handleStationSelect}
-          onCancel={cancelStationPicker}
-        />
+        <Suspense fallback={<div className="text-caption text-textMuted">추천 측정소를 불러오는 중...</div>}>
+          <StationPicker
+            locationName={pendingLocation.address || pendingLocation.name}
+            source={stationPickerSource}
+            stations={nearbyStations}
+            centerLat={pendingLocation.lat}
+            centerLon={pendingLocation.lon}
+            onSelect={handleStationSelect}
+            onCancel={cancelStationPicker}
+          />
+        </Suspense>
       )}
     </div>
   )

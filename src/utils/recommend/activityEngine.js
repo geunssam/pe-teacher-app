@@ -288,7 +288,10 @@ export function hasActivitiesForSport(sportName) {
  */
 export function generateActivityCandidates(request) {
   const { activities, sport: sportData, skills, modifiers, gradeConfig } = filterActivities(request)
-  const maxCandidates = Math.max(1, Math.min(3, Number(request.maxCandidates || 3)))
+  const requestedMaxCandidates = Number(request.maxCandidates)
+  const maxCandidates = Number.isFinite(requestedMaxCandidates) && requestedMaxCandidates > 0
+    ? requestedMaxCandidates
+    : 20
 
   if (!sportData) {
     return {
@@ -331,7 +334,7 @@ export function generateActivityCandidates(request) {
   const seen = new Set()
   const failureReasons = {}
   const shuffledActivities = shuffle(activities)
-  const maxAttempts = Math.min(activities.length * 3, 40)
+  const maxAttempts = Math.max(activities.length, activities.length * 3)
   let attempts = 0
 
   for (const activity of shuffledActivities) {

@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { useClassManager } from '../hooks/useClassManager'
 import { useRecommend } from '../hooks/useRecommend'
 import FilterPanel from '../components/sketch/FilterPanel'
-import ResultCard from '../components/sketch/ResultCard'
+ 
 import LessonMemo from '../components/sketch/LessonMemo'
 import { buildLessonOutline, cloneLessonOutline } from '../utils/recommend/lessonOutlineBuilder'
 
@@ -101,6 +101,42 @@ function LockIcon() {
   )
 }
 
+function CandidateSwitcher({ candidates, selectedCandidateId, onSelect }) {
+  if (candidates.length <= 1) {
+    return null
+  }
+
+  return (
+    <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-md border border-white/80 shadow-glass">
+      <div className="text-caption text-muted mb-sm">유사 후보 (원하면 선택)</div>
+      <div className="grid grid-cols-1 gap-xs">
+        {candidates.map((candidate, index) => {
+          const selected = candidate.id === selectedCandidateId
+          return (
+            <button
+              key={candidate.id}
+              onClick={() => onSelect(candidate)}
+              className={`text-left rounded-xl px-3 py-2 border transition-all ${
+                selected
+                  ? 'bg-primary/10 border-primary/40 text-primary'
+                  : 'bg-white/70 border-white/80 text-text hover:bg-white'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-sm">
+                <div>
+                  <div className="text-[11px] text-muted">#{index + 1}</div>
+                  <div className="text-sm font-semibold leading-snug">{candidate.title}</div>
+                </div>
+                <span className="text-[11px] font-semibold">{candidate.score}점</span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 /**
  * EditIcon: flexible 항목 표시 (파란 연필)
  */
@@ -139,10 +175,6 @@ export default function SketchPage() {
     generateMeta,
     recommendedActivity,
     filteredSports,
-    nLessonMode,
-    nLessonCount,
-    generatedLessonSequence,
-    isSixthSoccerSingleMode,
     primaryFmsFocus,
     primarySportSkill,
     fmsCurriculumGuide,
@@ -158,11 +190,8 @@ export default function SketchPage() {
     clearFmsCategory,
     toggleSportSkill,
     toggleStructure,
-    setNLessonMode,
-    setNLessonCount,
 
     getGeneratedRecommendations,
-    getGeneratedNLessonRecommendations,
 
     GRADES,
     DOMAINS,
@@ -208,29 +237,22 @@ export default function SketchPage() {
 
   const fallbackCard = legacyToGeneratedCard(recommendedActivity, selectedSport)
   const cardsToRender = generatedCandidates.length > 0 ? generatedCandidates : fallbackCard ? [fallbackCard] : []
-  const hasNLessonResults = nLessonMode && generatedLessonSequence?.meta?.successCount > 0
-  const canMoveStep2 = cardsToRender.length > 0 || hasNLessonResults
-
-  // Build outline for selected candidate
-  const currentOutline = useMemo(() => {
-    if (editableOutline) return editableOutline
-    if (!selectedCandidate) return null
-
-    return buildLessonOutline({
-      candidate: selectedCandidate,
-      durationMin,
-      fmsFocus: selectedFmsFocus,
-      sportSkills: selectedSportSkills,
-      grade: selectedGrade,
-    })
-  }, [durationMin, editableOutline, selectedCandidate, selectedFmsFocus, selectedSportSkills, selectedGrade])
+  const selectedCandidateId = selectedCandidate?.id
+  const canMoveStep2 = cardsToRender.length > 0
 
   // When selectedCandidate changes, rebuild editable outline
   useEffect(() => {
-    if (!selectedCandidate) {
+    if (!cardsToRender.length) {
+      setSelectedCandidate(null)
       setEditableOutline(null)
       return
     }
+
+    if (!selectedCandidate || !cardsToRender.some((card) => card.id === selectedCandidateId)) {
+      setSelectedCandidate(cardsToRender[0])
+      return
+    }
+
     const outline = buildLessonOutline({
       candidate: selectedCandidate,
       durationMin,
@@ -239,7 +261,7 @@ export default function SketchPage() {
       grade: selectedGrade,
     })
     setEditableOutline(cloneLessonOutline(outline))
-  }, [selectedCandidate?.id])
+  }, [selectedCandidate, selectedCandidateId, cardsToRender, durationMin, selectedFmsFocus, selectedSportSkills, selectedGrade])
 
   const updateActivityField = (activityIndex, field, value) => {
     setEditableOutline((prev) => {
@@ -341,18 +363,6 @@ export default function SketchPage() {
     setEditableOutline(null)
     setIsFinalized(false)
 
-    // N차시 모드
-    if (nLessonMode) {
-      const nResult = getGeneratedNLessonRecommendations({ classSize, lessonHistory })
-      if (nResult.meta.successCount > 0) {
-        setCurrentStep(2)
-        toast.success(`${nResult.meta.successCount}차시 시퀀스를 생성했습니다`)
-      } else {
-        toast.error('N차시 시퀀스 생성에 실패했습니다. 조건을 완화해주세요.')
-      }
-      return
-    }
-
     // 단일 추천 모드
     const result = getGeneratedRecommendations({
       classSize,
@@ -360,12 +370,17 @@ export default function SketchPage() {
     })
 
     if (result.mode === 'generated') {
+      const firstCard = result.candidates?.[0] || fallbackCard
+      if (firstCard) {
+        setSelectedCandidate(firstCard)
+      }
       setCurrentStep(2)
       toast.success(`${result.candidates.length}개 후보를 생성했습니다`)
       return
     }
 
     if (result.fallbackActivity) {
+      setSelectedCandidate(result.fallbackActivity)
       setCurrentStep(2)
       const reasonText = result.meta?.reason ? ` (${result.meta.reason})` : ''
       toast(`생성 실패로 기존 추천 1개를 표시합니다${reasonText}`, { icon: '⚠️' })
@@ -500,7 +515,6 @@ export default function SketchPage() {
             recommendAvailability={recommendAvailability}
             compatibleModuleCounts={compatibleModuleCounts}
             fmsCurriculumGuide={fmsCurriculumGuide}
-            isSixthSoccerSingleMode={isSixthSoccerSingleMode}
             GRADES={GRADES}
             DOMAINS={DOMAINS}
             SUB_DOMAINS_BY_DOMAIN={SUB_DOMAINS_BY_DOMAIN}
@@ -512,54 +526,6 @@ export default function SketchPage() {
             FMS_OPTIONS_BY_CATEGORY={FMS_OPTIONS_BY_CATEGORY}
             onRecommend={handleRecommend}
           />
-
-          {/* N차시 모드 토글 */}
-          <div className="bg-white/60 backdrop-blur-xl rounded-xl p-3 border border-white/80 shadow-glass">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-text">N차시 모드</span>
-                <span className="text-[10px] text-muted">차시별 난이도 자동 배치</span>
-              </div>
-              <button
-                onClick={() => setNLessonMode(!nLessonMode)}
-                className={`relative w-10 h-5 rounded-full transition-colors ${
-                  nLessonMode ? 'bg-primary' : 'bg-black/10'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                    nLessonMode ? 'translate-x-5' : 'translate-x-0.5'
-                  }`}
-                />
-              </button>
-            </div>
-            {nLessonMode && (
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-[11px] text-text/60">차시 수</span>
-                <select
-                  value={nLessonCount}
-                  onChange={(e) => setNLessonCount(Number(e.target.value))}
-                  className="py-1 px-2 bg-white/70 border border-white/80 rounded-lg text-xs text-text font-semibold"
-                >
-                  {[2, 3, 4, 5].map((n) => (
-                    <option key={n} value={n}>
-                      {n}차시
-                    </option>
-                  ))}
-                </select>
-                <div className="flex items-center gap-1 text-[10px] text-muted">
-                  {Array.from({ length: nLessonCount }, (_, i) => {
-                    const phases = { 1: '기본', 2: '기본', 3: '응용', 4: '챌린지', 5: '챌린지' }
-                    return (
-                      <span key={i} className="px-1 py-0.5 bg-white/70 rounded">
-                        {i + 1}차시={phases[i + 1]}
-                      </span>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
 
           <div className="bg-white/60 backdrop-blur-xl rounded-xl p-sm border border-white/80 shadow-glass flex flex-wrap items-center gap-2">
             <span className="text-[11px] text-muted">요약</span>
@@ -622,85 +588,46 @@ export default function SketchPage() {
             </div>
           )}
 
-          {/* N차시 시퀀스 표시 */}
-          {nLessonMode && generatedLessonSequence ? (
-            <div className="space-y-md">
-              <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-md border border-white/80 shadow-glass-strong">
-                <h3 className="text-body-bold mb-sm">
-                  {generatedLessonSequence.meta.successCount}차시 시퀀스
-                </h3>
-                <div className="text-caption text-muted">
-                  성공 {generatedLessonSequence.meta.successCount} / 총 {generatedLessonSequence.meta.lessonCount}차시
-                </div>
-              </div>
-
-              {generatedLessonSequence.lessons.map((lesson) => (
-                <div key={lesson.lessonNumber}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center shrink-0">
-                      {lesson.lessonNumber}
-                    </span>
-                    <span className="text-xs font-semibold text-text">
-                      {lesson.lessonNumber}차시
-                    </span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                      lesson.phase === '기본' ? 'bg-success/20 text-success'
-                        : lesson.phase === '응용' ? 'bg-warning/20 text-warning'
-                        : 'bg-danger/20 text-danger'
-                    }`}>
-                      {lesson.phase}
-                    </span>
-                  </div>
-                  {lesson.candidate ? (
-                    <ResultCard
-                      card={lesson.candidate}
-                      index={lesson.lessonNumber}
-                      onConfirm={handleSelectCandidate}
-                      actionLabel="이 차시로 수업 스케치"
-                      selected={selectedCandidate?.id === lesson.candidate.id}
-                    />
-                  ) : (
-                    <div className="bg-white/40 rounded-xl p-md border border-white/60 text-center">
-                      <div className="text-caption text-muted">
-                        {lesson.failureReason || '후보를 생성하지 못했습니다.'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : cardsToRender.length > 0 ? (
+          {cardsToRender.length > 0 && selectedCandidate ? (
             <>
-              {/* 후보 카드 영역 */}
-              <div className="hidden md:grid md:grid-cols-3 gap-md items-start">
-                {cardsToRender.map((card, index) => (
-                  <ResultCard
-                    key={card.id}
-                    card={card}
-                    index={index + 1}
-                    onConfirm={handleSelectCandidate}
-                    actionLabel="이 후보 선택"
-                    selected={selectedCandidate?.id === card.id}
-                  />
-                ))}
-              </div>
-
-              <div className="md:hidden flex gap-md overflow-x-auto snap-x snap-mandatory pb-sm">
-                {cardsToRender.map((card, index) => (
-                  <div key={card.id} className="min-w-[88%] snap-center">
-                    <ResultCard
-                      card={card}
-                      index={index + 1}
-                      onConfirm={handleSelectCandidate}
-                      actionLabel="이 후보 선택"
-                      selected={selectedCandidate?.id === card.id}
-                    />
+              <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-lg border border-white/80 shadow-glass-strong">
+                <div className="flex items-start justify-between gap-md">
+                  <div>
+                    <div className="text-caption text-muted">추천 수업 제안</div>
+                    <h3 className="text-card-title mt-1">{selectedCandidate.title}</h3>
+                    <p className="text-caption text-text mt-xs">
+                      {selectedCandidate.sport} · {selectedCandidate.difficulty} · {durationMin}분
+                    </p>
                   </div>
-                ))}
+                  <div className="text-right">
+                    <div className="text-caption text-muted">추천점수</div>
+                    <div className="text-body-bold text-primary">{selectedCandidate.score}점</div>
+                  </div>
+                </div>
+                <CandidateSwitcher
+                  candidates={cardsToRender}
+                  selectedCandidateId={selectedCandidateId}
+                  onSelect={handleSelectCandidate}
+                />
+              </div>
+              <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-md border border-white/80">
+                <div className="text-caption text-muted mb-xs">핵심 규칙 · 점수 · 셋업</div>
+                <ul className="space-y-1">
+                  {(selectedCandidate.basicRules || []).slice(0, 3).map((rule, index) => (
+                    <li key={`${selectedCandidate.id}-rule-${index}`} className="text-sm text-text leading-relaxed">
+                      • {rule}
+                    </li>
+                  ))}
+                  {(selectedCandidate.equipment || []).length > 0 && (
+                    <li className="text-sm text-text mt-sm">준비물: {(selectedCandidate.equipment || []).join(', ')}</li>
+                  )}
+                </ul>
               </div>
             </>
           ) : (
-            <ResultCard />
+            <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-lg border border-white/80 shadow-glass-strong text-center">
+              <p className="text-caption text-muted">추천 결과가 없습니다. 조건을 다시 설정하고 재생성해 주세요.</p>
+            </div>
           )}
 
           {/* 선택된 후보의 수업 아웃라인 인라인 편집 */}
@@ -765,7 +692,9 @@ export default function SketchPage() {
                   전개 ({editableOutline.develop.reduce((sum, activity) => sum + Number(activity.durationMin || 0), 0)}분)
                 </h3>
                 <div className="grid grid-cols-1 gap-md">
-                  {editableOutline.develop.map((activity, index) => (
+                  {editableOutline.develop.map((activity, index) => {
+                    const phase = index === 0 ? '승' : index === 1 ? '전' : '결'
+                    return (
                     <div
                       key={`${activity.title}-${index}`}
                       className={`rounded-xl border p-md ${
@@ -777,7 +706,7 @@ export default function SketchPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-sm">
-                        <span className="text-[11px] font-semibold text-text/60">활동 카드 {index + 1}</span>
+                        <span className="text-[11px] font-semibold text-text/60">{phase} 단계 ({index + 1})</span>
                         <span className="text-[11px] text-muted">인라인 편집</span>
                       </div>
                       <input
@@ -837,7 +766,8 @@ export default function SketchPage() {
                         + 활동 지시 추가
                       </button>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
 

@@ -1,7 +1,6 @@
 // 시설관리 훅 — GPS 감지, 지도 위치 선택, 측정소 확정 (날씨탭/설정 공유) | 사용처→WeatherPage/SettingsPage, 측정소검색→utils/stationFinder.js, 지도→components/settings/LocationMapPicker.jsx
 import { useState } from 'react'
 import { findStationsWithFallback } from '../utils/stationFinder'
-import { reverseGeocodeLatLon } from '../services/naverLocal'
 import { useSettings } from './useSettings'
 import toast from 'react-hot-toast'
 
@@ -34,8 +33,8 @@ export function useLocationPicker() {
         const lat = position.coords.latitude
         const lon = position.coords.longitude
         try {
-          const address = await reverseGeocodeLatLon(lat, lon)
-          const stations = await findStationsWithFallback(lat, lon, address || '')
+          const address = '현재 위치(자동 감지)'
+          const stations = await findStationsWithFallback(lat, lon, '')
           toast.dismiss()
           setPendingLocation({
             name: '현재 위치',
@@ -79,6 +78,7 @@ export function useLocationPicker() {
     setShowMapPicker(false)
 
     try {
+      const { reverseGeocodeLatLon } = await import('../services/naverLocal')
       let baseName = placeInfo?.name || ''
       let addressLabel = placeInfo?.address || ''
       const jibunAddress = placeInfo?.jibunAddress || ''
