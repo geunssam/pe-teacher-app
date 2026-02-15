@@ -1,3 +1,4 @@
+// 최근 수업 — 홈 탭에서 최근 수업 기록 목록 | 부모→pages/HomePage.jsx, 데이터→hooks/useClassManager.js
 import { Link } from 'react-router-dom'
 import { useClassManager } from '../../hooks/useClassManager'
 

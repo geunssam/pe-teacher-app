@@ -2,7 +2,7 @@
 
 :root {
   /* 배경 계열 */
-  --color-bg: #FFF9F0;
+  --color-bg: #ffffff;
   --color-surface: rgba(255, 255, 255, 0.55);
   --color-surface2: rgba(255, 255, 255, 0.3);
   --color-border: rgba(255, 255, 255, 0.6);

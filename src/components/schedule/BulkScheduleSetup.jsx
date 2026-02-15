@@ -1,3 +1,4 @@
+// 일괄 시간표 — 여러 교시를 한번에 설정하는 UI | 부모→pages/SchedulePage.jsx, 데이터→hooks/useSchedule.js
 import { useState } from 'react'
 import { useSchedule } from '../../hooks/useSchedule'
 import { useClassManager } from '../../hooks/useClassManager'

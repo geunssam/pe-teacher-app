@@ -1,3 +1,4 @@
+// 🌤️ 날씨 탭 — 날씨 상세, 대기질, 시간별 예보, 야외수업 판단, 측정소 선택 | UI→components/weather/, API→services/weather/, 위치로직→hooks/useLocationPicker.js
 import { useState, useEffect, useCallback } from 'react'
 
 import WeatherDetail from '../components/weather/WeatherDetail'

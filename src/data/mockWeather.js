@@ -1,3 +1,4 @@
+// 야외수업 판단 — 날씨 조건별 실외활동 가능 여부 + 개발용 목업 데이터 | 상수(SKY_CODE/PTY_CODE/PM_GRADE)→weather 컴포넌트들에서 import
 /**
  * Mock Weather Data
  * 실제 API 연동 전까지 사용할 Mock 데이터

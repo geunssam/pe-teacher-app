@@ -1,3 +1,4 @@
+// 학급담임 훅 — 학급 목록, 학생 명단, 수업 기록 CRUD (localStorage 기반) | 사용처→ClassesPage/SchedulePage/HomePage, 저장소→useLocalStorage.js
 import { useLocalStorage } from './useLocalStorage'
 import { generateClassId, generateStudentId } from '../utils/generateId'
 

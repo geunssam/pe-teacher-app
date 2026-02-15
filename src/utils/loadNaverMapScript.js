@@ -1,3 +1,4 @@
+// 네이버 지도 로더 — 네이버 지도 SDK 스크립트를 동적으로 로드 | 사용처→LocationMapPicker.jsx, StationMap.jsx, API키→.env.local
 const NAVER_MAPS_KEY_ID =
   import.meta.env.VITE_NAVER_MAPS_KEY_ID ||
   import.meta.env.VITE_NAVER_KEY_ID ||

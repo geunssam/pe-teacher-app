@@ -1,3 +1,4 @@
+// 날씨 상세 — 기온, 습도, 풍속 등 상세 기상 정보 | 부모→pages/WeatherPage.jsx, 상수→data/mockWeather.js(SKY_CODE/PTY_CODE)
 import { SKY_CODE, PTY_CODE, PM_GRADE } from '../../data/mockWeather'
 
 // 기온 범위별 색상

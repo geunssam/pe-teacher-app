@@ -1,3 +1,4 @@
+// 시간표 그리드 — 월~금 × 7교시 격자 UI | 부모→pages/SchedulePage.jsx, 셀→PeriodCell.jsx, 데이터→hooks/useSchedule.js
 import { useSchedule } from '../../hooks/useSchedule'
 import { useCurrentPeriod } from '../../hooks/useCurrentPeriod'
 import PeriodCell from './PeriodCell'

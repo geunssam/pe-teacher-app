@@ -1,3 +1,4 @@
+// 수업 메모 — 확정된 수업에 대한 교사 메모 입력 | 부모→pages/SketchPage.jsx, 기록저장→hooks/useClassManager.js
 /**
  * 수업 메모 입력
  * "수업 결정" 시 메모도 함께 저장

@@ -1,3 +1,4 @@
+// 대기질 — 미세먼지/초미세먼지 수치 + 등급 표시 | 부모→pages/WeatherPage.jsx, API→services/weather/airQualityFetch.js, 등급→data/mockWeather.js(PM_GRADE)
 import { PM_GRADE } from '../../data/mockWeather'
 
 const UV_INFO = {

@@ -1,3 +1,4 @@
+// 상단 탭바 — 태블릿/데스크톱용 5탭 네비게이션 (640px+) | 탭아이콘→constants/navigation.jsx, 스타일→css/components/navbar.css, 반응형→css/utilities/responsive.css
 import { Link, useLocation } from 'react-router-dom'
 import { NAV_ITEMS } from '../../constants/navigation'
 

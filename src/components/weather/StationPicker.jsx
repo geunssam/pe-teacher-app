@@ -1,3 +1,4 @@
+// 측정소 선택 — 지도/목록 모드로 대기오염 측정소 선택 | 부모→pages/WeatherPage.jsx, 하위→StationMap.jsx+StationList.jsx, 로직→hooks/useLocationPicker.js
 import { useState } from 'react'
 import StationMap from './StationMap'
 import StationList from './StationList'

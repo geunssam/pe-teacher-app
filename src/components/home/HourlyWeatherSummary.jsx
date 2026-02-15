@@ -1,3 +1,4 @@
+// 시간별 날씨 요약 — 홈 탭에서 오늘의 시간대별 날씨 미리보기 | 부모→pages/HomePage.jsx, API→services/weather/weatherFetch.js
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchHourlyForecast, fetchAirQualityData } from '../../services/weather'

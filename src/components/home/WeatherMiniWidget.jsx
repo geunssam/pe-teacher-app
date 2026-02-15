@@ -1,3 +1,4 @@
+// 날씨 미니위젯 — 홈 탭 상단의 현재 날씨 요약 카드 | 부모→pages/HomePage.jsx, API→services/weather/weatherFetch.js, 위치→hooks/useSettings.js
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWeatherData, fetchAirQualityData } from '../../services/weather'

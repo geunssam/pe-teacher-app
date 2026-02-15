@@ -1,3 +1,4 @@
+// 행정실장 훅 — 위치, 측정소, 앱 환경설정 (useLocalStorage 기반) | 사용처→SettingsPage/WeatherPage/HomePage, 저장소→useLocalStorage.js
 import { useLocalStorage, removeLocalStorageItem } from './useLocalStorage'
 
 const SETTINGS_KEY = 'pe-teacher-settings'

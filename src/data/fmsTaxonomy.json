@@ -11,55 +11,86 @@
       "skills": [
         {
           "name": "걷기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "달리기",
           "aliases": [
             "뛰기"
+          ],
+          "relatedSportSkills": [
+            "soccer_dribble",
+            "basketball_dribble",
+            "tball_batting",
+            "tball_catching",
+            "kickball_rolling_kick",
+            "kickball_fly_kick",
+            "disc_catching",
+            "jumprope_long_rope"
           ]
         },
         {
           "name": "점핑",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "basketball_layup",
+            "jumprope_basic",
+            "jumprope_double_under",
+            "jumprope_long_rope"
+          ]
         },
         {
           "name": "호핑",
           "aliases": [
             "앙감질"
+          ],
+          "relatedSportSkills": [
+            "jumprope_basic"
           ]
         },
         {
           "name": "리핑",
           "aliases": [
             "한 발 뛰기"
-          ]
+          ],
+          "relatedSportSkills": []
         },
         {
           "name": "스키핑",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "갤로핑",
           "aliases": [
             "말처럼 뛰기"
-          ]
+          ],
+          "relatedSportSkills": []
         },
         {
           "name": "사이드 스텝",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "dodgeball_dodge"
+          ]
         },
         {
           "name": "슬라이딩",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "dodgeball_dodge"
+          ]
         },
         {
           "name": "구르기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "기어가기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         }
       ],
       "movementElements": [
@@ -70,11 +101,19 @@
       "gradeFocus": [
         {
           "grade": "3학년",
-          "focus": "기본 움직임 기술 자체 습득 및 익히기"
+          "focus": "기본 이동 움직임(걷기, 달리기, 점핑, 갤로핑) 자체를 익히고 다양한 방향과 경로로 탐색"
         },
         {
-          "grade": "4~6학년",
-          "focus": "복합 및 응용 기술로 발전시켜 전략형 스포츠 게임에 적용"
+          "grade": "4학년",
+          "focus": "이동 움직임을 조합하여 간이 게임(릴레이, 술래잡기)에 적용"
+        },
+        {
+          "grade": "5학년",
+          "focus": "이동 움직임을 스포츠 상황(축구 달리기, 배구 이동)에 맞게 응용"
+        },
+        {
+          "grade": "6학년",
+          "focus": "복합 이동 움직임을 전략적 게임 상황에서 자동화 수준으로 수행"
         }
       ],
       "source": "1, 2"
@@ -92,49 +131,60 @@
             "머리",
             "어깨",
             "엉덩이"
-          ]
+          ],
+          "relatedSportSkills": []
         },
         {
           "name": "털기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "흔들기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "돌기",
           "aliases": [
             "제자리 회전"
-          ]
+          ],
+          "relatedSportSkills": []
         },
         {
           "name": "꺾기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "펴기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "구부리기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "움츠리기 & 늘리기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "비틀기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "균형 잡기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "들기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         }
       ],
       "movementElements": [
@@ -146,11 +196,19 @@
       "gradeFocus": [
         {
           "grade": "3학년",
-          "focus": "제자리에서 몸을 움직이는 기본 원리 습득"
+          "focus": "제자리에서 몸을 움직이는 기본 원리(돌리기, 구부리기, 균형 잡기) 습득"
         },
         {
-          "grade": "4~6학년",
-          "focus": "표현 활동 및 체력 운동 활동의 복합 기술로 전이"
+          "grade": "4학년",
+          "focus": "비이동 움직임을 짝 활동과 간이 표현 활동에 적용"
+        },
+        {
+          "grade": "5학년",
+          "focus": "체력 운동(스트레칭, 근력 운동)과 표현 활동에서 비이동 기술 심화"
+        },
+        {
+          "grade": "6학년",
+          "focus": "전략형 스포츠에서 피벗, 페인트 등 비이동 기술을 상황에 맞게 활용"
         }
       ],
       "source": "1, 2"
@@ -164,51 +222,105 @@
       "skills": [
         {
           "name": "던지기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "basketball_chest_pass",
+            "basketball_layup",
+            "basketball_bounce_pass",
+            "dodgeball_throw",
+            "volleyball_overhand",
+            "tball_fielding_throw",
+            "kickball_fielding",
+            "bigvb_overhand_toss",
+            "bigvb_team_receive",
+            "disc_backhand",
+            "disc_forehand"
+          ]
         },
         {
           "name": "받기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "soccer_inside_pass",
+            "soccer_trapping",
+            "basketball_chest_pass",
+            "basketball_bounce_pass",
+            "dodgeball_catch",
+            "volleyball_underhand",
+            "volleyball_overhand",
+            "tball_fielding_throw",
+            "tball_catching",
+            "kickball_fielding",
+            "bigvb_underhand_hit",
+            "bigvb_overhand_toss",
+            "bigvb_team_receive",
+            "disc_catching"
+          ]
         },
         {
           "name": "굴리기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": []
         },
         {
           "name": "치기",
           "aliases": [
             "손",
             "배트"
+          ],
+          "relatedSportSkills": [
+            "volleyball_serve",
+            "tball_batting",
+            "bigvb_underhand_hit"
           ]
         },
         {
           "name": "튀기기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "basketball_dribble"
+          ]
         },
         {
           "name": "되받아치기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "volleyball_underhand"
+          ]
         },
         {
           "name": "차기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "soccer_inside_pass",
+            "soccer_shooting",
+            "kickball_rolling_kick",
+            "kickball_fly_kick"
+          ]
         },
         {
           "name": "공 몰기",
           "aliases": [
             "드리블"
+          ],
+          "relatedSportSkills": [
+            "soccer_dribble"
           ]
         },
         {
           "name": "볼 멈추기",
-          "aliases": []
+          "aliases": [],
+          "relatedSportSkills": [
+            "soccer_trapping"
+          ]
         },
         {
           "name": "타기",
           "aliases": [
             "스케이트",
             "자전거"
-          ]
+          ],
+          "relatedSportSkills": []
         }
       ],
       "movementElements": [
@@ -220,11 +332,19 @@
       "gradeFocus": [
         {
           "grade": "3학년",
-          "focus": "공과 도구를 다루는 기초 기술 연습"
+          "focus": "공과 도구를 다루는 기초 기술(던지기, 받기, 굴리기, 차기) 연습"
         },
         {
-          "grade": "4~6학년",
-          "focus": "전략형 스포츠(축구, 농구, 배구 등) 내 응용 기술로 전이"
+          "grade": "4학년",
+          "focus": "조작 움직임을 간이 게임(공 주고받기, 드리블 릴레이)에 적용"
+        },
+        {
+          "grade": "5학년",
+          "focus": "종목별 기술(축구 패스, 농구 드리블, 배구 리시브)로 조작 기술 전이"
+        },
+        {
+          "grade": "6학년",
+          "focus": "전략형 경기에서 패스-이동-슈팅 등 조작 기술을 연계하여 수행"
         }
       ],
       "source": "1, 2"

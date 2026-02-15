@@ -1,3 +1,4 @@
+// 후보 텍스트 렌더링 — 규칙/벌칙/운영팁/교육효과를 포맷팅된 문자열로 변환 | 호출→generateCandidates.js, 결과표시→components/sketch/ResultCard.jsx
 function hasItems(list) {
   return Array.isArray(list) && list.length > 0
 }

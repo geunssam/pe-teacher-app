@@ -1,3 +1,4 @@
+// 공통 모달 — glassmorphism backdrop + onClose 팝업 | 스타일→css/components/modal.css, 글래스→css/utilities/glass.css
 /**
  * 공통 모달 래퍼 컴포넌트
  * classpet 글래스모피즘 디자인 시스템 기반

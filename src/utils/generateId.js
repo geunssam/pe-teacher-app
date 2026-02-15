@@ -1,3 +1,4 @@
+// ID 생성기 — 고유 식별자 생성 (수업기록, 학급 등) | 사용처→hooks/useClassManager.js
 /**
  * 고유 ID 생성 유틸리티
  */

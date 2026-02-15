@@ -1,3 +1,4 @@
+// 교시 셀 — 시간표 한 칸 (과목명 + 편집) | 부모→ScheduleGrid.jsx, 학급색상→hooks/useClassManager.js
 import { useClassManager } from '../../hooks/useClassManager'
 
 export default function PeriodCell({

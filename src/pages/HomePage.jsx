@@ -1,3 +1,4 @@
+// 🏠 오늘 탭 — 날씨 요약 + 오늘 시간표 + 최근 수업 기록 | 위젯→components/home/, 날씨데이터→services/weather/
 import { Link } from 'react-router-dom'
 import { useClassManager } from '../hooks/useClassManager'
 import GlassCard from '../components/common/GlassCard'

@@ -1,3 +1,4 @@
+// 측정소 검색 — 좌표 기반 가장 가까운 대기오염 측정소 찾기 (fallback 포함) | 사용처→hooks/useLocationPicker.js, API→services/weather/stationSearch.js
 import { findNearbyStations } from '../services/weather'
 
 /**

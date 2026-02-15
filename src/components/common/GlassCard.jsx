@@ -1,3 +1,4 @@
+// 공통 카드 — 글래스모피즘 스타일의 카드 컨테이너 | 스타일→css/components/cards.css, 글래스→css/utilities/glass.css
 /**
  * 리퀴드 글래스 이펙트 카드 컴포넌트
  *

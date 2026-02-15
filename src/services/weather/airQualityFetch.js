@@ -1,3 +1,4 @@
+// 에어코리아 API — 대기오염(미세먼지/초미세먼지) 데이터 fetch | 사용처→WeatherPage, 측정소→stationSearch.js, API키→.env.local
 const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY
 const AIR_ENDPOINT = import.meta.env.VITE_AIR_API_ENDPOINT
 

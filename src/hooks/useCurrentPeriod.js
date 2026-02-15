@@ -1,3 +1,4 @@
+// 시계 훅 — 현재 시각 기반으로 몇 교시인지 계산 | 사용처→HomePage, 교시표시→components/schedule/ScheduleGrid.jsx
 import { useState, useEffect } from 'react'
 
 /**

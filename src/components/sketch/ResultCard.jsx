@@ -1,3 +1,4 @@
+// 수업스케치 결과 — 생성된 활동 후보 카드 (제목, 규칙, 교구, 점수) | 부모→pages/SketchPage.jsx, 스타일→css/components/cards.css
 import { useState } from 'react'
 
 /**
@@ -86,6 +87,29 @@ export default function ResultCard({
 
       {expanded && (
         <div className="space-y-sm mb-sm p-sm bg-white/45 rounded-lg border border-white/70">
+          <Section
+            title="활동 흐름"
+            items={card.compiledFlow}
+            numbered
+          />
+          <Section
+            title="적용 변형"
+            items={
+              card.modifierDetails ||
+              (card.modifierNarratives || []).map(
+                (modifier) => `${modifier.name} (${modifier.type}) - ${modifier.ruleText}`
+              )
+            }
+          />
+          {card.teacherMeaning?.length > 0 && (
+            <Section title="교사 의도" items={card.teacherMeaning} />
+          )}
+          {card.setupExamples?.length > 0 && (
+            <Section title="셋업 예시" items={card.setupExamples} />
+          )}
+          {card.scoringExamples?.length > 0 && (
+            <Section title="점수 예시" items={card.scoringExamples} />
+          )}
           <Section title="벌칙/미션" items={card.penaltiesMissions} />
           <Section title="운영 팁" items={card.operationTips} />
           <Section title="교육 효과" items={card.educationEffects} />
@@ -131,7 +155,7 @@ function Badge({ children, tone = 'default' }) {
   return <span className={className}>{children}</span>
 }
 
-function Section({ title, items }) {
+function Section({ title, items, numbered = false }) {
   if (!items || items.length === 0) {
     return null
   }
@@ -140,9 +164,9 @@ function Section({ title, items }) {
     <div>
       <div className="text-[11px] font-semibold text-muted mb-xs">{title}</div>
       <ul className="space-y-1">
-        {items.slice(0, 3).map((item, index) => (
+        {items.slice(0, numbered ? 6 : 3).map((item, index) => (
           <li key={`${title}-${index}`} className="text-[12px] text-text leading-relaxed">
-            • {truncateText(item, 74)}
+            {numbered ? `${index + 1}. ` : '• '}{truncateText(item, 74)}
           </li>
         ))}
       </ul>

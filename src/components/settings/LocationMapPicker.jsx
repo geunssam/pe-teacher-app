@@ -1,3 +1,4 @@
+// 위치 선택 — 네이버 지도에서 학교 위치를 클릭/검색으로 설정 | 부모→pages/SettingsPage.jsx, 지도SDK→utils/loadNaverMapScript.js, 검색→services/naverLocal.js
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { loadNaverMapScript } from '../../utils/loadNaverMapScript'

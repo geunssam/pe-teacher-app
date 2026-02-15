@@ -1,3 +1,4 @@
+// 거리 계산 — Haversine 공식으로 두 좌표 간 직선 거리(km) 산출 | 사용처→services/weather/stationSearch.js, utils/stationFinder.js
 /**
  * 두 좌표 간의 거리를 구면 코사인법칙(Haversine)으로 계산
  * @param {number} lat1 - 시작점 위도

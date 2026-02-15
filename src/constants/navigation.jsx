@@ -1,4 +1,4 @@
-// SVG Icon Components
+// 탭 메뉴 아이콘 + NAV_ITEMS 정의 — 5탭 네비게이션 공용 상수 | 사용처→Header.jsx, TopNav.jsx, HamburgerMenu.jsx
 export const HomeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>

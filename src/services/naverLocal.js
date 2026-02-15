@@ -1,3 +1,4 @@
+// 네이버 API — 역지오코딩(좌표→주소) + 로컬 검색(학교 찾기) | 사용처→LocationMapPicker.jsx, 프록시→netlify/functions/naver-search.mjs, API키→.env.local
 import { CITY_COORDS } from '../utils/gridConvert'
 import { loadNaverMapScript } from '../utils/loadNaverMapScript'
 

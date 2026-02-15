@@ -1,0 +1,432 @@
+{
+  "meta": {
+    "version": "3.0.0",
+    "description": "수업 구조 틀 16개 - Phase 2.5 교사 번역 시스템 (slotKeys + editableFields 추가)"
+  },
+  "structures": [
+    {
+      "id": "pair_activity",
+      "name": "짝활동",
+      "description": "2인 1조로 기술 동작을 주고받으며 반복 연습하는 기본 구조",
+      "groupSize": 2,
+      "space": ["운동장", "체육관", "교실"],
+      "flow": ["마주 보고 [기술동작]을 주고받는다", "성공 시 거리를 1m 늘린다", "실패 시 원래 거리에서 재시도한다"],
+      "slots": {
+        "기술동작": "기본 기술 동작 (패스, 리시브 등)"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": []
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "연습거리"]
+      },
+      "compatibleFmsCategories": ["조작", "비이동"],
+      "suitablePhase": "기본",
+      "baseDurationMin": 10,
+      "difficultyBase": 1,
+      "equipment": ["콘"],
+      "teachingTips": ["거리 조절로 난이도 조정", "성공 경험을 쌓을 수 있도록 가까운 거리에서 시작"]
+    },
+    {
+      "id": "triangle_pass",
+      "name": "삼각패스",
+      "description": "3인이 삼각형을 유지하며 패스 후 빈 공간으로 이동하는 구조",
+      "groupSize": 3,
+      "space": ["운동장", "체육관"],
+      "flow": ["삼각형을 유지하며 [기술동작]으로 연결한다", "패스 후 빈 공간으로 [이동동작]한다", "5회 연속 성공 시 다음 라운드로 이동한다"],
+      "slots": {
+        "기술동작": "패스 기술 동작",
+        "이동동작": "이동 움직임 (달리기, 사이드스텝 등)"
+      },
+      "slotKeys": {
+        "required": ["기술동작", "이동동작"],
+        "optional": []
+      },
+      "editableFields": {
+        "locked": ["기술동작", "이동동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "삼각형간격"]
+      },
+      "compatibleFmsCategories": ["조작", "이동"],
+      "suitablePhase": "기본",
+      "baseDurationMin": 12,
+      "difficultyBase": 2,
+      "equipment": ["콘", "마커콘"],
+      "teachingTips": ["삼각형 간격을 2~5m로 조절", "이동 속도보다 정확한 타이밍을 먼저 강조"]
+    },
+    {
+      "id": "square_pass",
+      "name": "사각패스",
+      "description": "4인이 사각형을 유지하며 패스와 이동을 연결하는 구조",
+      "groupSize": 4,
+      "space": ["운동장", "체육관"],
+      "flow": ["사각형 코너에서 [기술동작]으로 다음 코너로 연결한다", "패스 후 패스 방향으로 [이동동작]한다", "한 바퀴 완성 시 방향을 전환한다"],
+      "slots": {
+        "기술동작": "패스 기술 동작",
+        "이동동작": "이동 움직임"
+      },
+      "slotKeys": {
+        "required": ["기술동작", "이동동작"],
+        "optional": []
+      },
+      "editableFields": {
+        "locked": ["기술동작", "이동동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "사각형크기"]
+      },
+      "compatibleFmsCategories": ["조작", "이동"],
+      "suitablePhase": "응용",
+      "baseDurationMin": 13,
+      "difficultyBase": 2,
+      "equipment": ["콘"],
+      "teachingTips": ["사각형 크기 조절로 난이도 조정", "시계/반시계 방향 전환으로 변화"]
+    },
+    {
+      "id": "captain_activity",
+      "name": "대장활동",
+      "description": "팀 대장이 지시하고 팀원이 수행하는 리더십 중심 구조",
+      "groupSize": 5,
+      "space": ["운동장", "체육관"],
+      "flow": ["대장이 [기술동작] 방향을 지시한다", "팀원은 지시에 따라 [이동동작]으로 위치를 잡는다", "성공 시 대장을 교대한다"],
+      "slots": {
+        "기술동작": "공격/수비 기술 동작",
+        "이동동작": "이동 움직임"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [{ "key": "이동동작", "fallback": "달리기로 위치를 잡는다" }]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "대장교대방식"]
+      },
+      "compatibleFmsCategories": ["조작", "이동", "비이동"],
+      "suitablePhase": "응용",
+      "baseDurationMin": 14,
+      "difficultyBase": 3,
+      "equipment": ["콘", "조끼"],
+      "teachingTips": ["대장 역할을 골고루 돌아가게 진행", "의사소통 키워드를 사전 약속"]
+    },
+    {
+      "id": "freeze_tag",
+      "name": "얼음땡",
+      "description": "술래가 터치하면 정지, 팀원이 구출하는 변형 태그 구조",
+      "groupSize": 6,
+      "space": ["운동장", "체육관"],
+      "flow": ["술래가 [이동동작]으로 추격한다", "터치당하면 [기술동작] 자세로 정지한다", "팀원이 [기술동작-응답]으로 구출한다"],
+      "slots": {
+        "이동동작": "이동 움직임 (달리기, 사이드스텝 등)",
+        "기술동작": "정지 시 취하는 자세/동작",
+        "기술동작-응답": "구출 시 수행하는 기술 동작"
+      },
+      "slotKeys": {
+        "required": ["이동동작"],
+        "optional": [
+          { "key": "기술동작", "fallback": "양팔 벌려 정지 자세" },
+          { "key": "기술동작-응답", "fallback": "하이파이브로 구출한다" }
+        ]
+      },
+      "editableFields": {
+        "locked": ["이동동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "술래수", "활동공간크기"]
+      },
+      "compatibleFmsCategories": ["이동", "조작"],
+      "suitablePhase": "기본",
+      "baseDurationMin": 10,
+      "difficultyBase": 1,
+      "equipment": ["콘", "조끼"],
+      "teachingTips": ["술래 수를 조절해 난이도 변경", "활동 공간을 제한해 밀도 조절"]
+    },
+    {
+      "id": "relay",
+      "name": "릴레이",
+      "description": "팀별로 순서대로 기술 동작을 수행하며 이어가는 경쟁 구조",
+      "groupSize": 5,
+      "space": ["운동장", "체육관"],
+      "flow": ["출발선에서 [기술동작]을 수행하며 반환점까지 [이동동작]한다", "반환점에서 되돌아와 다음 주자에게 터치한다", "모든 주자가 완료한 팀이 승리한다"],
+      "slots": {
+        "기술동작": "기술 동작 (드리블, 패스 등)",
+        "이동동작": "이동 움직임"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [{ "key": "이동동작", "fallback": "달리기" }]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "반환점거리"]
+      },
+      "compatibleFmsCategories": ["이동", "조작"],
+      "suitablePhase": "기본",
+      "baseDurationMin": 12,
+      "difficultyBase": 2,
+      "equipment": ["콘"],
+      "teachingTips": ["팀별 인원을 균등하게 배분", "대기 중인 학생에게 응원/관찰 역할 부여"]
+    },
+    {
+      "id": "number_call",
+      "name": "넘버콜",
+      "description": "교사가 번호를 부르면 해당 학생이 출전하여 미션을 수행하는 구조",
+      "groupSize": 6,
+      "space": ["운동장", "체육관"],
+      "flow": ["교사가 번호를 호출한다", "해당 번호 학생이 [이동동작]으로 출전한다", "[기술동작]으로 미션을 수행하고 복귀한다"],
+      "slots": {
+        "기술동작": "기술 동작",
+        "이동동작": "이동 움직임"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [{ "key": "이동동작", "fallback": "달리기로 출전" }]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "호출간격"]
+      },
+      "compatibleFmsCategories": ["이동", "조작"],
+      "suitablePhase": "응용",
+      "baseDurationMin": 14,
+      "difficultyBase": 2,
+      "equipment": ["콘", "번호조끼"],
+      "teachingTips": ["번호 호출 간격을 조절해 긴장감 유지", "복수 번호 호출로 협력 상황 연출"]
+    },
+    {
+      "id": "shuttle_challenge",
+      "name": "왕복챌린지",
+      "description": "왕복 거리를 점진적으로 늘리며 기술 동작 정확도를 시험하는 구조",
+      "groupSize": 2,
+      "space": ["운동장", "체육관"],
+      "flow": ["시작 거리에서 [기술동작]을 수행한다", "성공 시 거리를 1단계 늘리고 [이동동작]으로 되돌아온다", "실패 시 해당 거리에서 재도전한다"],
+      "slots": {
+        "기술동작": "기술 동작",
+        "이동동작": "이동 움직임"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [{ "key": "이동동작", "fallback": "달리기" }]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "거리증가폭"]
+      },
+      "compatibleFmsCategories": ["조작", "이동"],
+      "suitablePhase": "기본",
+      "baseDurationMin": 10,
+      "difficultyBase": 1,
+      "equipment": ["콘"],
+      "teachingTips": ["거리 증가폭을 학생 수준에 맞춤", "실패 허용적 분위기 조성"]
+    },
+    {
+      "id": "hot_potato",
+      "name": "폭탄돌리기",
+      "description": "시간 제한 내에 빠르게 패스를 돌리는 긴장감 있는 구조",
+      "groupSize": 5,
+      "space": ["운동장", "체육관", "교실"],
+      "flow": ["원형으로 서서 [기술동작]으로 빠르게 돌린다", "타이머 종료 시 공을 가진 학생이 [벌칙동작]을 수행한다", "라운드를 반복하며 방향을 전환한다"],
+      "slots": {
+        "기술동작": "패스 기술 동작",
+        "벌칙동작": "벌칙/미션 동작 (스쿼트, 제자리뛰기 등)"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [{ "key": "벌칙동작", "fallback": "제자리 스쿼트 3회" }]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "타이머시간", "벌칙동작"]
+      },
+      "compatibleFmsCategories": ["조작", "비이동"],
+      "suitablePhase": "기본",
+      "baseDurationMin": 8,
+      "difficultyBase": 1,
+      "equipment": ["타이머"],
+      "teachingTips": ["타이머 시간을 점진적으로 줄여 난이도 조절", "벌칙을 가벼운 운동으로 설정"]
+    },
+    {
+      "id": "mini_game",
+      "name": "미니게임",
+      "description": "소규모 팀 대항 전으로 공격-수비 전환을 경험하는 게임형 구조",
+      "groupSize": 6,
+      "space": ["운동장", "체육관"],
+      "flow": ["공격팀이 [기술동작]으로 전진한다", "수비팀이 [수비동작]으로 차단한다", "공수 전환 시 [이동동작]으로 빠르게 복귀한다"],
+      "slots": {
+        "기술동작": "공격 기술 동작",
+        "수비동작": "수비 기술 동작",
+        "이동동작": "이동 움직임"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [
+          { "key": "수비동작", "fallback": "수비 위치를 잡고 차단한다" },
+          { "key": "이동동작", "fallback": "달리기로 복귀" }
+        ]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "라운드시간", "팀구성"]
+      },
+      "compatibleFmsCategories": ["이동", "조작", "비이동"],
+      "suitablePhase": "챌린지",
+      "baseDurationMin": 16,
+      "difficultyBase": 3,
+      "equipment": ["콘", "조끼"],
+      "teachingTips": ["팀 규모를 3vs3 이하로 유지해 참여도 확보", "라운드 시간을 4분으로 제한"]
+    },
+    {
+      "id": "station",
+      "name": "스테이션",
+      "description": "여러 코너를 순환하며 다양한 기술을 연습하는 순환 구조",
+      "groupSize": 4,
+      "space": ["운동장", "체육관"],
+      "flow": ["스테이션 A에서 [기술동작]을 반복한다", "신호 시 다음 스테이션으로 [이동동작]한다", "모든 스테이션 순환 후 팀별 점수를 합산한다"],
+      "slots": {
+        "기술동작": "각 스테이션별 기술 동작",
+        "이동동작": "이동 움직임"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [{ "key": "이동동작", "fallback": "달리기로 이동" }]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "스테이션수", "체류시간"]
+      },
+      "compatibleFmsCategories": ["이동", "조작", "비이동"],
+      "suitablePhase": "응용",
+      "baseDurationMin": 15,
+      "difficultyBase": 2,
+      "equipment": ["콘", "타이머"],
+      "teachingTips": ["스테이션 수를 4~5개로 제한", "각 스테이션 체류 시간을 3분으로 통일"]
+    },
+    {
+      "id": "circle_pass",
+      "name": "원형패스",
+      "description": "5인이 원형으로 서서 순서대로 패스를 돌리며 기술을 반복하는 구조",
+      "groupSize": 5,
+      "space": ["운동장", "체육관", "교실"],
+      "flow": ["원형으로 서서 시계 방향으로 [기술동작]을 전달한다", "한 바퀴 완성 시 반시계 방향으로 전환한다", "성공 시 원의 크기를 1m 늘린다"],
+      "slots": {
+        "기술동작": "패스 기술 동작"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": []
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "원크기"]
+      },
+      "compatibleFmsCategories": ["조작", "이동"],
+      "suitablePhase": "기본",
+      "baseDurationMin": 10,
+      "difficultyBase": 1,
+      "equipment": ["콘"],
+      "teachingTips": ["원 크기를 조절해 난이도 변경", "전달 속도보다 정확성을 먼저 강조"]
+    },
+    {
+      "id": "target_challenge",
+      "name": "타깃챌린지",
+      "description": "2인이 정해진 타깃을 향해 기술 정확도를 겨루는 구조",
+      "groupSize": 2,
+      "space": ["운동장", "체육관", "교실"],
+      "flow": ["타깃을 향해 [기술동작]을 수행한다", "정확도에 따라 1~3점을 부여한다", "3라운드 합산 점수로 승패를 결정한다"],
+      "slots": {
+        "기술동작": "기술 동작 (던지기, 차기 등)"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": []
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "타깃거리", "점수기준"]
+      },
+      "compatibleFmsCategories": ["조작"],
+      "suitablePhase": "기본",
+      "baseDurationMin": 10,
+      "difficultyBase": 1,
+      "equipment": ["콘", "타깃보드 또는 콘"],
+      "teachingTips": ["타깃 거리를 학생 수준에 맞게 조절", "점수 기준을 명확히 안내"]
+    },
+    {
+      "id": "gate_breakthrough",
+      "name": "게이트돌파",
+      "description": "4인 팀이 수비 게이트를 돌파하며 공수 대결을 펼치는 구조",
+      "groupSize": 4,
+      "space": ["운동장", "체육관"],
+      "flow": ["공격팀이 [기술동작]으로 게이트를 통과한다", "수비팀이 [수비동작]으로 게이트를 차단한다", "게이트 통과 시 1점, 3점 선취 팀 승리"],
+      "slots": {
+        "기술동작": "공격 기술 동작",
+        "수비동작": "수비 기술 동작"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [{ "key": "수비동작", "fallback": "수비 위치를 잡고 게이트를 차단한다" }]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "게이트폭", "승리조건"]
+      },
+      "compatibleFmsCategories": ["조작", "이동"],
+      "suitablePhase": "응용",
+      "baseDurationMin": 14,
+      "difficultyBase": 2,
+      "equipment": ["콘", "조끼"],
+      "teachingTips": ["게이트 폭을 조절해 난이도 변경", "수비는 신체 접촉 없이 차단하도록 지도"]
+    },
+    {
+      "id": "king_of_the_court",
+      "name": "킹오브코트",
+      "description": "토너먼트형으로 승자가 코트에 남고 패자가 교체되는 경쟁 구조",
+      "groupSize": 6,
+      "space": ["운동장", "체육관"],
+      "flow": ["양팀이 [기술동작]으로 미니게임을 진행한다", "승리팀은 코트에 남고 패배팀은 대기열 뒤로 이동한다", "연속 3승 달성 시 킹 등극"],
+      "slots": {
+        "기술동작": "경기에서 사용하는 기술 동작"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": []
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "연속승기준", "코트수"]
+      },
+      "compatibleFmsCategories": ["조작", "이동", "비이동"],
+      "suitablePhase": "챌린지",
+      "baseDurationMin": 16,
+      "difficultyBase": 3,
+      "equipment": ["콘", "조끼"],
+      "teachingTips": ["대기 시간을 줄이기 위해 코트 2개 운영", "연속 승 기준을 학생 수준에 맞게 조절"]
+    },
+    {
+      "id": "invasion_game",
+      "name": "침공게임",
+      "description": "상대 영역을 침투하여 득점하는 본격적인 영역침투형 게임 구조",
+      "groupSize": 6,
+      "space": ["운동장", "체육관"],
+      "flow": ["공격팀이 [기술동작]으로 상대 영역에 침투한다", "수비팀이 [수비동작]으로 침투를 저지한다", "공수 전환 시 [이동동작]으로 빠르게 복귀한다"],
+      "slots": {
+        "기술동작": "공격 기술 동작",
+        "수비동작": "수비 기술 동작",
+        "이동동작": "이동 움직임"
+      },
+      "slotKeys": {
+        "required": ["기술동작"],
+        "optional": [
+          { "key": "수비동작", "fallback": "수비 위치를 잡고 저지한다" },
+          { "key": "이동동작", "fallback": "달리기로 복귀" }
+        ]
+      },
+      "editableFields": {
+        "locked": ["기술동작", "safetyRules"],
+        "flexible": ["groupSize", "baseDurationMin", "코트크기", "공수전환규칙"]
+      },
+      "compatibleFmsCategories": ["조작", "이동", "비이동"],
+      "suitablePhase": "챌린지",
+      "baseDurationMin": 18,
+      "difficultyBase": 3,
+      "equipment": ["콘", "조끼"],
+      "teachingTips": ["코트 크기를 인원에 맞게 축소", "공수 전환 규칙을 사전에 명확히 안내"]
+    }
+  ]
+}

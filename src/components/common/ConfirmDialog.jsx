@@ -1,3 +1,4 @@
+// 공통 확인창 — 삭제/초기화 등 위험 동작 확인 다이얼로그 | 호출방법: window.showConfirm(), 스타일→css/components/modal.css
 import { useState, useEffect } from 'react'
 
 let confirmResolve = null

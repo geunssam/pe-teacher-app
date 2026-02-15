@@ -1,3 +1,4 @@
+// 기상청 API — 단기예보 데이터 fetch + 파싱 | 사용처→WeatherPage/HomePage, 좌표변환→utils/gridConvert.js, API키→.env.local
 import { latLonToGrid, DEFAULT_LOCATION } from '../../utils/gridConvert'
 
 const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY

@@ -1,3 +1,4 @@
+// 초기 설정 마법사 — 첫 진입 시 학교급 → 학년 → 학급수 → 학생수 설정 | 학급데이터→hooks/useClassManager.js, 진입조건→App.jsx(ProtectedRoute)
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClassManager } from '../hooks/useClassManager'

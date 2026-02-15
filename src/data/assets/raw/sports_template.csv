@@ -1,0 +1,11 @@
+id,name,domain,sub_domain,fms_group,core_rules,required_concepts,safety_rules,default_equipment,skills,forbidden_modifier_ids,forbidden_tags
+soccer,축구,스포츠,영역형,차기|받기|공 몰기|달리기,손 사용 금지|패스 후 빈 공간으로 재이동,공간 만들기|패스 각도|수비 압박,슬라이딩 금지|충돌 거리 유지,축구공|콘|팀조끼,soccer_inside_pass|soccer_trapping|soccer_dribble,hand_only,hand_use
+dodge_touch,공 터치 피구,스포츠,영역형,던지기|받기|피하기|달리기,공을 잡은 채 이동 금지|공으로 터치하면 아웃,패스 타이밍|빈 공간 이동|재참여 절차,얼굴 조준 금지|강투 금지,폼볼|팀조끼|원마커,dodge_touch_pass|dodge_evasion,hard_throw_bonus,head_shot
+cup_volleyball,컵 배구,스포츠,네트형,받기|치기|협응,양손 컵으로 공을 다룸|네트 너머 3회 이내 반환,협응|연결 플레이|라켓면 감각,컵 휘두르기 금지|안전 거리 유지,스태킹컵|풍선공|교실네트,cup_volley_receive,cross_court_spike,body_contact
+hand_jokgu,손족구,스포츠,네트형,던지기|받기|협응|달리기,서브는 언더토스로 시작|연결 후 네트 넘기기,팀 연결|위치 교대|의사소통,네트 접근 충돌 금지|손가락 과신전 주의,폼볼|네트|원마커,hand_jokgu_under_toss|hand_jokgu_all_touch,one_touch_only,net_touch
+gaga_ball,가가볼,스포츠,영역형,치기|피하기|반응|달리기,원바운드 후 타구|무릎 아래 맞으면 아웃,반응 속도|공간 인지|규칙 판단,손가락 가격 금지|무리한 다이빙 금지,풍선공|원마커|책상경계,gaga_one_bounce_hit,carry_ball_free,high_hit
+finger_baseball,핑거 베이스볼,스포츠,필드형,치기|던지기|받기|달리기,손가락 타격으로 타구 생성|베이스 진루 규칙 준수,카운트 이해|진루 판단|수비 배치,타석 주변 밀집 금지|볼 분실 주의,보드판|말|카드,finger_baseball_hit|finger_baseball_field,no_strike_count,unsafe_reach
+finger_volleyball,핑거 발리볼,스포츠,네트형,치기|받기|협응,손가락 탭으로만 넘기기|랠리 유지 우선,라켓면 감각|네트 전술|연결 플레이,손목 과사용 주의|네트 접촉 금지,보드판|미니볼|네트선,finger_volleyball_set,no_rally_limit,smash_only
+tag_chase_play,술래 놀이,놀이,추격형,달리기|방향 전환|반응|태그,술래와 도망자 역할 교대|태그 후 과제 수행,반응 판단|공간 인식|규칙 준수,태그는 어깨 이하|밀기 금지,팀조끼|펀스틱|콘,tag_escape|tag_chase,hard_tag,body_push
+traditional_play,전래 놀이,놀이,민속형,한 발 뛰기|균형|달리기|회전,놀이판 선 준수|아웃 규칙 명확화,균형 유지|협동 전략|차례 지키기,놀이판 주변 정리|충돌 예방,분필|콘|원마커,traditional_one_leg_jump|tag_escape,free_cross_line,unsafe_contact
+cup_stacking_play,컵 스태킹 놀이,놀이,조작형,치기|받기|손 조작|협응,정해진 순서로 컵 쌓기|무너짐 후 재시도,순서 기억|정확도|속도 조절,컵 던지기 금지|자리 이동 주의,스태킹컵|탁구공,cup_flip_control|cup_stacking_speed|cup_pingpong_smash,skip_sequence,throw_cup

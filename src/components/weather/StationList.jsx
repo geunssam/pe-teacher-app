@@ -1,3 +1,4 @@
+// 측정소 목록 — 거리순 측정소 리스트 표시 | 부모→StationPicker.jsx, 거리계산→utils/haversine.js
 /**
  * StationList
  * Pure UI component: renders station cards + action buttons.

@@ -53,7 +53,7 @@ export default {
         tab: {
           home: '#7C9EF5',        // 🏠 오늘
           weather: '#7CE0A3',     // 🌤️ 날씨
-          schedule: '#F5E07C',    // 📅 시간표
+          schedule: '#f5d327',    // 📅 시간표
           sketch: '#F5A67C',      // ✏️ 수업스케치
           classes: '#A78BFA',     // 📋 학급
         },

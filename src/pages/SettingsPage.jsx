@@ -1,3 +1,4 @@
+// ⚙️ 설정 — 학교 위치, 측정소 선택, 앱 환경설정 | 지도→components/settings/LocationMapPicker.jsx, 위치로직→hooks/useLocationPicker.js, 저장→hooks/useSettings.js
 import { useNavigate } from 'react-router-dom'
 import { useLocationPicker } from '../hooks/useLocationPicker'
 import { useClassManager } from '../hooks/useClassManager'

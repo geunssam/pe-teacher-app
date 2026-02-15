@@ -1,3 +1,4 @@
+// 교무부장 훅 — 시간표 CRUD (기본 시간표 + 주차별 오버라이드, ISO주 기준) | 사용처→SchedulePage/HomePage, 그리드UI→components/schedule/, 저장소→useLocalStorage.js
 import { useLocalStorage } from './useLocalStorage'
 
 /**

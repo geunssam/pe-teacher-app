@@ -1,3 +1,4 @@
+// 영상 섹션 — 활동 관련 YouTube 영상 표시 | 부모→pages/SketchPage.jsx (현재 DORMANT 상태, Phase 5에서 활성화)
 /**
  * @status DORMANT
  * @reason YouTube Data API v3 미구현 (Phase 5 예정)

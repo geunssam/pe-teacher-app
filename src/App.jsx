@@ -1,3 +1,4 @@
+// 앱 루트 — React Router 설정, 탭 레이아웃, ProtectedRoute(학급설정 필수) | 탭메뉴→constants/navigation.jsx, 레이아웃→components/layout/
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'

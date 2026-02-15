@@ -1,3 +1,4 @@
+// 상단 헤더 — 앱 제목 + 현재 탭 표시 | 탭아이콘→constants/navigation.jsx, 스타일→css/components/navbar.css
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { NAV_ITEMS, SettingsIcon, LogoutIcon } from '../../constants/navigation'
 

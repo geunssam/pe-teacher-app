@@ -1,4 +1,5 @@
-const MAX_DURATION_MIN = 40
+// 후보 유효성 검증 — 시간/장소/안전/장비/핵심개념 체크 + operationScore 산출 | 호출→generateCandidates.js, 종목규칙→data/sportCoreRules.json
+const MAX_DURATION_MIN = 50
 const EQUIPMENT_ALIASES = {
   팀조끼: '조끼',
   '팀 조끼': '조끼',
@@ -15,6 +16,17 @@ const EQUIPMENT_ALIASES = {
   호루라기: '호루라기',
   스톱워치: '타이머',
   타이머: '타이머',
+  '티볼 공': '티볼공',
+  '발야구 공': '발야구공',
+  프리스비: '프리스비',
+  '플라잉 디스크': '프리스비',
+  플라잉디스크: '프리스비',
+  비치볼: '비치볼',
+  '비치 볼': '비치볼',
+  줄넘기줄: '줄넘기줄',
+  '줄넘기 줄': '줄넘기줄',
+  긴줄: '긴줄',
+  '긴 줄': '긴줄',
 }
 
 function normalizeText(value) {
@@ -55,6 +67,11 @@ function canCoverGenericBall(requiredItem, availableSet, sport) {
     농구: '농구공',
     피구: '피구공',
     배구: '배구공',
+    티볼: '티볼공',
+    발야구: '발야구공',
+    빅발리볼: '비치볼',
+    플라잉디스크: '프리스비',
+    줄넘기: '줄넘기줄',
   }[sport]
 
   return sportBall ? availableSet.has(sportBall) : false
@@ -107,14 +124,64 @@ export function validateCandidate({ candidate, request, coreRule }) {
     reasons.push('안전 규칙 누락')
   }
 
-  const modifierIds = candidate.modifiers.map((modifier) => modifier.id)
+  const candidateModifiers = Array.isArray(candidate.modifiers) ? candidate.modifiers : []
+  const modifierIds = candidateModifiers.map((modifier) => modifier.id)
+  const modifierNarratives = Array.isArray(candidate.modifierNarratives) ? candidate.modifierNarratives : []
+  const titleModifierNames = Array.isArray(candidate.titleModifierNames) ? candidate.titleModifierNames : []
+  const modifierDetails = Array.isArray(candidate.modifierDetails) ? candidate.modifierDetails : []
+
+  if (candidateModifiers.length > 0) {
+    if (modifierNarratives.length !== candidateModifiers.length) {
+      reasons.push('제목-본문 동기화 실패: modifier narrative 누락')
+    }
+
+    const modifierNarrativeIdSet = new Set(modifierNarratives.map((modifier) => modifier.id))
+    if (candidateModifiers.some((modifier) => !modifierNarrativeIdSet.has(modifier.id))) {
+      reasons.push('제목-본문 동기화 실패: modifier id 불일치')
+    }
+
+    if (modifierNarratives.some((modifier) => !modifier.name || !modifier.ruleText)) {
+      reasons.push('제목-본문 동기화 실패: modifier 이름/규칙 누락')
+    }
+
+    if (titleModifierNames.length === 0) {
+      reasons.push('제목-본문 동기화 실패: 제목 modifier 누락')
+    }
+
+    const modifierNameSet = new Set(modifierNarratives.map((modifier) => normalizeText(modifier.name)))
+    if (titleModifierNames.some((name) => !modifierNameSet.has(normalizeText(name)))) {
+      reasons.push('제목-본문 동기화 실패: 제목 modifier 불일치')
+    }
+
+    const bodyText = [
+      ...(candidate.operationTips || []),
+      ...(candidate.penaltiesMissions || []),
+      ...modifierDetails,
+    ]
+      .map((line) => normalizeText(line))
+      .join('|')
+
+    titleModifierNames.forEach((titleModifierName) => {
+      const normalizedName = normalizeText(titleModifierName)
+      const narrative = modifierNarratives.find(
+        (modifier) => normalizeText(modifier.name) === normalizedName
+      )
+      if (!narrative) {
+        return
+      }
+      if (!bodyText.includes(normalizeText(narrative.ruleText))) {
+        reasons.push(`제목-본문 동기화 실패: ${titleModifierName} 규칙 본문 누락`)
+      }
+    })
+  }
+
   const blockedIds = new Set(coreRule.forbiddenModifierIds || [])
   if (modifierIds.some((id) => blockedIds.has(id))) {
     reasons.push('종목 Core Rule을 침해하는 modifier 포함')
   }
 
   const forbiddenTags = new Set(coreRule.forbiddenTags || [])
-  const hasForbiddenTag = candidate.modifiers.some((modifier) =>
+  const hasForbiddenTag = candidateModifiers.some((modifier) =>
     (modifier.constraintTags || []).some((tag) => forbiddenTags.has(tag))
   )
   if (hasForbiddenTag) {

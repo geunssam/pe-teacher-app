@@ -1,3 +1,4 @@
+// 📅 시간표 탭 — 주간 시간표 편집 (기본 + 주차별 오버라이드), useReducer 기반 | UI→components/schedule/, 데이터→hooks/useSchedule.js
 import { useReducer } from 'react'
 import { useSchedule, getWeekRange } from '../hooks/useSchedule'
 import { useClassManager, CLASS_COLOR_PRESETS } from '../hooks/useClassManager'

@@ -1,3 +1,4 @@
+// 서류함 훅 — localStorage ↔ React 상태 동기화 (CustomEvent 크로스탭 지원) | 모든 훅의 기반. 키 목록→CLAUDE.md "데이터 저장 전략"
 import { useState, useEffect } from 'react'
 
 const LOCAL_STORAGE_SYNC_EVENT = 'pe-local-storage-sync'

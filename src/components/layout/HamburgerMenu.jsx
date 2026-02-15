@@ -1,3 +1,4 @@
+// 모바일 메뉴 — 햄버거 버튼 → 좌측 슬라이드 메뉴 (<640px) | 탭아이콘→constants/navigation.jsx, 스타일→css/components/navbar.css
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { NAV_ITEMS } from '../../constants/navigation'

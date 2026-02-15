@@ -1,3 +1,4 @@
+// 측정소 지도 — 네이버 지도 위에 측정소 위치 마커 표시 | 부모→StationPicker.jsx, 지도SDK→utils/loadNaverMapScript.js
 import { useEffect, useRef, useCallback } from 'react'
 import { loadNaverMapScript } from '../../utils/loadNaverMapScript'
 import { haversineDistanceKm } from '../../utils/haversine'

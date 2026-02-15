@@ -1,3 +1,4 @@
+// 야외수업 판단 — 날씨 조건 종합하여 실외활동 가능 여부 판정 | 부모→pages/WeatherPage.jsx, 판단로직→data/mockWeather.js
 /**
  * 야외수업 자동 판단 결과
  */

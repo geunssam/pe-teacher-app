@@ -1,3 +1,4 @@
+// 오늘 시간표 — 홈 탭에서 오늘의 체육 수업 일정 표시 | 부모→pages/HomePage.jsx, 데이터→hooks/useSchedule.js
 import { Link } from 'react-router-dom'
 import { useSchedule } from '../../hooks/useSchedule'
 import { useCurrentPeriod } from '../../hooks/useCurrentPeriod'

@@ -1,3 +1,4 @@
+// 시간별 예보 — 24시간 시간대별 기상 예보 표시 | 부모→pages/WeatherPage.jsx, 상수→data/mockWeather.js(SKY_CODE/PTY_CODE)
 import { SKY_CODE, PTY_CODE } from '../../data/mockWeather'
 
 /**

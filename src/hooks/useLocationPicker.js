@@ -1,3 +1,4 @@
+// 시설관리 훅 — GPS 감지, 지도 위치 선택, 측정소 확정 (날씨탭/설정 공유) | 사용처→WeatherPage/SettingsPage, 측정소검색→utils/stationFinder.js, 지도→components/settings/LocationMapPicker.jsx
 import { useState } from 'react'
 import { findStationsWithFallback } from '../utils/stationFinder'
 import { reverseGeocodeLatLon } from '../services/naverLocal'

@@ -67,6 +67,86 @@
       ],
       "defaultEquipment": ["배구공", "네트", "콘"],
       "youtubeKeywords": ["초등 배구 전략형 활동", "양수쌤 배구 게임", "기백쌤 배구 수업"]
+    },
+    "티볼": {
+      "coreRules": [
+        "타자는 티 위의 공을 배트로 쳐서 페어 지역으로 보낸다.",
+        "타자는 타격 후 즉시 1루로 달리고, 주자는 다음 루까지 진루를 시도한다.",
+        "수비는 타구를 잡아 가장 가까운 루로 송구하여 아웃을 만든다."
+      ],
+      "requiredConcepts": ["치기", "달리기", "송구"],
+      "forbiddenModifierIds": [],
+      "forbiddenTags": ["foot_only"],
+      "safetyRules": [
+        "배트 스윙 반경 내 대기 금지",
+        "배트를 던지지 않고 반드시 내려놓기"
+      ],
+      "defaultEquipment": ["티볼공", "티", "배트", "글러브", "콘"],
+      "youtubeKeywords": ["초등 티볼 수업", "양수쌤 티볼", "기백쌤 티볼"]
+    },
+    "발야구": {
+      "coreRules": [
+        "투수가 굴린 공을 타자가 발로 차서 페어 지역으로 보낸다.",
+        "타자는 킥 후 즉시 1루로 달리고, 주자는 다음 루까지 진루를 시도한다.",
+        "수비는 타구를 잡아 주자에게 맞히거나 루에 터치하여 아웃을 만든다."
+      ],
+      "requiredConcepts": ["차기", "달리기", "송구"],
+      "forbiddenModifierIds": [],
+      "forbiddenTags": ["hand_only"],
+      "safetyRules": [
+        "얼굴 방향 강한 송구 금지",
+        "루 주변 충돌 방지를 위한 감속 구간 설정"
+      ],
+      "defaultEquipment": ["발야구공", "콘", "팀조끼"],
+      "youtubeKeywords": ["초등 발야구 수업", "킥런볼 체육", "양수쌤 발야구"]
+    },
+    "빅발리볼": {
+      "coreRules": [
+        "큰 공(짐볼 또는 비치볼)을 양손으로 쳐서 네트 너머로 보낸다.",
+        "세 번째 터치 안에 상대 코트로 보내는 팀 리듬을 유지한다.",
+        "리시브 후 동료에게 연결하여 팀 공격을 완성한다."
+      ],
+      "requiredConcepts": ["받기", "쳐올리기", "팀 연결"],
+      "forbiddenModifierIds": [],
+      "forbiddenTags": ["foot_only"],
+      "safetyRules": [
+        "네트 근처 충돌 방지를 위해 호출 후 이동",
+        "손가락 부상 방지를 위해 양손 사용 지도"
+      ],
+      "defaultEquipment": ["비치볼", "네트", "콘"],
+      "youtubeKeywords": ["빅발리볼 수업", "초등 빅발리볼", "비치볼 배구"]
+    },
+    "플라잉디스크": {
+      "coreRules": [
+        "디스크를 잡은 상태에서 이동하지 않고 피벗 후 패스한다.",
+        "디스크가 떨어지면 상대팀에게 소유권이 넘어간다.",
+        "수비는 신체 접촉 없이 디스크 경로를 차단한다."
+      ],
+      "requiredConcepts": ["던지기", "받기", "빈 공간 이동"],
+      "forbiddenModifierIds": [],
+      "forbiddenTags": ["foot_only"],
+      "safetyRules": [
+        "디스크를 얼굴 높이로 던지지 않기",
+        "받기 시 손가락 보호를 위해 클랩 캐치 사전 지도"
+      ],
+      "defaultEquipment": ["프리스비", "콘", "팀조끼"],
+      "youtubeKeywords": ["플라잉디스크 체육", "얼티밋 프리스비 초등", "디스크 던지기"]
+    },
+    "줄넘기": {
+      "coreRules": [
+        "줄을 일정한 리듬으로 돌리며 점프 타이밍을 유지한다.",
+        "다양한 발 기술(양발 모아뛰기, 한발 뛰기, 교차 뛰기)을 단계별로 익힌다.",
+        "긴줄넘기 시 돌리는 학생과 뛰는 학생의 호흡을 맞춘다."
+      ],
+      "requiredConcepts": ["점프", "리듬", "타이밍"],
+      "forbiddenModifierIds": [],
+      "forbiddenTags": [],
+      "safetyRules": [
+        "줄을 휘두르는 범위 내 대기 금지",
+        "바닥이 미끄러운 곳에서는 실내화 착용 확인"
+      ],
+      "defaultEquipment": ["줄넘기줄", "긴줄"],
+      "youtubeKeywords": ["줄넘기 수업", "초등 줄넘기", "긴줄넘기 활동"]
     }
   }
 }

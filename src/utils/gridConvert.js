@@ -1,3 +1,4 @@
+// 좌표 변환 — WGS84(위경도) ↔ 기상청 격자 좌표 변환 | 사용처→services/weather/weatherFetch.js, 도시좌표(CITY_COORDS)→stationSearch.js에서도 사용
 /**
  * 위경도 → 기상청 격자 좌표 변환
  * 

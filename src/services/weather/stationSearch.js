@@ -1,3 +1,4 @@
+// 측정소 검색 — 에어코리아 측정소 목록 조회 + 인메모리 캐싱 | 사용처→utils/stationFinder.js, 거리계산→utils/haversine.js, 도시좌표→utils/gridConvert.js(CITY_COORDS)
 import { CITY_COORDS } from '../../utils/gridConvert'
 import { haversineDistanceKm } from '../../utils/haversine'
 

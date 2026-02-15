@@ -1,0 +1,405 @@
+{
+  "meta": {
+    "version": "3.0.0",
+    "generatedAt": "2026-02-15T02:36:26.918Z",
+    "source": "sports_template.csv"
+  },
+  "sports": [
+    {
+      "id": "soccer",
+      "name": "축구",
+      "domain": "스포츠",
+      "subDomain": "영역형",
+      "fmsGroup": [
+        "차기",
+        "받기",
+        "공 몰기",
+        "달리기"
+      ],
+      "coreRules": [
+        "손 사용 금지",
+        "패스 후 빈 공간으로 재이동"
+      ],
+      "requiredConcepts": [
+        "공간 만들기",
+        "패스 각도",
+        "수비 압박"
+      ],
+      "safetyRules": [
+        "슬라이딩 금지",
+        "충돌 거리 유지"
+      ],
+      "defaultEquipment": [
+        "축구공",
+        "콘",
+        "팀조끼"
+      ],
+      "skills": [
+        "soccer_inside_pass",
+        "soccer_trapping",
+        "soccer_dribble"
+      ],
+      "forbiddenModifierIds": [
+        "hand_only"
+      ],
+      "forbiddenTags": [
+        "hand_use"
+      ]
+    },
+    {
+      "id": "dodge_touch",
+      "name": "공 터치 피구",
+      "domain": "스포츠",
+      "subDomain": "영역형",
+      "fmsGroup": [
+        "던지기",
+        "받기",
+        "피하기",
+        "달리기"
+      ],
+      "coreRules": [
+        "공을 잡은 채 이동 금지",
+        "공으로 터치하면 아웃"
+      ],
+      "requiredConcepts": [
+        "패스 타이밍",
+        "빈 공간 이동",
+        "재참여 절차"
+      ],
+      "safetyRules": [
+        "얼굴 조준 금지",
+        "강투 금지"
+      ],
+      "defaultEquipment": [
+        "폼볼",
+        "팀조끼",
+        "원마커"
+      ],
+      "skills": [
+        "dodge_touch_pass",
+        "dodge_evasion"
+      ],
+      "forbiddenModifierIds": [
+        "hard_throw_bonus"
+      ],
+      "forbiddenTags": [
+        "head_shot"
+      ]
+    },
+    {
+      "id": "cup_volleyball",
+      "name": "컵 배구",
+      "domain": "스포츠",
+      "subDomain": "네트형",
+      "fmsGroup": [
+        "받기",
+        "치기",
+        "협응"
+      ],
+      "coreRules": [
+        "양손 컵으로 공을 다룸",
+        "네트 너머 3회 이내 반환"
+      ],
+      "requiredConcepts": [
+        "협응",
+        "연결 플레이",
+        "라켓면 감각"
+      ],
+      "safetyRules": [
+        "컵 휘두르기 금지",
+        "안전 거리 유지"
+      ],
+      "defaultEquipment": [
+        "스태킹컵",
+        "풍선공",
+        "교실네트"
+      ],
+      "skills": [
+        "cup_volley_receive"
+      ],
+      "forbiddenModifierIds": [
+        "cross_court_spike"
+      ],
+      "forbiddenTags": [
+        "body_contact"
+      ]
+    },
+    {
+      "id": "hand_jokgu",
+      "name": "손족구",
+      "domain": "스포츠",
+      "subDomain": "네트형",
+      "fmsGroup": [
+        "던지기",
+        "받기",
+        "협응",
+        "달리기"
+      ],
+      "coreRules": [
+        "서브는 언더토스로 시작",
+        "연결 후 네트 넘기기"
+      ],
+      "requiredConcepts": [
+        "팀 연결",
+        "위치 교대",
+        "의사소통"
+      ],
+      "safetyRules": [
+        "네트 접근 충돌 금지",
+        "손가락 과신전 주의"
+      ],
+      "defaultEquipment": [
+        "폼볼",
+        "네트",
+        "원마커"
+      ],
+      "skills": [
+        "hand_jokgu_under_toss",
+        "hand_jokgu_all_touch"
+      ],
+      "forbiddenModifierIds": [
+        "one_touch_only"
+      ],
+      "forbiddenTags": [
+        "net_touch"
+      ]
+    },
+    {
+      "id": "gaga_ball",
+      "name": "가가볼",
+      "domain": "스포츠",
+      "subDomain": "영역형",
+      "fmsGroup": [
+        "치기",
+        "피하기",
+        "반응",
+        "달리기"
+      ],
+      "coreRules": [
+        "원바운드 후 타구",
+        "무릎 아래 맞으면 아웃"
+      ],
+      "requiredConcepts": [
+        "반응 속도",
+        "공간 인지",
+        "규칙 판단"
+      ],
+      "safetyRules": [
+        "손가락 가격 금지",
+        "무리한 다이빙 금지"
+      ],
+      "defaultEquipment": [
+        "풍선공",
+        "원마커",
+        "책상경계"
+      ],
+      "skills": [
+        "gaga_one_bounce_hit"
+      ],
+      "forbiddenModifierIds": [
+        "carry_ball_free"
+      ],
+      "forbiddenTags": [
+        "high_hit"
+      ]
+    },
+    {
+      "id": "finger_baseball",
+      "name": "핑거 베이스볼",
+      "domain": "스포츠",
+      "subDomain": "필드형",
+      "fmsGroup": [
+        "치기",
+        "던지기",
+        "받기",
+        "달리기"
+      ],
+      "coreRules": [
+        "손가락 타격으로 타구 생성",
+        "베이스 진루 규칙 준수"
+      ],
+      "requiredConcepts": [
+        "카운트 이해",
+        "진루 판단",
+        "수비 배치"
+      ],
+      "safetyRules": [
+        "타석 주변 밀집 금지",
+        "볼 분실 주의"
+      ],
+      "defaultEquipment": [
+        "보드판",
+        "말",
+        "카드"
+      ],
+      "skills": [
+        "finger_baseball_hit",
+        "finger_baseball_field"
+      ],
+      "forbiddenModifierIds": [
+        "no_strike_count"
+      ],
+      "forbiddenTags": [
+        "unsafe_reach"
+      ]
+    },
+    {
+      "id": "finger_volleyball",
+      "name": "핑거 발리볼",
+      "domain": "스포츠",
+      "subDomain": "네트형",
+      "fmsGroup": [
+        "치기",
+        "받기",
+        "협응"
+      ],
+      "coreRules": [
+        "손가락 탭으로만 넘기기",
+        "랠리 유지 우선"
+      ],
+      "requiredConcepts": [
+        "라켓면 감각",
+        "네트 전술",
+        "연결 플레이"
+      ],
+      "safetyRules": [
+        "손목 과사용 주의",
+        "네트 접촉 금지"
+      ],
+      "defaultEquipment": [
+        "보드판",
+        "미니볼",
+        "네트선"
+      ],
+      "skills": [
+        "finger_volleyball_set"
+      ],
+      "forbiddenModifierIds": [
+        "no_rally_limit"
+      ],
+      "forbiddenTags": [
+        "smash_only"
+      ]
+    },
+    {
+      "id": "tag_chase_play",
+      "name": "술래 놀이",
+      "domain": "놀이",
+      "subDomain": "추격형",
+      "fmsGroup": [
+        "달리기",
+        "방향 전환",
+        "반응",
+        "태그"
+      ],
+      "coreRules": [
+        "술래와 도망자 역할 교대",
+        "태그 후 과제 수행"
+      ],
+      "requiredConcepts": [
+        "반응 판단",
+        "공간 인식",
+        "규칙 준수"
+      ],
+      "safetyRules": [
+        "태그는 어깨 이하",
+        "밀기 금지"
+      ],
+      "defaultEquipment": [
+        "팀조끼",
+        "펀스틱",
+        "콘"
+      ],
+      "skills": [
+        "tag_escape",
+        "tag_chase"
+      ],
+      "forbiddenModifierIds": [
+        "hard_tag"
+      ],
+      "forbiddenTags": [
+        "body_push"
+      ]
+    },
+    {
+      "id": "traditional_play",
+      "name": "전래 놀이",
+      "domain": "놀이",
+      "subDomain": "민속형",
+      "fmsGroup": [
+        "한 발 뛰기",
+        "균형",
+        "달리기",
+        "회전"
+      ],
+      "coreRules": [
+        "놀이판 선 준수",
+        "아웃 규칙 명확화"
+      ],
+      "requiredConcepts": [
+        "균형 유지",
+        "협동 전략",
+        "차례 지키기"
+      ],
+      "safetyRules": [
+        "놀이판 주변 정리",
+        "충돌 예방"
+      ],
+      "defaultEquipment": [
+        "분필",
+        "콘",
+        "원마커"
+      ],
+      "skills": [
+        "traditional_one_leg_jump",
+        "tag_escape"
+      ],
+      "forbiddenModifierIds": [
+        "free_cross_line"
+      ],
+      "forbiddenTags": [
+        "unsafe_contact"
+      ]
+    },
+    {
+      "id": "cup_stacking_play",
+      "name": "컵 스태킹 놀이",
+      "domain": "놀이",
+      "subDomain": "조작형",
+      "fmsGroup": [
+        "치기",
+        "받기",
+        "손 조작",
+        "협응"
+      ],
+      "coreRules": [
+        "정해진 순서로 컵 쌓기",
+        "무너짐 후 재시도"
+      ],
+      "requiredConcepts": [
+        "순서 기억",
+        "정확도",
+        "속도 조절"
+      ],
+      "safetyRules": [
+        "컵 던지기 금지",
+        "자리 이동 주의"
+      ],
+      "defaultEquipment": [
+        "스태킹컵",
+        "탁구공"
+      ],
+      "skills": [
+        "cup_flip_control",
+        "cup_stacking_speed",
+        "cup_pingpong_smash"
+      ],
+      "forbiddenModifierIds": [
+        "skip_sequence"
+      ],
+      "forbiddenTags": [
+        "throw_cup"
+      ]
+    }
+  ]
+}
