@@ -1,3 +1,4 @@
+// [레거시] 후보 생성기 — atom + modifier 랜덤 140회 조합 → 상위 3개 (fallback용) | 호출→hooks/useRecommend.js, 신규엔진→generateModularCandidates.js, 데이터→data/activityAtoms.json+ruleModifiers.json
 import activityAtomsData from '../../data/activityAtoms.json'
 import fmsTaxonomyData from '../../data/fmsTaxonomy.json'
 import ruleModifiersData from '../../data/ruleModifiers.json'
@@ -5,6 +6,7 @@ import sportCoreRulesData from '../../data/sportCoreRules.json'
 import { validateCandidate } from './validateCandidate.js'
 import { scoreCandidate } from './scoreCandidate.js'
 import { renderTemplate } from './renderTemplate.js'
+import { isPenaltyType } from './normalizePenalty.js'
 
 const STRICT_MIN_MODIFIER_COUNT = 2
 const RELAXED_MIN_MODIFIER_COUNT = 1
@@ -312,18 +314,31 @@ function buildTitle(request, atom, modifiers) {
 }
 
 function buildCandidate({ request, atom, modifiers, coreRule }) {
+  const modifierNarratives = modifiers.map((modifier) => ({
+    id: modifier.id,
+    name: modifier.name,
+    type: modifier.type,
+    ruleText: modifier.ruleText || modifier.ruleOverride || '',
+    equipmentNeeded: modifier.equipmentNeeded || [],
+  }))
+  const modifierNames = modifierNarratives.map((modifier) => modifier.name).filter(Boolean)
+  const titleModifierNames = modifierNames.slice(0, Math.min(2, modifierNames.length))
+  const modifierDetails = modifierNarratives.map((modifier) =>
+    `적용 변형: ${modifier.name} (${modifier.type}) - ${modifier.ruleText}`
+  )
+
   const additionalDuration = modifiers.reduce((sum, modifier) => sum + (modifier.timeDelta || 0), 0)
   const estimatedDurationMin = atom.baseDurationMin + additionalDuration + 8
 
   const modifierDifficulty = modifiers.reduce((sum, modifier) => sum + (modifier.difficultyDelta || 0), 0)
   const level = Math.max(1, Math.min(3, Math.round(atom.difficultyBase + modifierDifficulty / 2)))
 
-  const penaltiesMissions = modifiers
-    .filter((modifier) => modifier.type === '벌칙/미션')
+  const penaltiesMissions = modifierNarratives
+    .filter((modifier) => isPenaltyType(modifier.type))
     .map((modifier) => modifier.ruleText)
 
-  const nonPenaltyModifiers = modifiers
-    .filter((modifier) => modifier.type !== '벌칙/미션')
+  const nonPenaltyModifiers = modifierNarratives
+    .filter((modifier) => !isPenaltyType(modifier.type))
     .map((modifier) => `${modifier.type}: ${modifier.ruleText}`)
 
   const equipment = uniq([
@@ -353,6 +368,10 @@ function buildCandidate({ request, atom, modifiers, coreRule }) {
     coreRules: coreRule.coreRules,
     location: atom.location,
     modifiers,
+    modifierNarratives,
+    titleModifierNames,
+    modifierDetails,
+    modifierBodyContractVersion: 'v1',
     difficulty: mapDifficulty(level),
     basicRules: uniq([...(coreRule.coreRules || []), ...(atom.basicRules || [])]),
     penaltiesMissions: penaltiesMissions.length > 0
@@ -397,6 +416,7 @@ export function generateCandidates(request) {
       candidates: [],
       meta: {
         reason: `지원하지 않는 종목: ${request.sport}`,
+        topFailureReasons: [],
       },
     }
   }
@@ -409,6 +429,7 @@ export function generateCandidates(request) {
       candidates: [],
       meta: {
         reason: '조건에 맞는 activity atom이 없습니다.',
+        topFailureReasons: [],
       },
     }
   }
