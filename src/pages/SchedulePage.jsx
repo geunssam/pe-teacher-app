@@ -1,5 +1,5 @@
 // 📅 시간표 탭 — 주간 시간표 편집 (기본 + 주차별 오버라이드), 수업 기록 저장까지 연결 | UI→components/schedule/, 데이터→hooks/useSchedule.js
-import { useCallback, useEffect, useReducer, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSchedule, getWeekRange } from '../hooks/useSchedule'
 import { useClassManager, CLASS_COLOR_PRESETS } from '../hooks/useClassManager'
@@ -14,6 +14,29 @@ import { judgeOutdoorClass } from '../data/mockWeather'
 import { formatRecordDate } from '../utils/recordDate'
 
 const LESSON_DOMAINS = ['스포츠', '놀이', '표현', '기타']
+
+const LESSON_ACTIVITY_LIBRARY = {
+  스포츠: {
+    optimal: ['빠르게 이어달리기', '교차줄넘기', '협력 릴레이'],
+    caution: ['정적 스트레칭 순환', '제자리 활동 드릴', '볼 패스 릴레이(저강도)'],
+    indoors: ['기초 근력(맨몸)', '균형 트레이닝', '볼 없이 동작 정렬'],
+  },
+  놀이: {
+    optimal: ['장비 줄잡기 놀이', '오리엔테이션 추격전', '협동 미션 보드'],
+    caution: ['조용한 신체놀이', '숫자 제자리 게임', '소근육 협응 놀이'],
+    indoors: ['실내 이동 놀이', '정렬·대기 게임', '제한 공간 반응 놀이'],
+  },
+  표현: {
+    optimal: ['공간 라인댄스', '구간 이동 퍼포먼스', '리듬 동작 결합'],
+    caution: ['제자리 안무', '동작 연결 리듬', '조별 동작 반복 연습'],
+    indoors: ['기초 동작 결합', '파트별 안무 정렬', '호흡·균형 연습'],
+  },
+  기타: {
+    optimal: ['웜업 루틴', '기초 체력 순환', '저강도 협업 활동'],
+    caution: ['정적 활동 중심 수업', '소도구 활용 실내 활동', '교실형 체력 활동'],
+    indoors: ['기초 체력 훈련', '기본 동작 정렬', '교재 기반 활동'],
+  },
+}
 
 const LESSON_FORM_DEFAULT = {
   activity: '',
@@ -50,6 +73,29 @@ const toLocalDateString = (dateValue) => {
 }
 
 const getTodayLocalDate = () => toLocalDateString(new Date())
+
+const getLessonRecommendationMode = (judgment) => {
+  const status = judgment?.status
+
+  if (status === 'optimal') return 'optimal'
+  if (status === 'caution') return 'caution'
+  if (status === 'not-recommended') return 'indoors'
+
+  return 'indoors'
+}
+
+const getLessonSuggestions = (judgment, domain = '스포츠') => {
+  const resolvedDomain = LESSON_ACTIVITY_LIBRARY[domain] ? domain : '기타'
+  const mode = getLessonRecommendationMode(judgment)
+  return LESSON_ACTIVITY_LIBRARY[resolvedDomain][mode]
+}
+
+const getSuggestionSummary = (judgment) => {
+  const mode = getLessonRecommendationMode(judgment)
+  if (mode === 'optimal') return '현재 조건에서 야외 활동이 무난합니다'
+  if (mode === 'caution') return '강수·미세먼지 주의, 조정된 활동을 추천해요'
+  return '실내 대체 활동으로 진행하면 더 안정적입니다'
+}
 
 function scheduleReducer(state, action) {
   switch (action.type) {
@@ -169,6 +215,10 @@ export default function SchedulePage() {
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false)
   const [lessonRecommendation, setLessonRecommendation] = useState(null)
   const [recommendationError, setRecommendationError] = useState('')
+  const suggestionActivities = useMemo(
+    () => getLessonSuggestions(lessonRecommendation?.judgment, lessonForm.domain),
+    [lessonRecommendation?.judgment, lessonForm.domain]
+  )
 
   const weekInfo = getWeekRange(state.weekOffset)
   const { timetable } = getTimetableForWeek(weekInfo.weekKey)
@@ -445,6 +495,13 @@ export default function SchedulePage() {
     }))
   }
 
+  const handleApplySuggestion = (suggestion) => {
+    setLessonForm((prev) => ({
+      ...prev,
+      activity: prev.activity ? `${prev.activity}, ${suggestion}` : suggestion,
+    }))
+  }
+
   const handleSearchParams = () => {
     if (state.isEditing) return
 
@@ -649,6 +706,24 @@ export default function SchedulePage() {
           <div className="mb-4 p-3 rounded-lg border border-white/80 bg-white/60">
             <p className="text-sm font-semibold text-text mb-1">날씨 기반 활동 제안</p>
             <p className="text-sm text-text">{getRecommendationText()}</p>
+            <p className="text-xs text-textMuted mt-1">
+              {getSuggestionSummary(lessonRecommendation?.judgment)}
+            </p>
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-text mb-2">추천 활동</p>
+              <div className="flex flex-wrap gap-2">
+                {suggestionActivities.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => handleApplySuggestion(suggestion)}
+                    className="px-2.5 py-1.5 rounded-lg text-sm bg-white/80 border border-white/80 text-text hover:border-primary/60 hover:bg-primary/5 transition-all"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
