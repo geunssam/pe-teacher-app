@@ -49,6 +49,8 @@ const toLocalDateString = (dateValue) => {
   return `${year}-${month}-${day}`
 }
 
+const getTodayLocalDate = () => toLocalDateString(new Date())
+
 function scheduleReducer(state, action) {
   switch (action.type) {
     case 'SET_WEEK_OFFSET':
@@ -228,7 +230,7 @@ export default function SchedulePage() {
         className: periodData?.className,
         periodData,
         classDate: toLocalDateString(classDate),
-        recordedAt: toLocalDateString(new Date()),
+        recordedAt: getTodayLocalDate(),
       },
     })
 
@@ -390,7 +392,7 @@ export default function SchedulePage() {
     const finalSequence = Number.isInteger(sequenceValue) && sequenceValue > 0
       ? sequenceValue
       : getNextLessonSequence(classId, lessonForm.domain)
-    const recordDate = state.lessonLogTarget?.recordedAt || new Date()
+    const recordDate = getTodayLocalDate()
 
     addClassRecord(classId, {
       date: recordDate,
@@ -404,6 +406,7 @@ export default function SchedulePage() {
       memo: lessonForm.memo.trim(),
       sequence: finalSequence,
       performance: lessonForm.performance.trim(),
+      classDate: state.lessonLogTarget.classDate,
       subject: state.lessonLogTarget.periodData?.subject || '체육',
     })
 
@@ -629,7 +632,11 @@ export default function SchedulePage() {
 
       {/* 수업 기록 모달 */}
       {state.lessonLogTarget && (
-        <Modal onClose={closeLessonLog} maxWidth="max-w-2xl">
+        <Modal
+          onClose={closeLessonLog}
+          maxWidth="max-w-5xl"
+          contentClassName="max-h-[86vh] overflow-y-auto"
+        >
           <h2 className="text-xl font-bold text-text mb-2">수업 기록</h2>
           <p className="text-sm text-textMuted mb-4">
             {state.lessonLogTarget.className} · {WEEKDAY_LABELS[state.lessonLogTarget.day] || state.lessonLogTarget.day}요일
@@ -644,7 +651,7 @@ export default function SchedulePage() {
             <p className="text-sm text-text">{getRecommendationText()}</p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1">
               <label className="block text-sm font-semibold text-text mb-1">수업 활동명</label>
               <input
@@ -713,7 +720,7 @@ export default function SchedulePage() {
                 value={lessonForm.variation}
                 onChange={(e) => setLessonForm((prev) => ({ ...prev, variation: e.target.value }))}
                 placeholder="예: 공 간격 3m, 3명 조 편성"
-                className="w-full h-20 resize-none p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full h-24 resize-none p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
@@ -723,7 +730,7 @@ export default function SchedulePage() {
                 value={lessonForm.memo}
                 onChange={(e) => setLessonForm((prev) => ({ ...prev, memo: e.target.value }))}
                 placeholder="수업 메모, 반응, 특이사항"
-                className="w-full h-20 resize-none p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full h-24 resize-none p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </div>

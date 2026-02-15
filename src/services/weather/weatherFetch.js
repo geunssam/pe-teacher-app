@@ -7,11 +7,18 @@ const ULTRA_SRT_NCST_DELAY_MIN = 40
 const VILAGE_FCST_DELAY_MIN = 10
 const VILAGE_BASE_HOURS = [2, 5, 8, 11, 14, 17, 20, 23]
 const WEATHER_CACHE_TTL_MS = 1000 * 60 * 3
+const WEATHER_STALE_TTL_MS = 1000 * 60 * 60 * 24
 const WEATHER_CACHE = new Map()
 const WEATHER_INFLIGHT = new Map()
+const WEATHER_STALE_CACHE = new Map()
 
 const limitText = (value, length = 180) =>
   String(value).slice(0, length)
+
+const looksLikeJson = (value) => {
+  const trimmed = String(value || '').trim()
+  return trimmed.startsWith('{') || trimmed.startsWith('[')
+}
 
 /**
  * 기상청 단기예보 API 호출
@@ -28,42 +35,43 @@ export async function fetchWeatherData(location = DEFAULT_LOCATION) {
     for (let attempt = 0; attempt < 3; attempt++) {
       const referenceTime = new Date(now.getTime() - attempt * 60 * 60 * 1000)
       const { baseDate, baseTime } = getUltraSrtNcstBaseDateTime(referenceTime)
+      const query = {
+        serviceKey: API_KEY,
+        pageNo: '1',
+        numOfRows: '100',
+        dataType: 'JSON',
+        base_date: baseDate,
+        base_time: baseTime,
+        nx: nx.toString(),
+        ny: ny.toString(),
+      }
 
       try {
-        const data = await fetchWeatherEndpoint('getUltraSrtNcst', {
-          serviceKey: API_KEY,
-          pageNo: '1',
-          numOfRows: '100',
-          dataType: 'JSON',
-          base_date: baseDate,
-          base_time: baseTime,
-          nx: nx.toString(),
-          ny: ny.toString(),
-        })
+        const data = await fetchWeatherEndpoint('getUltraSrtNcst', query)
+        const weatherResult = buildCurrentWeatherResult(data, baseDate, baseTime)
 
-        const items = data.response?.body?.items?.item || []
-        if (items.length === 0) {
+        if (!weatherResult) {
           lastNoDataError = new Error('NO_DATA')
           continue
         }
 
-        // 데이터 파싱
-        return {
-          baseDate,
-          baseTime,
-          t1h: getItemValue(items, 'T1H') || 20, // 기온
-          rn1: getItemValue(items, 'RN1') || 0, // 1시간 강수량
-          reh: getItemValue(items, 'REH') || 50, // 습도
-          pty: getItemValue(items, 'PTY') || 0, // 강수형태
-          sky: 1, // 초단기실황에는 SKY가 없으므로 기본값
-          pop: 10, // 초단기실황에는 POP가 없으므로 기본값
-          wsd: getItemValue(items, 'WSD') || 2.5, // 풍속
-        }
+        return weatherResult
       } catch (error) {
         if (isNoDataError(error)) {
           lastNoDataError = error
           continue
         }
+
+        const fallback = getWeatherFallbackData(query)
+        const fallbackWeather = buildCurrentWeatherResult(
+          fallback,
+          baseDate,
+          baseTime
+        )
+        if (fallbackWeather) {
+          return { ...fallbackWeather, isStale: true }
+        }
+
         throw error
       }
     }
@@ -90,41 +98,43 @@ export async function fetchHourlyForecast(location = DEFAULT_LOCATION) {
     for (let attempt = 0; attempt < 4; attempt++) {
       const referenceTime = new Date(now.getTime() - attempt * 3 * 60 * 60 * 1000)
       const { baseDate, baseTime } = getVilageFcstBaseDateTime(referenceTime)
+      const query = {
+        serviceKey: API_KEY,
+        pageNo: '1',
+        numOfRows: '600',
+        dataType: 'JSON',
+        base_date: baseDate,
+        base_time: baseTime,
+        nx: nx.toString(),
+        ny: ny.toString(),
+      }
 
       try {
-        const data = await fetchWeatherEndpoint('getVilageFcst', {
-          serviceKey: API_KEY,
-          pageNo: '1',
-          numOfRows: '600', // 카테고리별 항목 충분히 확보
-          dataType: 'JSON',
-          base_date: baseDate,
-          base_time: baseTime,
-          nx: nx.toString(),
-          ny: ny.toString(),
-        })
+        const data = await fetchWeatherEndpoint('getVilageFcst', query)
+        const forecastResult = buildHourlyForecastResult(data, baseDate, baseTime)
 
-        const items = data.response?.body?.items?.item || []
-        if (items.length === 0) {
+        if (!forecastResult) {
           lastNoDataError = new Error('NO_DATA')
           continue
         }
 
-        // 시간별로 그룹핑
-        const hourlyData = groupByTime(items)
-        if (hourlyData.length > 0) {
-          return {
-            forecast: hourlyData,
-            baseDate,
-            baseTime,
-          }
-        }
-
-        lastNoDataError = new Error('NO_DATA')
+        return forecastResult
       } catch (error) {
         if (isNoDataError(error)) {
           lastNoDataError = error
           continue
         }
+
+        const fallback = getWeatherFallbackData(query)
+        const fallbackForecast = buildHourlyForecastResult(
+          fallback,
+          baseDate,
+          baseTime
+        )
+        if (fallbackForecast) {
+          return { ...fallbackForecast, isStale: true }
+        }
+
         throw error
       }
     }
@@ -172,6 +182,40 @@ function getItemValue(items, category) {
   return isNaN(value) ? null : value
 }
 
+function buildCurrentWeatherResult(data, baseDate, baseTime) {
+  const items = data.response?.body?.items?.item || []
+  if (items.length === 0) {
+    return null
+  }
+
+  return {
+    baseDate,
+    baseTime,
+    t1h: getItemValue(items, 'T1H') || 20,
+    rn1: getItemValue(items, 'RN1') || 0,
+    reh: getItemValue(items, 'REH') || 50,
+    pty: getItemValue(items, 'PTY') || 0,
+    sky: 1,
+    pop: 10,
+    wsd: getItemValue(items, 'WSD') || 2.5,
+  }
+}
+
+function buildHourlyForecastResult(data, baseDate, baseTime) {
+  const items = data.response?.body?.items?.item || []
+  const hourlyData = groupByTime(items)
+
+  if (hourlyData.length === 0) {
+    return null
+  }
+
+  return {
+    forecast: hourlyData,
+    baseDate,
+    baseTime,
+  }
+}
+
 // 단기예보 기준시각 계산 (02, 05, 08, 11, 14, 17, 20, 23시 발표, 약 10분 지연)
 function getVilageFcstBaseDateTime(now) {
   const effective = shiftMinutes(now, -VILAGE_FCST_DELAY_MIN)
@@ -207,6 +251,7 @@ async function fetchWeatherEndpoint(path, query) {
   const params = new URLSearchParams(query)
   const url = `${WEATHER_ENDPOINT}/${path}?${params}`
   const cacheKey = url
+  const fallbackKey = makeFallbackCacheKey(query)
 
   const cachedItem = WEATHER_CACHE.get(cacheKey)
   if (cachedItem && Date.now() - cachedItem.updatedAt < WEATHER_CACHE_TTL_MS) {
@@ -221,6 +266,11 @@ async function fetchWeatherEndpoint(path, query) {
   const request = (async () => {
     const response = await fetch(url)
     const responseText = await response.text()
+
+    if (!looksLikeJson(responseText)) {
+      const preview = limitText(responseText || response.statusText || '요청 실패')
+      throw new Error(`API 응답 형식 오류: ${preview}`)
+    }
 
     if (!response.ok) {
       const preview = limitText(responseText || response.statusText || '요청 실패')
@@ -242,6 +292,10 @@ async function fetchWeatherEndpoint(path, query) {
     }
 
     WEATHER_CACHE.set(cacheKey, { data, updatedAt: Date.now() })
+    WEATHER_STALE_CACHE.set(fallbackKey, {
+      data,
+      updatedAt: Date.now(),
+    })
     return data
   })()
 
@@ -250,6 +304,32 @@ async function fetchWeatherEndpoint(path, query) {
     return await request
   } finally {
     WEATHER_INFLIGHT.delete(cacheKey)
+  }
+}
+
+function makeFallbackCacheKey(query) {
+  const params = new URLSearchParams(query)
+  params.delete('base_date')
+  params.delete('base_time')
+  return params.toString()
+}
+
+export function getWeatherFallbackData(query) {
+  const fallbackKey = makeFallbackCacheKey(query)
+  const fallback = WEATHER_STALE_CACHE.get(fallbackKey)
+
+  if (!fallback) {
+    return null
+  }
+
+  if (Date.now() - fallback.updatedAt > WEATHER_STALE_TTL_MS) {
+    WEATHER_STALE_CACHE.delete(fallbackKey)
+    return null
+  }
+
+  return {
+    ...fallback.data,
+    _stale: true,
   }
 }
 

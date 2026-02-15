@@ -153,14 +153,23 @@ export default function RosterEditor({ classInfo, onClose }) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;')
 
-    const rows = [...classRecords]
-      .sort((a, b) => getRecordSortValue(b.date || b.createdAt) - getRecordSortValue(a.date || a.createdAt))
+    const sortedRecords = [...classRecords].sort(
+      (a, b) => getRecordSortValue(b.date || b.createdAt) - getRecordSortValue(a.date || a.createdAt)
+    )
+
+    const rows = sortedRecords
       .map((record, index) => {
         const date = formatRecordDate(record.date || record.createdAt)
         const dayLabel = record.dayLabel || '-'
         const periodLabel = record.period ? `${record.period}교시` : '차시 미기록'
         const variation = String(record.variation || '-')
         const memo = String(record.memo || '-')
+        const performance = String(record.performance || '-')
+        const classDateLabel =
+          record.classDate && record.classDate !== (record.date || record.createdAt)
+            ? ` · 수업일 ${formatRecordDate(record.classDate)}`
+            : ''
+
         return `<tr>
           <td>${escapeHtml(index + 1)}</td>
           <td>${escapeHtml(record.activity || '수업 활동')}</td>
@@ -168,19 +177,13 @@ export default function RosterEditor({ classInfo, onClose }) {
           <td>${escapeHtml(String(record.sequence || '-'))}</td>
           <td>${escapeHtml(dayLabel)}</td>
           <td>${escapeHtml(periodLabel)}</td>
-          <td>${escapeHtml(record.performance || '-')}</td>
+          <td>${escapeHtml(performance)}</td>
           <td>${escapeHtml(variation)}</td>
           <td>${escapeHtml(memo)}</td>
-          <td>${escapeHtml(date)}</td>
+          <td>${escapeHtml(date)}${escapeHtml(classDateLabel)}</td>
         </tr>`
       })
       .join('')
-
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) {
-      toast.error('팝업이 차단되어 출력할 수 없습니다')
-      return
-    }
 
     const printContentHtml = `<!doctype html>
       <html lang="ko">
@@ -194,12 +197,12 @@ export default function RosterEditor({ classInfo, onClose }) {
             table { width: 100%; border-collapse: collapse; }
             th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-size: 12px; }
             thead { background: #f8fafc; }
-            .note { color: #64748b; }
+            .small { color: #64748b; }
           </style>
         </head>
         <body>
           <h1>${className} 수업 이력</h1>
-          <p>총 ${classRecords.length}건</p>
+          <p>총 ${sortedRecords.length}건</p>
         <table>
           <thead>
             <tr>
@@ -223,22 +226,34 @@ export default function RosterEditor({ classInfo, onClose }) {
       </html>
     `
 
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      toast.error('팝업이 차단되어 출력할 수 없습니다')
+      return
+    }
+
     printWindow.document.open()
     printWindow.document.write(printContentHtml)
     printWindow.document.close()
 
-    const doPrint = () => {
-      printWindow.focus()
-      printWindow.print()
+    const printNow = () => {
+      try {
+        if (printWindow.closed) return
+        printWindow.focus()
+        printWindow.print()
+      } catch (_error) {
+        // pass
+      }
     }
 
     if (printWindow.document.readyState === 'complete') {
-      setTimeout(doPrint, 100)
-    } else {
-      printWindow.onload = () => {
-        setTimeout(doPrint, 100)
-      }
+      setTimeout(printNow, 100)
+      return
     }
+
+    printWindow.addEventListener('load', () => {
+      setTimeout(printNow, 150)
+    }, { once: true })
   }
 
   const genderStats = localRoster.reduce(
@@ -656,15 +671,17 @@ function HistoryTab({ classInfo, classRecords, onExportPdf }) {
                 const periodNumber = record.sequence || totalRecords - index
                 const periodLabel = record.period ? `${record.period}교시` : '차시 미기록'
                 const subtitle = [dayLabel, periodLabel].filter(Boolean)
-                const performance = record.performance?.trim()
-                const variation = record.variation?.trim()
-                const memo = record.memo?.trim()
+                const performance = (record.performance || '').trim()
+                const variation = (record.variation || '').trim()
+                const memo = (record.memo || '').trim()
+                const activityDate = formatRecordDate(record.date || record.createdAt)
+                const classDate = record.classDate || record.date
                 const hasDetail = !!(performance || variation || memo)
 
                 return (
-              <div
-                key={record.id || `${record.classId}-${record.date || record.createdAt || 'nodate'}-${index}`}
-                className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/80 space-y-2"
+                  <div
+                    key={record.id || `${record.classId}-${record.date || record.createdAt || 'nodate'}-${index}`}
+                    className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/80 space-y-2"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-semibold text-text">
@@ -675,7 +692,10 @@ function HistoryTab({ classInfo, classRecords, onExportPdf }) {
                   </span>
                 </div>
                 <p className="text-sm font-medium text-textMuted">
-                  {periodNumber}차시 · {formatDate(record.date || record.createdAt)}
+                  {periodNumber}차시 · {activityDate}
+                  {classDate && classDate !== (record.date || record.createdAt) ? (
+                    <span className="ml-2">· 수업일 {formatRecordDate(classDate)}</span>
+                  ) : null}
                 </p>
                 <p className="text-sm text-textMuted">{subtitle.join(' · ')}</p>
                 {performance && <p className="text-sm text-text">평가: {performance}</p>}

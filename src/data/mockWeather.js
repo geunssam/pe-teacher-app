@@ -32,6 +32,35 @@ export const PM_GRADE = {
   4: { text: '매우나쁨', emoji: '🤢', color: '#991B1B', bg: 'rgba(153, 27, 27, 0.08)' }
 }
 
+const getNumber = (value, fallback = 0) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const getSkyCode = (value) => {
+  const key = String(Math.max(1, Math.floor(Math.abs(getNumber(value, 1))))
+  return SKY_CODE[key] ? key : '1'
+}
+
+const getPtyCode = (value) => {
+  const parsed = getNumber(value, 0)
+  const key = Math.max(0, Math.min(7, Math.floor(parsed)))
+  return String(key) in PTY_CODE ? key : 0
+}
+
+const fallback = {
+  text: '측정불가',
+  emoji: '⚪',
+  color: '#64748B',
+  bg: 'rgba(100, 116, 139, 0.08)',
+}
+
+const getPmGrade = (value) => {
+  const safeValue = Math.max(1, Math.min(4, Math.floor(getNumber(value, 1))))
+  const grade = PM_GRADE[safeValue]
+  return grade || fallback
+}
+
 /**
  * Mock 현재 날씨 데이터
  * 실제로는 기상청 API에서 받아옴
@@ -120,11 +149,37 @@ export const getHourlyForecast = () => {
  * @returns {Object} 판정 결과
  */
 export const judgeOutdoorClass = (weather, air) => {
+  const safeWeather = {
+    t1h: getNumber(weather?.t1h, 20),
+    pty: getPtyCode(weather?.pty),
+    sky: getSkyCode(weather?.sky),
+    rn1: getNumber(weather?.rn1, 0),
+    pop: getNumber(weather?.pop, 10),
+    reh: getNumber(weather?.reh, 50),
+  }
+
+  const safeAir = {
+    pm10Value: getNumber(air?.pm10Value, 20),
+    pm10Grade: Math.max(1, Math.min(4, Math.floor(getNumber(air?.pm10Grade, 1)))),
+    pm25Value: getNumber(air?.pm25Value, 15),
+    pm25Grade: Math.max(1, Math.min(4, Math.floor(getNumber(air?.pm25Grade, 1)))),
+  }
+
+  const rainLabel = safeWeather.pty === 0 ? '없음' : PTY_CODE[safeWeather.pty]?.text || '강수'
+
   const checks = {
-    rain: { pass: weather.pty === 0, label: '강수', value: weather.pty === 0 ? '없음' : PTY_CODE[weather.pty].text },
-    pm10: { pass: air.pm10Value <= 80, label: '미세먼지', value: `${air.pm10Value}㎍/㎥ (${PM_GRADE[air.pm10Grade].text})` },
-    temp: { pass: weather.t1h >= -5 && weather.t1h <= 33, label: '기온', value: `${weather.t1h}℃` },
-    pm10Warning: { pass: air.pm10Value <= 50, label: '미세먼지 주의', value: '' }
+    rain: { pass: safeWeather.pty === 0, label: '강수', value: rainLabel },
+    pm10: {
+      pass: safeAir.pm10Value <= 80,
+      label: '미세먼지',
+      value: `${safeAir.pm10Value}㎍/㎥ (${getPmGrade(safeAir.pm10Grade).text})`,
+    },
+    temp: {
+      pass: safeWeather.t1h >= -5 && safeWeather.t1h <= 33,
+      label: '기온',
+      value: `${safeWeather.t1h}℃`,
+    },
+    pm10Warning: { pass: safeAir.pm10Value <= 50, label: '미세먼지 주의', value: '' }
   }
 
   let result = {
@@ -170,7 +225,7 @@ export const judgeOutdoorClass = (weather, air) => {
       emoji: '❌',
       text: '실내 수업 권장',
       color: '#F57C7C',
-      reason: weather.t1h < -5 ? '기온이 너무 낮음' : '기온이 너무 높음'
+      reason: safeWeather.t1h < -5 ? '기온이 너무 낮음' : '기온이 너무 높음'
     }
     return result
   }
