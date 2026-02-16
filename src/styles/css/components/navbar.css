@@ -130,6 +130,14 @@
   color: var(--color-tab-sketch);
 }
 
+.nav-item.active[data-tab="classes"] {
+  color: var(--color-tab-classes);
+}
+
+.nav-item.active[data-tab="curriculum"] {
+  color: var(--color-tab-curriculum);
+}
+
 /* 헤더 우측 */
 .header-right {
   display: flex;

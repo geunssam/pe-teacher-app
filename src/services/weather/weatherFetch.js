@@ -1,5 +1,6 @@
 // 기상청 API — 단기예보 데이터 fetch + 파싱 | 사용처→WeatherPage/HomePage, 좌표변환→utils/gridConvert.js, API키→.env.local
 import { latLonToGrid, DEFAULT_LOCATION } from '../../utils/gridConvert'
+import { getCurrentWeather as getMockCurrentWeather, getHourlyForecast as getMockHourlyForecast } from '../../data/mockWeather'
 
 const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY
 const WEATHER_ENDPOINT = import.meta.env.VITE_WEATHER_API_ENDPOINT
@@ -18,6 +19,28 @@ const limitText = (value, length = 180) =>
 const looksLikeJson = (value) => {
   const trimmed = String(value || '').trim()
   return trimmed.startsWith('{') || trimmed.startsWith('[')
+}
+
+const isRateLimitError = (error) => {
+  const message = String(error?.message || '').toLowerCase()
+  return (
+    message.includes('429') ||
+    message.includes('too many requests') ||
+    message.includes('rate limit') ||
+    message.includes('api rate') ||
+    message.includes('요청횟수')
+  )
+}
+
+const isRateLimitResponseText = (value) => {
+  const text = String(value || '').toLowerCase()
+  return (
+    text.includes('api rate') ||
+    text.includes('too many requests') ||
+    text.includes('rate limit') ||
+    text.includes('429') ||
+    text.includes('요청횟수')
+  )
 }
 
 /**
@@ -60,6 +83,16 @@ export async function fetchWeatherData(location = DEFAULT_LOCATION) {
         if (isNoDataError(error)) {
           lastNoDataError = error
           continue
+        }
+
+        if (isRateLimitError(error)) {
+          return {
+            ...getMockCurrentWeather(),
+            baseDate,
+            baseTime,
+            isMock: true,
+            isStale: true,
+          }
         }
 
         const fallback = getWeatherFallbackData(query)
@@ -123,6 +156,16 @@ export async function fetchHourlyForecast(location = DEFAULT_LOCATION) {
         if (isNoDataError(error)) {
           lastNoDataError = error
           continue
+        }
+
+        if (isRateLimitError(error)) {
+          return {
+            forecast: getMockHourlyForecast(),
+            baseDate,
+            baseTime,
+            isMock: true,
+            isStale: true,
+          }
         }
 
         const fallback = getWeatherFallbackData(query)
@@ -267,14 +310,17 @@ async function fetchWeatherEndpoint(path, query) {
     const response = await fetch(url)
     const responseText = await response.text()
 
-    if (!looksLikeJson(responseText)) {
-      const preview = limitText(responseText || response.statusText || '요청 실패')
-      throw new Error(`API 응답 형식 오류: ${preview}`)
-    }
-
     if (!response.ok) {
       const preview = limitText(responseText || response.statusText || '요청 실패')
       throw new Error(`HTTP ${response.status}: ${preview}`)
+    }
+
+    if (!looksLikeJson(responseText)) {
+      if (isRateLimitResponseText(responseText)) {
+        throw new Error('API 응답 형식 오류: API rate limit exceeded')
+      }
+      const preview = limitText(responseText || response.statusText || '요청 실패')
+      throw new Error(`API 응답 형식 오류: ${preview}`)
     }
 
     let data

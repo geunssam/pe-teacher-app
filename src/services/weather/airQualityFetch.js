@@ -1,4 +1,5 @@
 // 에어코리아 API — 대기오염(미세먼지/초미세먼지) 데이터 fetch | 사용처→WeatherPage, 측정소→stationSearch.js, API키→.env.local
+import { getAirQuality as getMockAirQuality } from '../../data/mockWeather'
 const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY
 const AIR_ENDPOINT = import.meta.env.VITE_AIR_API_ENDPOINT
 const AIR_CACHE_TTL_MS = 1000 * 60 * 5
@@ -10,6 +11,28 @@ const limitText = (value, length = 180) => String(value).slice(0, length)
 const looksLikeJson = (value) => {
   const trimmed = String(value || '').trim()
   return trimmed.startsWith('{') || trimmed.startsWith('[')
+}
+
+const isRateLimitError = (error) => {
+    const message = String(error?.message || '').toLowerCase()
+  return (
+    message.includes('429') ||
+    message.includes('too many requests') ||
+    message.includes('rate limit') ||
+    message.includes('api rate') ||
+    message.includes('요청횟수')
+  )
+}
+
+const isRateLimitResponseText = (value) => {
+  const text = String(value || '').toLowerCase()
+  return (
+    text.includes('api rate') ||
+    text.includes('too many requests') ||
+    text.includes('rate limit') ||
+    text.includes('429') ||
+    text.includes('요청횟수')
+  )
 }
 
 const getAirCacheKey = (stationName) =>
@@ -70,14 +93,17 @@ export async function fetchAirQualityData(stationName = '대전') {
         const response = await fetch(url)
         const responseText = await response.text()
 
-        if (!looksLikeJson(responseText)) {
-          const preview = limitText(responseText || response.statusText || '요청 실패')
-          throw new Error(`API 응답 형식 오류: ${preview}`)
-        }
-
         if (!response.ok) {
           const preview = limitText(responseText || response.statusText || '요청 실패')
           throw new Error(`HTTP ${response.status}: ${preview}`)
+        }
+
+        if (!looksLikeJson(responseText)) {
+          if (isRateLimitResponseText(responseText)) {
+            throw new Error('API 응답 형식 오류: API rate limit exceeded')
+          }
+          const preview = limitText(responseText || response.statusText || '요청 실패')
+          throw new Error(`API 응답 형식 오류: ${preview}`)
         }
 
         let data
@@ -117,6 +143,14 @@ export async function fetchAirQualityData(stationName = '대전') {
 
         return airData
       } catch (error) {
+        if (isRateLimitError(error)) {
+          const fallback = getMockAirQuality()
+          return {
+            ...fallback,
+            stationName: stationName,
+          }
+        }
+
         const fallback = getAirQualityFallback(stationName)
         if (fallback) {
           return fallback.data
@@ -135,6 +169,14 @@ export async function fetchAirQualityData(stationName = '대전') {
     const fallback = getAirQualityFallback(stationName)
     if (fallback) {
       return fallback.data
+    }
+
+    if (isRateLimitError(error)) {
+      const mockData = getMockAirQuality()
+      return {
+        ...mockData,
+        stationName: stationName,
+      }
     }
 
     console.error('에어코리아 API 호출 오류:', error)

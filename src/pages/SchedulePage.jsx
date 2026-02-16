@@ -1,19 +1,20 @@
 // 📅 시간표 탭 — 주간 시간표 편집 (기본 + 주차별 오버라이드), 수업 기록 저장까지 연결 | UI→components/schedule/, 데이터→hooks/useSchedule.js
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom'
 import { useSchedule, getWeekRange } from '../hooks/useSchedule'
 import { useClassManager, CLASS_COLOR_PRESETS } from '../hooks/useClassManager'
 import { useSettings } from '../hooks/useSettings'
 import ScheduleGrid from '../components/schedule/ScheduleGrid'
 import BulkScheduleSetup from '../components/schedule/BulkScheduleSetup'
 import Modal from '../components/common/Modal'
+import AceLessonFlow from '../components/curriculum/AceLessonFlow'
 import { fetchAirQualityData, fetchWeatherData } from '../services/weather'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
 import { judgeOutdoorClass } from '../data/mockWeather'
 import { formatRecordDate } from '../utils/recordDate'
 
-const LESSON_DOMAINS = ['스포츠', '놀이', '표현', '기타']
+const LESSON_DOMAINS = ['운동', '스포츠', '놀이', '표현', '기타']
 
 const LESSON_ACTIVITY_LIBRARY = {
   스포츠: {
@@ -206,8 +207,11 @@ export default function SchedulePage() {
     isEmpty,
   } = useSchedule()
 
-  const { classes, setClassColor, addClassRecord, getClass, getNextLessonSequence } = useClassManager()
+  const { classes, setClassColor, addClassRecord, getClass, getNextLessonSequence, findRecordForCell, records } = useClassManager()
   const { location } = useSettings()
+
+  const routerLocation = useLocation()
+  const navigate = useNavigate()
 
   const [state, dispatch] = useReducer(scheduleReducer, initialState)
   const [lessonForm, setLessonForm] = useState(LESSON_FORM_DEFAULT)
@@ -215,6 +219,20 @@ export default function SchedulePage() {
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false)
   const [lessonRecommendation, setLessonRecommendation] = useState(null)
   const [recommendationError, setRecommendationError] = useState('')
+  const [pendingActivity, setPendingActivity] = useState(null)
+
+  // 수업설계에서 전달받은 활동 감지
+  useEffect(() => {
+    if (routerLocation.state?.pendingActivity) {
+      setPendingActivity(routerLocation.state.pendingActivity)
+      // 편집 모드 해제 — 셀 클릭이 바로 수업 기록으로 연결되도록
+      if (state.isEditing) {
+        dispatch({ type: 'TOGGLE_EDITING' })
+      }
+      // state 초기화 (뒤로가기 시 중복 방지)
+      navigate('/schedule', { replace: true, state: {} })
+    }
+  }, [routerLocation.state])
   const suggestionActivities = useMemo(
     () => getLessonSuggestions(lessonRecommendation?.judgment, lessonForm.domain),
     [lessonRecommendation?.judgment, lessonForm.domain]
@@ -222,6 +240,24 @@ export default function SchedulePage() {
 
   const weekInfo = getWeekRange(state.weekOffset)
   const { timetable } = getTimetableForWeek(weekInfo.weekKey)
+
+  // cellRecordMap 계산 — 각 셀에 해당하는 기록을 매핑
+  const cellRecordMap = useMemo(() => {
+    const map = {}
+    Object.entries(timetable).forEach(([cellKey, periodData]) => {
+      if (!periodData?.classId) return
+      const [day, period] = cellKey.split('-')
+      const dayIndex = WEEKDAYS.indexOf(day)
+      const cellDate = new Date(weekInfo.monday)
+      if (dayIndex >= 0) {
+        cellDate.setDate(cellDate.getDate() + dayIndex)
+      }
+      const dateStr = toLocalDateString(cellDate)
+      const record = findRecordForCell(periodData.classId, day, Number(period), dateStr)
+      if (record) map[cellKey] = record
+    })
+    return map
+  }, [timetable, weekInfo.monday, records])
 
   const clearLessonQuery = () => {
     if (!searchParams.has('day') && !searchParams.has('period') && !searchParams.has('classId')) {
@@ -280,17 +316,20 @@ export default function SchedulePage() {
         className: periodData?.className,
         periodData,
         classDate: toLocalDateString(classDate),
+        scheduledDate: toLocalDateString(classDate),
         recordedAt: getTodayLocalDate(),
       },
     })
 
     setLessonForm((prev) => ({
       ...prev,
-      activity: '',
+      activity: pendingActivity?.name || '',
       variation: '',
       memo: periodData?.memo || '',
-      domain: nextDomain,
-      sequence: suggestedSequence,
+      domain: pendingActivity?.domain || nextDomain,
+      sequence: pendingActivity?.domain
+        ? (classId ? getNextLessonSequence(classId, pendingActivity.domain) : suggestedSequence)
+        : suggestedSequence,
       performance: '',
     }))
   }
@@ -302,6 +341,18 @@ export default function SchedulePage() {
   }
 
   const handleEditPeriod = (day, period) => {
+    // pendingActivity가 있으면 편집 대신 수업 기록으로 바로 연결
+    if (pendingActivity) {
+      const cellKey = `${day}-${period}`
+      const existingData = timetable[cellKey]
+      if (existingData?.classId) {
+        openLessonLog(day, period, existingData)
+      } else {
+        toast('이 교시에 학급이 배정되지 않았습니다.\n먼저 학급을 배정한 후 다시 시도해주세요.', { icon: 'ℹ️' })
+      }
+      return
+    }
+
     const cellKey = `${day}-${period}`
     const existingData = timetable[cellKey]
 
@@ -315,9 +366,45 @@ export default function SchedulePage() {
   }
 
   const handleOpenLessonLog = (day, period, periodData) => {
-    if (state.isEditing || !periodData?.classId) {
+    if (!periodData?.classId) {
       return
     }
+    // pendingActivity가 있으면 편집 모드 무시하고 수업 기록 열기
+    if (!pendingActivity && state.isEditing) {
+      return
+    }
+
+    // 기존 기록이 있는지 확인
+    const cellKey = `${day}-${period}`
+    const existingRecord = cellRecordMap[cellKey]
+
+    if (existingRecord) {
+      // 기존 기록이 있으면 — 기록 보기 모달로 (aceLesson 포함)
+      dispatch({
+        type: 'OPEN_LESSON_LOG',
+        payload: {
+          day,
+          period,
+          classId: periodData?.classId,
+          className: periodData?.className,
+          periodData,
+          classDate: existingRecord.classDate,
+          scheduledDate: existingRecord.classDate,
+          recordedAt: existingRecord.recordedAt || existingRecord.date,
+          existingRecord,
+        },
+      })
+      setLessonForm({
+        activity: existingRecord.activity || '',
+        domain: existingRecord.domain || '스포츠',
+        variation: existingRecord.variation || '',
+        memo: existingRecord.memo || '',
+        sequence: existingRecord.sequence || '',
+        performance: existingRecord.performance || '',
+      })
+      return
+    }
+
     openLessonLog(day, period, periodData)
   }
 
@@ -442,10 +529,13 @@ export default function SchedulePage() {
     const finalSequence = Number.isInteger(sequenceValue) && sequenceValue > 0
       ? sequenceValue
       : getNextLessonSequence(classId, lessonForm.domain)
-    const recordDate = getTodayLocalDate()
+    const recordedAt = getTodayLocalDate()
+    const classDate = state.lessonLogTarget?.scheduledDate || state.lessonLogTarget?.classDate
 
     addClassRecord(classId, {
-      date: recordDate,
+      date: recordedAt,
+      recordedAt,
+      classDate,
       day: state.lessonLogTarget.day,
       dayLabel: WEEKDAY_LABELS[state.lessonLogTarget.day] || state.lessonLogTarget.day,
       period: state.lessonLogTarget.period,
@@ -456,11 +546,13 @@ export default function SchedulePage() {
       memo: lessonForm.memo.trim(),
       sequence: finalSequence,
       performance: lessonForm.performance.trim(),
-      classDate: state.lessonLogTarget.classDate,
       subject: state.lessonLogTarget.periodData?.subject || '체육',
+      source: pendingActivity ? 'curriculum' : 'schedule-log',
+      aceLesson: pendingActivity?.aceLesson || null,
     })
 
     toast.success('수업 기록이 저장되었습니다')
+    setPendingActivity(null)
     closeLessonLog()
   }
 
@@ -614,6 +706,33 @@ export default function SchedulePage() {
         </button>
       </div>
 
+      {/* 수업설계에서 전달받은 활동 배너 */}
+      {pendingActivity && (
+        <div className="mb-md p-3 rounded-xl border-2 border-[#F5E07C] bg-[#FFF9C4]/60 backdrop-blur-sm flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm">✏️</span>
+              <p className="text-sm font-bold text-gray-900 truncate">{pendingActivity.name}</p>
+              <span className="text-[10px] bg-[#92400E]/10 text-[#92400E] rounded-full px-2 py-0.5 font-medium shrink-0">
+                {pendingActivity.domain}
+              </span>
+            </div>
+            <p className="text-[11px] text-[#92400E]">
+              👆 수업을 기록할 교시를 클릭하세요
+            </p>
+          </div>
+          <button
+            onClick={() => setPendingActivity(null)}
+            className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/60 transition-all"
+            title="취소"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* 시간표 그리드 */}
       <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-lg border border-white/80">
         <ScheduleGrid
@@ -623,6 +742,7 @@ export default function SchedulePage() {
           onEditPeriod={handleEditPeriod}
           onRemovePeriod={handleRemovePeriod}
           onOpenLessonLog={handleOpenLessonLog}
+          cellRecordMap={cellRecordMap}
         />
       </div>
 
@@ -688,145 +808,273 @@ export default function SchedulePage() {
       )}
 
       {/* 수업 기록 모달 */}
-      {state.lessonLogTarget && (
-        <Modal
-          onClose={closeLessonLog}
-          maxWidth="max-w-5xl"
-          contentClassName="max-h-[86vh] overflow-y-auto"
-        >
-          <h2 className="text-xl font-bold text-text mb-2">수업 기록</h2>
-          <p className="text-sm text-textMuted mb-4">
-            {state.lessonLogTarget.className} · {WEEKDAY_LABELS[state.lessonLogTarget.day] || state.lessonLogTarget.day}요일
-        {state.lessonLogTarget.period}교시 (기록일 {formatRecordDate(state.lessonLogTarget.recordedAt)})
-        {state.lessonLogTarget.classDate && state.lessonLogTarget.classDate !== state.lessonLogTarget.recordedAt ? (
-          <span className="ml-2">· 수업일 {formatRecordDate(state.lessonLogTarget.classDate)}</span>
-        ) : null}
-          </p>
+      {state.lessonLogTarget && (() => {
+        const existingRecord = state.lessonLogTarget.existingRecord
+        const aceSource = pendingActivity?.aceLesson || existingRecord?.aceLesson
+        const isAceMode = !!aceSource
+        const isViewingExisting = !!existingRecord
 
-          <div className="mb-4 p-3 rounded-lg border border-white/80 bg-white/60">
-            <p className="text-sm font-semibold text-text mb-1">날씨 기반 활동 제안</p>
-            <p className="text-sm text-text">{getRecommendationText()}</p>
-            <p className="text-xs text-textMuted mt-1">
-              {getSuggestionSummary(lessonRecommendation?.judgment)}
+        return (
+          <Modal
+            onClose={closeLessonLog}
+            maxWidth="max-w-4xl"
+            contentClassName="max-h-[88vh] overflow-y-auto"
+          >
+            <h2 className="text-xl font-bold text-text mb-1">
+              {isViewingExisting ? '수업 기록 보기' : '수업 기록'}
+            </h2>
+            <p className="text-xs text-textMuted mb-3">
+              {state.lessonLogTarget.className} · {WEEKDAY_LABELS[state.lessonLogTarget.day] || state.lessonLogTarget.day}요일 · {state.lessonLogTarget.period}교시
+              <span className="ml-2">기록일 {formatRecordDate(state.lessonLogTarget.recordedAt)}</span>
+              {state.lessonLogTarget.scheduledDate &&
+              state.lessonLogTarget.scheduledDate !== state.lessonLogTarget.recordedAt ? (
+                <span className="ml-2">수업일 {formatRecordDate(state.lessonLogTarget.scheduledDate)}</span>
+              ) : null}
             </p>
-            <div className="mt-3">
-              <p className="text-xs font-semibold text-text mb-2">추천 활동</p>
-              <div className="flex flex-wrap gap-2">
-                {suggestionActivities.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => handleApplySuggestion(suggestion)}
-                    className="px-2.5 py-1.5 rounded-lg text-sm bg-white/80 border border-white/80 text-text hover:border-primary/60 hover:bg-primary/5 transition-all"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-1">
-              <label className="block text-sm font-semibold text-text mb-1">수업 활동명</label>
-              <input
-                value={lessonForm.activity}
-                onChange={(e) => setLessonForm((prev) => ({ ...prev, activity: e.target.value }))}
-                placeholder="예: 빠르게 이어달리기"
-                className="w-full p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
+            {/* ACE 모드: ACE 수업 흐름 + 간소화된 폼 */}
+            {isAceMode ? (
+              <>
+                {/* ACE 수업 흐름 표시 */}
+                <div className="mb-4 p-3 rounded-xl border border-[#7C9EF5]/30 bg-[#7C9EF5]/5">
+                  <AceLessonFlow aceLesson={aceSource} />
+                </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-semibold text-text mb-1">도메인</label>
-              <select
-                value={lessonForm.domain}
-                onChange={(e) => handleLessonDomainChange(e.target.value)}
-                className="w-full p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                {/* 기존 기록 정보 표시 (보기 모드) */}
+                {isViewingExisting && (
+                  <div className="mb-4 p-3 rounded-lg border border-white/80 bg-white/60">
+                    <div className="grid grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <span className="text-xs text-textMuted block">활동명</span>
+                        <span className="font-medium text-text">{existingRecord.activity}</span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-textMuted block">도메인</span>
+                        <span className="font-medium text-text">{existingRecord.domain}</span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-textMuted block">차시</span>
+                        <span className="font-medium text-text">{existingRecord.sequence}차시</span>
+                      </div>
+                    </div>
+                    {existingRecord.performance && (
+                      <div className="mt-2">
+                        <span className="text-xs text-textMuted">평가: </span>
+                        <span className="text-sm font-semibold text-primary">{existingRecord.performance}</span>
+                      </div>
+                    )}
+                    {existingRecord.memo && (
+                      <div className="mt-2">
+                        <span className="text-xs text-textMuted">메모: </span>
+                        <span className="text-sm text-text">{existingRecord.memo}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 새 기록 폼 (pendingActivity가 있을 때만) */}
+                {!isViewingExisting && (
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-semibold text-text mb-1">수업 활동명</label>
+                        <input
+                          value={lessonForm.activity}
+                          onChange={(e) => setLessonForm((prev) => ({ ...prev, activity: e.target.value }))}
+                          placeholder="예: 빠르게 이어달리기"
+                          className="w-full p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-semibold text-text mb-1">도메인</label>
+                        <select
+                          value={lessonForm.domain}
+                          onChange={(e) => handleLessonDomainChange(e.target.value)}
+                          className="w-full p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        >
+                          {LESSON_DOMAINS.map((domain) => (
+                            <option key={domain} value={domain}>{domain}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 mt-4">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-semibold text-text mb-1">차시 (도메인 누적)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={lessonForm.sequence}
+                          onChange={(e) => setLessonForm((prev) => ({ ...prev, sequence: e.target.value }))}
+                          className="w-full p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-text mb-1">간편 평가</label>
+                        <div className="flex gap-sm">
+                          {['상', '중', '하'].map((level) => (
+                            <button
+                              key={level}
+                              type="button"
+                              onClick={() => setLessonForm((prev) => ({ ...prev, performance: level }))}
+                              className={`flex-1 py-2 rounded-lg font-semibold transition-all border ${
+                                lessonForm.performance === level
+                                  ? 'bg-primary text-white border-primary'
+                                  : 'bg-white/60 text-text border-white/80'
+                              }`}
+                            >
+                              {level}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-1">
+                      <label className="block text-sm font-semibold text-text mb-1">수업 메모</label>
+                      <textarea
+                        value={lessonForm.memo}
+                        onChange={(e) => setLessonForm((prev) => ({ ...prev, memo: e.target.value }))}
+                        placeholder="수업 메모, 반응, 특이사항"
+                        className="w-full h-20 resize-none p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              /* 일반 모드: 기존 UI (날씨 추천 + 전체 폼) */
+              <>
+                <div className="mb-4 p-3 rounded-lg border border-white/80 bg-white/60">
+                  <p className="text-sm font-semibold text-text mb-1">날씨 기반 활동 제안</p>
+                  <p className="text-sm text-text">{getRecommendationText()}</p>
+                  <p className="text-xs text-textMuted mt-1">
+                    {getSuggestionSummary(lessonRecommendation?.judgment)}
+                  </p>
+                  <div className="mt-3 max-h-20 overflow-y-auto">
+                    <p className="text-xs font-semibold text-text mb-2">추천 활동</p>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestionActivities.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          type="button"
+                          onClick={() => handleApplySuggestion(suggestion)}
+                          className="px-2.5 py-1.5 rounded-lg text-sm bg-white/80 border border-white/80 text-text hover:border-primary/60 hover:bg-primary/5 transition-all"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-semibold text-text mb-1">수업 활동명</label>
+                    <input
+                      value={lessonForm.activity}
+                      onChange={(e) => setLessonForm((prev) => ({ ...prev, activity: e.target.value }))}
+                      placeholder="예: 빠르게 이어달리기"
+                      className="w-full p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-semibold text-text mb-1">도메인</label>
+                    <select
+                      value={lessonForm.domain}
+                      onChange={(e) => handleLessonDomainChange(e.target.value)}
+                      className="w-full p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      {LESSON_DOMAINS.map((domain) => (
+                        <option key={domain} value={domain}>
+                          {domain}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-semibold text-text mb-1">
+                      차시 (도메인 누적)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={lessonForm.sequence}
+                      onChange={(e) => setLessonForm((prev) => ({ ...prev, sequence: e.target.value }))}
+                      className="w-full p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-text mb-1">간편 평가</label>
+                    <div className="flex gap-sm">
+                      {['상', '중', '하'].map((level) => (
+                        <button
+                          key={level}
+                          type="button"
+                          onClick={() => setLessonForm((prev) => ({ ...prev, performance: level }))}
+                          className={`flex-1 py-2 rounded-lg font-semibold transition-all border ${
+                            lessonForm.performance === level
+                              ? 'bg-primary text-white border-primary'
+                              : 'bg-white/60 text-text border-white/80'
+                          }`}
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-semibold text-text mb-1">변형 사항</label>
+                    <textarea
+                      value={lessonForm.variation}
+                      onChange={(e) => setLessonForm((prev) => ({ ...prev, variation: e.target.value }))}
+                      placeholder="예: 공 간격 3m, 3명 조 편성"
+                      className="w-full h-20 resize-none p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm font-semibold text-text mb-1">수업 메모</label>
+                    <textarea
+                      value={lessonForm.memo}
+                      onChange={(e) => setLessonForm((prev) => ({ ...prev, memo: e.target.value }))}
+                      placeholder="수업 메모, 반응, 특이사항"
+                      className="w-full h-20 resize-none p-2 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-2 mt-4">
+              {!isViewingExisting && (
+                <button
+                  onClick={handleSaveLessonLog}
+                  className="flex-1 py-3 px-4 rounded-xl font-semibold transition-all"
+                  style={{ backgroundColor: '#B3D9FF', color: '#1E5A9E' }}
+                >
+                  수업 기록 저장
+                </button>
+              )}
+              <button
+                onClick={closeLessonLog}
+                className={`${isViewingExisting ? 'flex-1' : 'flex-1'} py-3 px-4 rounded-xl font-semibold transition-all bg-white/60 text-text border border-white/80`}
               >
-                {LESSON_DOMAINS.map((domain) => (
-                  <option key={domain} value={domain}>
-                    {domain}
-                  </option>
-                ))}
-              </select>
+                닫기
+              </button>
             </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 mt-4">
-            <div className="space-y-1">
-              <label className="block text-sm font-semibold text-text mb-1">
-                차시 (도메인 누적)
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={lessonForm.sequence}
-                onChange={(e) => setLessonForm((prev) => ({ ...prev, sequence: e.target.value }))}
-                className="w-full p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-text mb-1">간편 평가</label>
-              <div className="flex gap-sm">
-                {['상', '중', '하'].map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => setLessonForm((prev) => ({ ...prev, performance: level }))}
-                    className={`flex-1 py-2 rounded-lg font-semibold transition-all border ${
-                      lessonForm.performance === level
-                        ? 'bg-primary text-white border-primary'
-                        : 'bg-white/60 text-text border-white/80'
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 mt-4">
-            <div className="space-y-1">
-              <label className="block text-sm font-semibold text-text mb-1">변형 사항</label>
-              <textarea
-                value={lessonForm.variation}
-                onChange={(e) => setLessonForm((prev) => ({ ...prev, variation: e.target.value }))}
-                placeholder="예: 공 간격 3m, 3명 조 편성"
-                className="w-full h-24 resize-none p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-semibold text-text mb-1">수업 메모</label>
-              <textarea
-                value={lessonForm.memo}
-                onChange={(e) => setLessonForm((prev) => ({ ...prev, memo: e.target.value }))}
-                placeholder="수업 메모, 반응, 특이사항"
-                className="w-full h-24 resize-none p-3 rounded-lg border border-white/80 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleSaveLessonLog}
-              className="flex-1 py-3 px-4 rounded-xl font-semibold transition-all"
-              style={{ backgroundColor: '#B3D9FF', color: '#1E5A9E' }}
-            >
-              수업 기록 저장
-            </button>
-            <button
-              onClick={closeLessonLog}
-              className="flex-1 py-3 px-4 rounded-xl font-semibold transition-all bg-white/60 text-text border border-white/80"
-            >
-              닫기
-            </button>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        )
+      })()}
 
       {/* 메모 입력 모달 */}
       {state.showMemoInput && state.selectedClass && (

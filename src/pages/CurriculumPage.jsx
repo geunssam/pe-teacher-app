@@ -1,5 +1,6 @@
 // 교육과정 단원 설계 — 필터 칩 바 + viewMode 전환 (전체/교과서/내 활동/활동 추가) | 훅→useCurriculum, 컴포넌트→components/curriculum/
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCurriculum } from '../hooks/useCurriculum'
 import UnitCard from '../components/curriculum/UnitCard'
 import LessonTimeline from '../components/curriculum/LessonTimeline'
@@ -8,6 +9,7 @@ import AlternativeActivityModal from '../components/curriculum/AlternativeActivi
 import MyActivityList from '../components/curriculum/MyActivityList'
 import MyActivityForm from '../components/curriculum/MyActivityForm'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useEditedAceLesson } from '../hooks/useEditedAceLesson'
 import { generateId } from '../utils/generateId'
 
 const VIEW_CHIPS = [
@@ -17,11 +19,13 @@ const VIEW_CHIPS = [
 ]
 
 export default function CurriculumPage() {
+  const navigate = useNavigate()
   const {
     units, getActivityById,
     myActivityList, addMyActivity, updateMyActivity, deleteMyActivity,
     findRelatedActivities,
   } = useCurriculum()
+  const { getEditedAceLesson } = useEditedAceLesson()
 
   // --- 뷰 모드: 'all' | 'textbook' | 'archive' | 'addForm' ---
   const [viewMode, setViewMode] = useState('all')
@@ -157,6 +161,29 @@ export default function CurriculumPage() {
     setViewMode('archive')
   }
 
+  // --- 활동을 시간표에 배정 (SchedulePage로 이동) ---
+  const handleAssignToSchedule = (activity) => {
+    setSelectedActivity(null)
+    // 편집된 ACE 수업안이 있으면 우선 사용
+    const edited = getEditedAceLesson(activity.id)
+    const aceLesson = edited?.aceLesson || activity.aceLesson || null
+
+    navigate('/schedule', {
+      state: {
+        pendingActivity: {
+          name: activity.name,
+          domain: activity.domain || '스포츠',
+          source: activity.source || '',
+          difficulty: activity.difficulty,
+          acePhase: activity.acePhase,
+          space: activity.space,
+          aceLesson,
+          originalActivityId: activity.id,
+        },
+      },
+    })
+  }
+
   return (
     <div className="page-container max-w-2xl mx-auto px-4 py-6">
       {/* 페이지 제목 + 필터 칩 바 (Step 1에서만 표시) */}
@@ -255,6 +282,7 @@ export default function CurriculumPage() {
           onClose={() => setSelectedActivity(null)}
           relatedActivities={findRelatedActivities(selectedActivity, 5)}
           onActivitySwitch={setSelectedActivity}
+          onAssignToSchedule={handleAssignToSchedule}
         />
       )}
 

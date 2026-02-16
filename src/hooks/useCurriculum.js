@@ -21,7 +21,8 @@ export function useCurriculum() {
   const staticActivityMap = useMemo(() => {
     const map = new Map()
     for (const source of ALL_SOURCES) {
-      source.activities.forEach((a) => map.set(a.id, a))
+      const domain = source.meta?.domain || '스포츠'
+      source.activities.forEach((a) => map.set(a.id, { ...a, domain }))
     }
     return map
   }, [])

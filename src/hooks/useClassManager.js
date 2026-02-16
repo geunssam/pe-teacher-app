@@ -169,6 +169,7 @@ export function useClassManager() {
   const addClassRecord = (classId, record) => {
     const now = new Date().toISOString()
     const normalizedDomain = record?.domain || '스포츠'
+    const recordedAt = record?.recordedAt || toLocalDateString(record?.date)
     const nextSequence = record?.sequence
       ? Number(record.sequence)
       : getNextLessonSequence(classId, normalizedDomain)
@@ -180,6 +181,7 @@ export function useClassManager() {
     const nextRecord = {
       id: record?.id || generateRecordId(),
       date: nextDate,
+      recordedAt: recordedAt || nextDate,
       createdAt: now,
       classId,
       activity: '수업 활동',
@@ -373,6 +375,31 @@ export function useClassManager() {
     )
   }
 
+  /**
+   * 특정 셀(요일+교시+날짜)에 해당하는 수업 기록 찾기
+   * 여러 개면 가장 최신(createdAt 기준) 반환
+   *
+   * @param {string} classId
+   * @param {string} day - 요일 키 (mon, tue, ...)
+   * @param {number} period - 교시 번호
+   * @param {string} classDate - YYYY-MM-DD 형식
+   * @returns {object|null} 가장 최근 기록 또는 null
+   */
+  const findRecordForCell = (classId, day, period, classDate) => {
+    const classRecords = getClassRecords(classId)
+    if (!classRecords.length) return null
+
+    const matches = classRecords.filter(
+      (r) => r.day === day && r.period === period && r.classDate === classDate
+    )
+
+    if (!matches.length) return null
+    if (matches.length === 1) return matches[0]
+
+    // 여러 개면 가장 최신
+    return matches.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))[0]
+  }
+
   return {
     // 상태
     classSetup,
@@ -394,6 +421,7 @@ export function useClassManager() {
     getNextLessonSequence,
     addClassRecord,
     getClassesByGrade,
+    findRecordForCell,
 
     // 색상 관리
     getClassColor,

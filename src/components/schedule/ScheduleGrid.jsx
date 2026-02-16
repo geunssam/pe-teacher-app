@@ -8,7 +8,8 @@ export default function ScheduleGrid({
   isEditing,
   onEditPeriod,
   onRemovePeriod,
-  onOpenLessonLog
+  onOpenLessonLog,
+  cellRecordMap,
 }) {
   const { WEEKDAYS, WEEKDAY_LABELS, MAX_PERIODS, getTimetableForWeek } = useSchedule()
   const { isCurrentPeriod } = useCurrentPeriod()
@@ -44,6 +45,7 @@ export default function ScheduleGrid({
               const periodData = timetable[cellKey]
               const isOverridden = overriddenCells.includes(cellKey)
               const isCurrent = isCurrentPeriod(day, period)
+              const cellRecord = cellRecordMap?.[cellKey]
 
               return (
                 <PeriodCell
@@ -57,6 +59,7 @@ export default function ScheduleGrid({
                   onEdit={onEditPeriod}
                   onRemove={onRemovePeriod}
                   onOpenLessonLog={onOpenLessonLog}
+                  hasAceRecord={!!cellRecord?.aceLesson}
                 />
               )
             })}

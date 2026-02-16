@@ -46,10 +46,26 @@ export const LogoutIcon = () => (
   </svg>
 )
 
+export const CurriculumIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="3.2" width="10.9" height="17.6" rx="1.6" />
+    <rect x="15.5" y="3.2" width="1.1" height="17.6" rx="0.5" fill="currentColor" fillOpacity="0.24" stroke="none" />
+    <line x1="15.9" y1="3.2" x2="15.9" y2="20.8" />
+    <line x1="15.55" y1="4.35" x2="15.55" y2="5.1" />
+    <line x1="15.55" y1="18.7" x2="15.55" y2="19.45" />
+    <path d="M7.9 17.35l1.55-1.55 1.55 1.55 1.55-1.55 1.55 1.55" />
+    <path d="M7.9 4.5h6.2" strokeWidth="1.25" />
+    <circle cx="3.35" cy="7.35" r="1.05" fill="currentColor" fillOpacity="0.16" strokeWidth="0.9" />
+    <circle cx="3.35" cy="11.85" r="1.05" fill="currentColor" fillOpacity="0.16" strokeWidth="0.9" />
+    <circle cx="3.35" cy="16.35" r="1.05" fill="currentColor" fillOpacity="0.16" strokeWidth="0.9" />
+  </svg>
+  )
+
 // Navigation items shared across Header, TopNav, HamburgerMenu
 export const NAV_ITEMS = [
   { path: '/', label: '오늘', emoji: '🏠', icon: HomeIcon, tab: 'home' },
   { path: '/weather', label: '날씨', emoji: '🌤️', icon: WeatherIcon, tab: 'weather' },
   { path: '/schedule', label: '시간표', emoji: '📅', icon: CalendarIcon, tab: 'schedule' },
+  { path: '/curriculum', label: '수업 설계', emoji: '📚', icon: CurriculumIcon, tab: 'curriculum' },
   { path: '/classes', label: '학급', emoji: '📋', icon: UsersIcon, tab: 'classes' },
 ]

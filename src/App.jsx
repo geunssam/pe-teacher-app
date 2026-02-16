@@ -21,6 +21,7 @@ function ScrollToTop() {
 import HomePage from './pages/HomePage'
 import WeatherPage from './pages/WeatherPage'
 import SchedulePage from './pages/SchedulePage'
+import CurriculumPage from './pages/CurriculumPage'
 
 import ClassesPage from './pages/ClassesPage'
 import SetupWizard from './pages/SetupWizard'
@@ -92,6 +93,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <SchedulePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/curriculum"
+            element={
+              <ProtectedRoute>
+                <CurriculumPage />
               </ProtectedRoute>
             }
           />

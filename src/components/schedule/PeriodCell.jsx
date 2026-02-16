@@ -1,4 +1,4 @@
-// 교시 셀 — 시간표 한 칸 (과목명 + 편집) | 부모→ScheduleGrid.jsx, 학급색상→hooks/useClassManager.js
+// 교시 셀 — 시간표 한 칸 (과목명 + 편집 + ACE 배지) | 부모→ScheduleGrid.jsx, 학급색상→hooks/useClassManager.js
 import { useClassManager } from '../../hooks/useClassManager'
 
 export default function PeriodCell({
@@ -11,6 +11,7 @@ export default function PeriodCell({
   onEdit,
   onRemove,
   onOpenLessonLog,
+  hasAceRecord,
 }) {
   const { getClassColor } = useClassManager()
 
@@ -36,7 +37,6 @@ export default function PeriodCell({
       return 'bg-primary/20 border-2 border-primary'
     }
     if (periodData?.className && classColor) {
-      // 학급별 색상 적용 (40% 투명도)
       return { style: { backgroundColor: `${classColor.bg}` }, className: 'hover:opacity-90' }
     }
     if (isEditing) {
@@ -85,11 +85,12 @@ export default function PeriodCell({
               ● 현재
             </div>
           )}
-          {!isEditing && (
-            <div className="text-[10px] text-primary font-semibold mt-0.5">
-              기록
-            </div>
-          )}
+          {/* ACE 기록이 있으면 ACE 배지, 아니면 기록 텍스트 */}
+          {hasAceRecord ? (
+            <span className="text-[9px] text-[#7C9EF5] font-bold mt-0.5">ACE</span>
+          ) : !isEditing && periodData?.classId ? (
+            <span className="text-[10px] text-primary font-semibold mt-0.5">기록</span>
+          ) : null}
         </>
       ) : (
         isEditing && (

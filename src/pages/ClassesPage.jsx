@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useClassManager } from '../hooks/useClassManager'
 import GlassCard from '../components/common/GlassCard'
 import RosterEditor from '../components/classes/RosterEditor'
-import { formatRecordDate } from '../utils/recordDate'
+import { formatRecordDate, getRecordSortValue } from '../utils/recordDate'
 
 export default function ClassesPage() {
   const {
@@ -20,6 +20,8 @@ export default function ClassesPage() {
   const getRecordDateLabel = (recordDate) => {
     return formatRecordDate(recordDate)
   }
+  const getRecordDate = (record) =>
+    record?.recordedAt || record?.createdAt || record?.date
 
   return (
     <div className="page-container">
@@ -39,11 +41,18 @@ export default function ClassesPage() {
                 {classList.map((classItem) => {
                   const roster = rosters[classItem.id] || []
                   const filledRoster = roster.filter((s) => s.name).length
-                  const records = getClassRecords(classItem.id)
+                  const records = [...getClassRecords(classItem.id)].sort(
+                    (a, b) =>
+                      getRecordSortValue(b.recordedAt || b.createdAt || b.date) -
+                      getRecordSortValue(a.recordedAt || a.createdAt || a.date)
+                  )
                   const latestRecord = records?.[0]
-                  const latestDate = latestRecord?.date || latestRecord?.createdAt
+                  const latestDate = getRecordDate(latestRecord)
                   const latestPeriod = latestRecord?.period
                   const latestDomain = latestRecord?.domain || classItem.lastDomain || '-'
+                  const latestVariation = latestRecord?.variation || ''
+                  const latestMemo = latestRecord?.memo || latestRecord?.memoText || latestRecord?.note || ''
+                  const latestPerformance = latestRecord?.performance || latestRecord?.grade || ''
                   const totalRecords = records.length
                   const latestDomainCount = latestDomain && latestDomain !== '-'
                     ? getClassRecordCount(classItem.id, latestDomain)
@@ -93,19 +102,19 @@ export default function ClassesPage() {
                           <p className="text-caption text-muted">
                             {getRecordDateLabel(latestDate)}
                           </p>
-                          {latestRecord.variation && (
+                          {latestVariation && (
                             <p className="text-caption text-muted">
-                              변형: {latestRecord.variation}
+                              변형: {latestVariation}
                             </p>
                           )}
-                          {latestRecord.memo && (
+                          {latestMemo && (
                             <p className="text-caption text-muted">
-                              메모: {latestRecord.memo}
+                              메모: {latestMemo}
                             </p>
                           )}
-                          {latestRecord.performance && (
+                          {latestPerformance && (
                             <p className="text-caption text-muted">
-                              평가: {latestRecord.performance}
+                              평가: {latestPerformance}
                             </p>
                           )}
                           <p className="text-caption text-muted mt-1">
