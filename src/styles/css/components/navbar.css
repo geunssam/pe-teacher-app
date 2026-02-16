@@ -138,6 +138,10 @@
   color: var(--color-tab-curriculum);
 }
 
+.nav-item.active[data-tab="library"] {
+  color: var(--color-tab-library);
+}
+
 /* 헤더 우측 */
 .header-right {
   display: flex;

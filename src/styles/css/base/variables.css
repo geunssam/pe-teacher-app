@@ -39,6 +39,7 @@
   --color-tab-sketch: #F5A67C;    /* ✏️ 수업스케치 */
   --color-tab-classes: #A78BFA;   /* 📋 학급 */
   --color-tab-curriculum: #8B5CF6; /* 📚 수업 설계 */
+  --color-tab-library: #F5A67C;    /* 📦 자료실 */
 
   /* 간격 */
   --spacing-xs: 4px;

@@ -8,6 +8,7 @@ const isCustomActivityId = (activityId) => String(activityId).startsWith('alt_')
 export default function LessonTimeline({
   unit,
   getActivityById,
+  getStandardByCode,
   onActivityClick,
   onBack,
   onAddAlternative,
@@ -78,6 +79,21 @@ export default function LessonTimeline({
                         {fms}
                       </span>
                     ))}
+                  </div>
+                )}
+
+                {/* 성취기준 전문 */}
+                {lesson.standardCodes?.length > 0 && getStandardByCode && (
+                  <div className="space-y-1 mb-3">
+                    {lesson.standardCodes.map((code) => {
+                      const std = getStandardByCode(code)
+                      return (
+                        <p key={code} className="text-[11px] text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5 leading-relaxed">
+                          <span className="font-semibold text-gray-600">{code}</span>{' '}
+                          {std?.text || ''}
+                        </p>
+                      )
+                    })}
                   </div>
                 )}
 

@@ -1,10 +1,13 @@
-// 앱 루트 — React Router 설정, 탭 레이아웃, ProtectedRoute(학급설정 필수) | 탭메뉴→constants/navigation.jsx, 레이아웃→components/layout/
+// 앱 루트 — React Router 설정, Auth 통합, 탭 레이아웃, ProtectedRoute(인증+학급설정 필수) | 탭메뉴→constants/navigation.jsx, 레이아웃→components/layout/
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { useClassManager } from './hooks/useClassManager'
+import { AuthProvider, useAuthContext } from './contexts/AuthContext'
 import Header from './components/layout/Header'
+import AIChatPanel from './components/common/AIChatPanel'
 import { useConfirm } from './components/common/ConfirmDialog'
+import MigrationPrompt from './components/common/MigrationPrompt'
 
 // 페이지 이동 시 스크롤을 최상단으로
 function ScrollToTop() {
@@ -24,8 +27,32 @@ import SchedulePage from './pages/SchedulePage'
 import CurriculumPage from './pages/CurriculumPage'
 
 import ClassesPage from './pages/ClassesPage'
+import LibraryPage from './pages/LibraryPage'
 import SetupWizard from './pages/SetupWizard'
 import SettingsPage from './pages/SettingsPage'
+import LoginPage from './pages/LoginPage'
+
+// 인증 보호 라우트 (로그인 필수)
+function AuthRoute({ children }) {
+  const { user, loading } = useAuthContext()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-textMuted">로딩 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+
+  return children
+}
 
 // 보호된 라우트 (학급 설정 필요)
 function ProtectedRoute({ children }) {
@@ -40,89 +67,162 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
-    <Router
-      basename={import.meta.env.BASE_URL}
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-      }}
-    >
-      <AppContent />
-    </Router>
+    <AuthProvider>
+      <Router
+        basename={import.meta.env.BASE_URL}
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
+        <AppContent />
+      </Router>
+    </AuthProvider>
   )
+}
+
+// localStorage에 기존 PE 데이터가 있는지 확인
+function hasLocalPEData() {
+  const keys = ['pe_classes', 'pe_timetable_base', 'pe_class_records', 'pe_rosters', 'pe-teacher-settings']
+  return keys.some((key) => {
+    const val = localStorage.getItem(key)
+    return val && val !== '[]' && val !== '{}' && val !== 'null'
+  })
 }
 
 function AppContent() {
   const location = useLocation()
   const { ConfirmDialog } = useConfirm()
-  const shouldShowHeader = location.pathname !== '/setup'
+  const { user, loading, isNewUser } = useAuthContext()
+  const [showMigration, setShowMigration] = useState(false)
+  const [migrationChecked, setMigrationChecked] = useState(false)
+  const shouldShowHeader = location.pathname !== '/setup' && location.pathname !== '/login'
+
+  // 신규 사용자 + localStorage 데이터 있으면 마이그레이션 프롬프트 표시
+  useEffect(() => {
+    if (user && isNewUser && !migrationChecked && hasLocalPEData()) {
+      setShowMigration(true)
+      setMigrationChecked(true)
+    }
+  }, [user, isNewUser, migrationChecked])
+
+  // Show loading spinner during auth initialization
+  if (loading && location.pathname !== '/login') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-textMuted">로딩 중...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="app-container">
       {/* 페이지 이동 시 스크롤 초기화 */}
       <ScrollToTop />
 
-      {/* 헤더 + 네비게이션 (학급 설정 페이지에서는 숨김) */}
-      {shouldShowHeader && <Header />}
+      {/* 헤더 + 네비게이션 (로그인/학급설정 페이지에서는 숨김) */}
+      {shouldShowHeader && user && <Header />}
 
       {/* 메인 콘텐츠 */}
       <main className="main-content">
         <Routes>
+          {/* 로그인 페이지 */}
+          <Route path="/login" element={
+            user ? <Navigate to="/" replace /> : <LoginPage />
+          } />
+
           {/* 학급 설정 위저드 */}
-          <Route path="/setup" element={<SetupWizard />} />
+          <Route path="/setup" element={
+            <AuthRoute>
+              <SetupWizard />
+            </AuthRoute>
+          } />
 
           {/* 보호된 라우트들 */}
           <Route
             path="/"
             element={
-              <ProtectedRoute>
-                <HomePage />
-              </ProtectedRoute>
+              <AuthRoute>
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/weather"
             element={
-              <ProtectedRoute>
-                <WeatherPage />
-              </ProtectedRoute>
+              <AuthRoute>
+                <ProtectedRoute>
+                  <WeatherPage />
+                </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/schedule"
             element={
-              <ProtectedRoute>
-                <SchedulePage />
-              </ProtectedRoute>
+              <AuthRoute>
+                <ProtectedRoute>
+                  <SchedulePage />
+                </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/curriculum"
             element={
-              <ProtectedRoute>
-                <CurriculumPage />
-              </ProtectedRoute>
+              <AuthRoute>
+                <ProtectedRoute>
+                  <CurriculumPage />
+                </ProtectedRoute>
+              </AuthRoute>
             }
           />
 
           <Route
             path="/classes"
             element={
-              <ProtectedRoute>
-                <ClassesPage />
-              </ProtectedRoute>
+              <AuthRoute>
+                <ProtectedRoute>
+                  <ClassesPage />
+                </ProtectedRoute>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/library"
+            element={
+              <AuthRoute>
+                <ProtectedRoute>
+                  <LibraryPage />
+                </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/settings"
             element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
+              <AuthRoute>
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              </AuthRoute>
             }
           />
         </Routes>
       </main>
+
+      {/* 마이그레이션 프롬프트 (신규 로그인 + 기존 localStorage 데이터 존재 시) */}
+      {showMigration && user && (
+        <MigrationPrompt
+          uid={user.uid}
+          onComplete={() => setShowMigration(false)}
+        />
+      )}
 
       {/* Toast 알림 */}
       <Toaster
@@ -144,6 +244,9 @@ function AppContent() {
 
       {/* Confirm 다이얼로그 */}
       <ConfirmDialog />
+
+      {/* 글로벌 AI 채팅 (로그인 후에만 표시) */}
+      {user && <AIChatPanel />}
     </div>
   )
 }

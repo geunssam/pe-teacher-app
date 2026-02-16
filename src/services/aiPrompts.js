@@ -1,0 +1,297 @@
+// AI 프롬프트 빌더 — 기능별 프롬프트 템플릿 | 사용처→hooks/useAI.js, components/*
+
+/**
+ * 활동 설명 보강 프롬프트
+ */
+export function buildEnhancePrompt(activity) {
+  const { name, acePhase, fmsCategories, fmsSkills, equipment, space, flow, teachingTips } = activity
+
+  return `당신은 초등학교 체육 전문가입니다. 아래 체육 활동에 대해 교사가 수업에 바로 활용할 수 있도록 상세하고 실용적인 설명을 작성해주세요.
+
+활동명: ${name}
+ACE 단계: ${acePhase || '미정'}
+FMS 분류: ${(fmsCategories || []).join(', ') || '없음'}
+FMS 기술: ${(fmsSkills || []).join(', ') || '없음'}
+준비물: ${(equipment || []).join(', ') || '없음'}
+장소: ${(space || []).join(', ') || '미정'}
+수업 흐름: ${(flow || []).join(' → ') || '없음'}
+교사 팁: ${(teachingTips || []).join(', ') || '없음'}
+
+다음 항목을 포함해서 300자 이내로 작성해주세요:
+1. 활동의 핵심 목표와 교육적 가치
+2. 학생들의 예상 반응과 주의점
+3. 효과적인 운영 팁 1-2가지
+
+한국어로 작성하고, 친근하면서도 전문적인 톤으로 작성해주세요.`
+}
+
+/**
+ * ACE 수업안 AI 생성 프롬프트 (교육과정 데이터 컨텍스트 포함)
+ * @param {Object} activity - 활동 데이터
+ * @param {Object} context - gatherLessonContext() 결과 (optional)
+ */
+export function buildAceLessonPrompt(activity, context = {}) {
+  const { name, acePhase, fmsCategories, fmsSkills, equipment, space, groupSize, durationMin, flow, rules, teachingTips } = activity
+
+  // --- 기본 메타데이터 ---
+  let prompt = `당신은 초등학교 체육 수업 설계 전문가입니다. ACE 모델(Acquire-Challenge-Engage)에 따라 수업안을 생성해주세요.
+
+## 활동 기본 정보
+- 활동명: ${name}
+- ACE 단계: ${acePhase || 'A'}
+- FMS 분류: ${(fmsCategories || []).join(', ') || '없음'}
+- FMS 기술: ${(fmsSkills || []).join(', ') || '없음'}
+- 준비물: ${(equipment || []).join(', ') || '없음'}
+- 장소: ${(space || []).join(', ') || '미정'}
+- 인원: ${groupSize ? `${groupSize.min}~${groupSize.max}명` : '20~30명'}
+- 수업 시간: ${durationMin || 40}분`
+
+  // 기존 수업 흐름이 있으면 포함
+  if (flow?.length > 0) {
+    prompt += `\n- 수업 흐름: ${flow.join(' → ')}`
+  }
+  if (rules?.length > 0) {
+    prompt += `\n- 규칙: ${rules.join(', ')}`
+  }
+  if (teachingTips?.length > 0) {
+    prompt += `\n- 교사 팁: ${teachingTips.join(', ')}`
+  }
+
+  // --- 교육과정 컨텍스트 (있을 때만) ---
+  if (context.standards?.length > 0) {
+    prompt += '\n\n## 성취기준'
+    for (const s of context.standards) {
+      prompt += `\n- ${s.code} ${s.text}`
+    }
+  }
+
+  if (context.unitContext) {
+    const u = context.unitContext
+    prompt += `\n\n## 단원 맥락`
+    prompt += `\n- 단원명: ${u.unitTitle} (${u.grade}, ${u.domain})`
+    prompt += `\n- 차시 위치: ${u.totalLessons}차시 중 ${u.currentLesson}차시 (${u.acePhase}단계)`
+    if (u.prevLesson) prompt += `\n- 이전 차시: ${u.prevLesson.lesson}. ${u.prevLesson.title}`
+    if (u.nextLesson) prompt += `\n- 다음 차시: ${u.nextLesson.lesson}. ${u.nextLesson.title}`
+  }
+
+  if (context.skills?.length > 0) {
+    prompt += '\n\n## 활용 가능한 기술 자료'
+    for (const s of context.skills) {
+      prompt += `\n### ${s.name} (${s.sport})`
+      if (s.teachingCues?.length) prompt += `\n- 교사 큐: ${s.teachingCues.join(', ')}`
+      if (s.commonErrors?.length) prompt += `\n- 주요 오류: ${s.commonErrors.join(', ')}`
+      if (s.quickFixes?.length) prompt += `\n- 교정법: ${s.quickFixes.join(', ')}`
+      if (s.slotMapping) {
+        const slots = Object.entries(s.slotMapping).map(([k, v]) => `${k}: ${v}`).join(' / ')
+        prompt += `\n- 슬롯: ${slots}`
+      }
+    }
+  }
+
+  if (context.gameActivities?.length > 0) {
+    prompt += '\n\n## 적용 게임 후보'
+    for (const g of context.gameActivities) {
+      prompt += `\n- ${g.name} (${g.suitablePhase}): ${(g.flow || []).join(' → ')}`
+    }
+  }
+
+  if (context.sportRules) {
+    const r = context.sportRules
+    prompt += '\n\n## 종목 규칙'
+    prompt += `\n- 종목: ${r.name}`
+    if (r.coreRules?.length) prompt += `\n- 핵심 규칙: ${r.coreRules.join(', ')}`
+    if (r.safetyRules?.length) prompt += `\n- 안전 수칙: ${r.safetyRules.join(', ')}`
+    if (r.requiredConcepts?.length) prompt += `\n- 필수 개념: ${r.requiredConcepts.join(', ')}`
+  }
+
+  if (context.modifiers?.length > 0) {
+    prompt += '\n\n## 변형 규칙 아이디어'
+    for (const m of context.modifiers) {
+      prompt += `\n- ${m.name} (${m.type}): ${m.ruleOverride}`
+      if (m.setupExample) prompt += ` [세팅: ${m.setupExample}]`
+    }
+  }
+
+  // --- 출력 구조 지시 ---
+  prompt += `
+
+---
+
+**중요 지시**: 위에 제공된 교육과정 자료(성취기준, 기술 큐, 게임 후보, 변형 규칙)를 최대한 활용하여 수업안을 조립하세요. 새로운 내용을 만들기보다 제공된 자료를 재구성하세요.
+
+다음 구조로 수업안을 작성해주세요:
+
+## 도입 (5분)
+- 수업 흐름 3단계
+- 메타인지 질문 1개
+
+## A (Acquire, 기본 습득) (10분)
+- 목표 1문장
+- 드릴 2개 (이름: 설명) — 위 기술 자료의 교사 큐 활용
+- 피드백 포인트 2개 — 위 주요 오류/교정법 활용
+
+## C (Challenge, 도전) (12분)
+- 목표 1문장
+- 미션 2-3개 (이름: 설명, 시간)
+- 스캐폴딩 (완화/확장)
+
+## E (Engage, 적용 게임) (7분)
+- 게임명과 설명 — 위 게임 후보 활용
+- 규칙 2-3개 — 위 종목 규칙 활용
+- 변형 아이디어 1개 — 위 변형 규칙 활용
+
+## 마무리 (6분)
+- 정리 흐름 3단계
+- 성찰 질문 1개
+- 다음 차시 예고
+
+한국어로 작성하고, 초등학생 수준에 맞는 용어를 사용해주세요.`
+
+  return prompt
+}
+
+/**
+ * AI 활동 추천 프롬프트 (시간표 수업 기록용)
+ */
+export function buildActivitySuggestionPrompt({ domain, weather, grade, recentActivities }) {
+  const weatherDesc = weather
+    ? `현재 날씨: ${weather.temperature || '?'}℃, ${weather.condition || '맑음'}, 미세먼지 ${weather.pm10 || '보통'}`
+    : '날씨 정보 없음'
+
+  const recentText = recentActivities?.length
+    ? `최근 수업: ${recentActivities.slice(0, 5).join(', ')}`
+    : '최근 수업 기록 없음'
+
+  return `당신은 초등학교 체육 수업 활동 추천 전문가입니다.
+
+조건:
+- 도메인(영역): ${domain || '스포츠'}
+- 학년: ${grade || '3-6학년'}
+- ${weatherDesc}
+- ${recentText}
+
+위 조건에 맞는 체육 활동을 정확히 3개만 추천해주세요.
+각 활동은 활동명만 간결하게 (10자 이내) 작성합니다.
+최근 수업과 겹치지 않는 새로운 활동을 추천해주세요.
+
+형식: 활동1, 활동2, 활동3
+(쉼표로 구분, 설명 없이 활동명만)`
+}
+
+/**
+ * 홈 탭 오늘의 AI 한줄 제안 프롬프트
+ */
+export function buildDailySuggestionPrompt({ weather, schedule, recentRecords }) {
+  const weatherText = weather
+    ? `오늘 날씨: ${weather.temperature || '?'}℃, ${weather.condition || '맑음'}, 미세먼지 ${weather.pm10Grade || '보통'}`
+    : '날씨 정보 없음'
+
+  const scheduleText = schedule?.length
+    ? `오늘 수업: ${schedule.map((s) => `${s.period}교시 ${s.className}`).join(', ')}`
+    : '오늘 수업 없음'
+
+  const recentText = recentRecords?.length
+    ? `최근 기록: ${recentRecords.slice(0, 3).map((r) => `${r.className} ${r.activity}`).join(', ')}`
+    : ''
+
+  return `당신은 초등학교 체육교사의 AI 어시스턴트입니다.
+
+${weatherText}
+${scheduleText}
+${recentText}
+
+위 정보를 종합하여, 오늘 체육 수업에 대한 실용적인 한줄 제안을 해주세요.
+50자 이내로 간결하게, 구체적인 활동이나 조언을 포함해주세요.
+한국어로 작성합니다.`
+}
+
+/**
+ * AI 채팅 시스템 프롬프트
+ */
+export function buildChatSystemPrompt() {
+  return `당신은 "체육 AI 도우미"입니다. 초등학교 체육교사를 돕는 전문 AI 어시스턴트입니다.
+
+역할:
+- 체육 수업 활동 추천 및 설명
+- ACE 모델(Acquire-Challenge-Engage) 기반 수업 설계 조언
+- FMS(기본운동기술) 관련 질문 답변
+- 날씨/환경에 따른 실내외 활동 전환 조언
+- 학급 관리 및 수업 운영 팁
+
+규칙:
+- 한국어로 답변합니다
+- 초등학생 수준에 맞는 활동을 추천합니다
+- 안전을 최우선으로 고려합니다
+- 답변은 간결하고 실용적으로 작성합니다 (200자 이내 권장)
+- 확신할 수 없는 정보는 솔직히 "확인이 필요합니다"라고 말합니다
+- 이모지를 적절히 활용하여 친근하게 소통합니다`
+}
+
+/**
+ * 대체 활동 AI 추천 프롬프트
+ */
+export function buildAlternativeRecommendPrompt(lesson) {
+  const { title, acePhase, domain, grade } = lesson || {}
+
+  return `당신은 초등학교 체육 수업 설계 전문가입니다.
+
+현재 수업 정보:
+- 활동명: ${title || '미정'}
+- ACE 단계: ${acePhase || 'A'}
+- 영역: ${domain || '스포츠'}
+- 학년: ${grade || '3-6학년'}
+
+위 수업의 대체 활동을 정확히 3개 추천해주세요.
+각 활동은 다음 조건을 충족해야 합니다:
+1. 같은 영역(${domain || '스포츠'})이거나 유사한 FMS 기술을 다룸
+2. 비슷한 난이도와 준비물로 즉시 전환 가능
+3. 실내/실외 모두 가능하면 우선 추천
+
+각 활동에 대해 다음 형식으로 작성해주세요:
+활동명 | 이유(20자 이내) | 필요 준비물
+
+형식: 한 줄에 하나씩, 총 3줄만 작성합니다.`
+}
+
+/**
+ * 학급별 수업 분석 프롬프트
+ */
+export function buildClassAnalysisPrompt(classInfo, records) {
+  const { grade, classNum } = classInfo || {}
+
+  const domainCounts = {}
+  const activities = []
+  for (const r of (records || [])) {
+    const d = r.domain || '스포츠'
+    domainCounts[d] = (domainCounts[d] || 0) + 1
+    if (activities.length < 10) {
+      activities.push(`${r.sequence || '?'}차시: ${r.activity || '활동'} (${d})`)
+    }
+  }
+
+  const domainText = Object.entries(domainCounts)
+    .map(([d, c]) => `${d}: ${c}차시`)
+    .join(', ')
+
+  const activityText = activities.length
+    ? activities.join('\n')
+    : '수업 기록 없음'
+
+  return `당신은 초등학교 체육 수업 분석 전문가입니다.
+
+학급 정보: ${grade || '?'}학년 ${classNum || '?'}반
+총 수업 기록: ${(records || []).length}차시
+
+영역별 분포:
+${domainText || '기록 없음'}
+
+최근 수업 목록:
+${activityText}
+
+위 데이터를 분석하여 다음 항목을 150자 이내로 작성해주세요:
+1. 영역 균형 평가 (운동/스포츠/표현 비율이 적절한지)
+2. 차시 연속성 (같은 영역 내 차시가 연결되는지)
+3. 다음 수업 제안 (영역, 활동명, 이유 포함)
+
+한국어로 간결하게 작성합니다.`
+}

@@ -1,10 +1,16 @@
-// 활동 상세 모달 — ACE 수업 흐름 편집 + 폴딩 + 아이디어 팁 | Modal→common/Modal.jsx
+// 활동 상세 모달 — ACE 수업 흐름 편집 + 폴딩 + 아이디어 팁 + AI 설명 보강 | Modal→common/Modal.jsx
 import { useState } from 'react'
 import Modal from '../common/Modal'
 import AceBadge from './AceBadge'
 import IdeaTipPanel from './IdeaTipPanel'
 import AceLessonFlow from './AceLessonFlow'
+import AIButton from '../common/AIButton'
+import AIResponseCard from '../common/AIResponseCard'
 import { useEditedAceLesson } from '../../hooks/useEditedAceLesson'
+import { useCurriculum } from '../../hooks/useCurriculum'
+import { useAI } from '../../hooks/useAI'
+import { buildEnhancePrompt, buildAceLessonPrompt } from '../../services/aiPrompts'
+import { gatherLessonContext } from '../../utils/curriculum/gatherLessonContext'
 import toast from 'react-hot-toast'
 
 const DIFFICULTY_LABEL = { 1: '쉬움', 2: '보통', 3: '어려움' }
@@ -47,6 +53,20 @@ export default function ActivityDetailModal({ activity, onClose, relatedActiviti
   } = activity
 
   const { getEditedAceLesson, saveEditedAceLesson, deleteEditedAceLesson, hasEditedVersion } = useEditedAceLesson()
+  const { getStandardByCode, units } = useCurriculum()
+  const aiEnhance = useAI()
+  const aiAceGen = useAI()
+
+  // AI 설명 보강
+  const handleAIEnhance = () => {
+    aiEnhance.generateStream(buildEnhancePrompt(activity))
+  }
+
+  // AI ACE 수업안 생성 (교육과정 컨텍스트 포함)
+  const handleAIAceGenerate = () => {
+    const context = gatherLessonContext(activity, { getStandardByCode, units })
+    aiAceGen.generateStream(buildAceLessonPrompt(activity, context))
+  }
 
   // 편집 모드 상태
   const [isEditingAce, setIsEditingAce] = useState(false)
@@ -123,6 +143,36 @@ export default function ActivityDetailModal({ activity, onClose, relatedActiviti
             </span>
           )}
         </div>
+
+        {/* AI 기능 버튼 행 */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          <AIButton
+            label="AI 설명 보강"
+            loading={aiEnhance.loading}
+            onClick={handleAIEnhance}
+          />
+          <AIButton
+            label="ACE 수업안 생성"
+            loading={aiAceGen.loading}
+            onClick={handleAIAceGenerate}
+          />
+        </div>
+
+        {/* AI 설명 보강 응답 */}
+        <AIResponseCard
+          text={aiEnhance.streamingText || aiEnhance.result}
+          loading={aiEnhance.loading}
+          error={aiEnhance.error}
+          onClose={aiEnhance.reset}
+        />
+
+        {/* AI ACE 수업안 응답 */}
+        <AIResponseCard
+          text={aiAceGen.streamingText || aiAceGen.result}
+          loading={aiAceGen.loading}
+          error={aiAceGen.error}
+          onClose={aiAceGen.reset}
+        />
 
         {/* 기본 정보 */}
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">

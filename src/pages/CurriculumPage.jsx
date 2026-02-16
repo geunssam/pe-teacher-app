@@ -21,7 +21,7 @@ const VIEW_CHIPS = [
 export default function CurriculumPage() {
   const navigate = useNavigate()
   const {
-    units, getActivityById,
+    units, getActivityById, getStandardByCode,
     myActivityList, addMyActivity, updateMyActivity, deleteMyActivity,
     findRelatedActivities,
   } = useCurriculum()
@@ -263,6 +263,7 @@ export default function CurriculumPage() {
         <LessonTimeline
           unit={selectedUnit}
           getActivityById={getActivityByIdWithCustom}
+          getStandardByCode={getStandardByCode}
           onActivityClick={setSelectedActivity}
           onBack={() => {
             setSelectedUnit(null)
