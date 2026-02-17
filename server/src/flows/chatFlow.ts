@@ -13,6 +13,7 @@ const ChatInputSchema = z.object({
     )
     .optional()
     .describe('Conversation history'),
+  lessonContext: z.any().optional().describe('Lesson card context from gatherLessonCardContext'),
 });
 
 const ChatOutputSchema = z.string();
@@ -31,7 +32,8 @@ const CHAT_SYSTEM_PROMPT = `당신은 초등 체육 수업 전문 AI 어시스�
 - 간결하고 실용적인 답변을 제공합니다.
 - 안전 관련 내용은 반드시 포함합니다.
 - 관련 활동이 있으면 구체적으로 안내합니다.
-- [교사 업로드 자료]가 있으면 적극 참고하여 답변합니다.`;
+- [교사 업로드 자료]가 있으면 적극 참고하여 답변합니다.
+- 마크다운 서식을 사용하지 마세요. 볼드(**), 이탈릭(*), 헤딩(#), 코드블록(\`) 등의 마크다운 문법을 쓰지 않고 일반 텍스트로만 답변합니다. 목록은 "- " 대시 기호만 허용합니다.`;
 
 export const chatFlow = ai.defineFlow(
   {
@@ -76,6 +78,26 @@ export const chatFlow = ai.defineFlow(
         role: h.role,
         content: [{ text: h.content }],
       }));
+
+    // Build lesson context prefix if available
+    if (input.lessonContext) {
+      const lc = input.lessonContext;
+      const lcParts: string[] = ['[차시 컨텍스트]'];
+      if (lc.unitInfo) {
+        lcParts.push(`단원: ${lc.unitInfo.title} (${lc.unitInfo.grade}, ${lc.unitInfo.domain})`);
+      }
+      if (lc.lessonInfo) {
+        lcParts.push(`차시: ${lc.lessonInfo.lesson}차시 - ${lc.lessonInfo.title}`);
+        if (lc.lessonInfo.acePhase) lcParts.push(`ACE: ${lc.lessonInfo.acePhase}`);
+      }
+      if (lc.activities?.length) {
+        lcParts.push(`활동: ${lc.activities.map((a: { name: string }) => a.name).join(', ')}`);
+      }
+      if (lc.standards?.length) {
+        lcParts.push(`성취기준: ${lc.standards.map((s: { code: string; text: string }) => `${s.code} ${s.text}`).join(' / ')}`);
+      }
+      contextParts.unshift(lcParts.join('\n'));
+    }
 
     // Append current message with RAG context
     const enrichedMessage =

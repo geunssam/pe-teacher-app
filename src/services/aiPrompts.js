@@ -286,6 +286,7 @@ export function buildChatSystemPrompt() {
 4. 안전을 최우선으로 고려합니다.
 5. 답변은 간결하고 실용적으로 작성합니다 (300자 이내 권장).
 6. 성취기준을 인용할 때는 반드시 코드(예: [4체02-03])와 함께 표기합니다.
+7. **마크다운 서식을 사용하지 마세요.** 볼드(**), 이탈릭(*), 헤딩(#), 코드블록(\`) 등의 마크다운 문법을 쓰지 않고 일반 텍스트로만 답변합니다. 목록은 "- " 대시 기호만 허용합니다.
 
 ## 역할
 - 2022 개정 체육과 교육과정 성취기준 안내
@@ -342,6 +343,111 @@ export function buildAlternativeRecommendPrompt(lesson) {
 활동명 | 이유(20자 이내) | 필요 준비물
 
 형식: 한 줄에 하나씩, 총 3줄만 작성합니다.`
+}
+
+/**
+ * 차시 컨텍스트 기반 AI 채팅 시스템 프롬프트
+ * @param {Object} ctx - gatherLessonCardContext() 결과
+ */
+export function buildLessonChatSystemPrompt(ctx) {
+  const standardsCtx = buildStandardsContext()
+  const activityCtx = buildActivityContext()
+
+  let lessonSection = ''
+  if (ctx) {
+    const { lessonInfo, unitInfo, standards, activities, skills, gameActivities, sportRules, modifiers } = ctx
+
+    lessonSection += `\n\n## 현재 차시 컨텍스트 (이 정보를 최우선으로 활용하여 답변하세요)\n`
+
+    if (unitInfo) {
+      lessonSection += `\n### 단원 정보\n`
+      lessonSection += `- 단원명: ${unitInfo.title}\n`
+      lessonSection += `- 학년: ${unitInfo.grade}\n`
+      lessonSection += `- 영역: ${unitInfo.domain}\n`
+      lessonSection += `- 총 차시: ${unitInfo.totalLessons}차시\n`
+    }
+
+    if (lessonInfo) {
+      lessonSection += `\n### 차시 정보\n`
+      lessonSection += `- ${lessonInfo.lesson}차시: ${lessonInfo.title}\n`
+      if (lessonInfo.description) lessonSection += `- 설명: ${lessonInfo.description}\n`
+      if (lessonInfo.acePhase) lessonSection += `- ACE 단계: ${lessonInfo.acePhase}\n`
+      if (lessonInfo.fmsFocus?.length) lessonSection += `- FMS: ${lessonInfo.fmsFocus.join(', ')}\n`
+    }
+
+    if (standards?.length) {
+      lessonSection += `\n### 성취기준\n`
+      for (const s of standards) {
+        lessonSection += `- ${s.code} ${s.text}\n`
+      }
+    }
+
+    if (activities?.length) {
+      lessonSection += `\n### 이 차시의 활동\n`
+      for (const a of activities) {
+        lessonSection += `- ${a.name} (장소: ${a.space.join('/')}, 준비물: ${a.equipment.join(', ') || '없음'})\n`
+        if (a.flow?.length) lessonSection += `  수업 흐름: ${a.flow.join(' → ')}\n`
+      }
+    }
+
+    if (skills?.length) {
+      lessonSection += `\n### 관련 기술 자료\n`
+      for (const s of skills) {
+        lessonSection += `- ${s.name} (${s.sport})`
+        if (s.teachingCues?.length) lessonSection += ` / 교사 큐: ${s.teachingCues.join(', ')}`
+        lessonSection += `\n`
+      }
+    }
+
+    if (gameActivities?.length) {
+      lessonSection += `\n### 적용 가능한 게임\n`
+      for (const g of gameActivities) {
+        lessonSection += `- ${g.name} (${g.suitablePhase})\n`
+      }
+    }
+
+    if (sportRules) {
+      lessonSection += `\n### 종목 규칙 (${sportRules.name})\n`
+      if (sportRules.coreRules?.length) lessonSection += `- 핵심: ${sportRules.coreRules.join(', ')}\n`
+      if (sportRules.safetyRules?.length) lessonSection += `- 안전: ${sportRules.safetyRules.join(', ')}\n`
+    }
+
+    if (modifiers?.length) {
+      lessonSection += `\n### 변형 아이디어\n`
+      for (const m of modifiers) {
+        lessonSection += `- ${m.name} (${m.type}): ${m.ruleOverride}\n`
+      }
+    }
+  }
+
+  return `당신은 "체육 AI 도우미"입니다. 초등학교 체육교사를 돕는 전문 AI 어시스턴트입니다.
+
+## 핵심 규칙 (반드시 준수)
+
+1. 아래 제공된 "현재 차시 컨텍스트"를 최우선으로 활용하여 답변합니다.
+2. 한국어로 답변합니다.
+3. 초등학생 수준에 맞는 활동을 추천합니다.
+4. 안전을 최우선으로 고려합니다.
+5. 답변은 간결하고 실용적으로 작성합니다 (300자 이내 권장).
+6. 성취기준을 인용할 때는 반드시 코드(예: [4체02-03])와 함께 표기합니다.
+7. 마크다운 서식을 사용하지 마세요. 볼드(**), 이탈릭(*), 헤딩(#), 코드블록(\`) 등의 마크다운 문법을 쓰지 않고 일반 텍스트로만 답변합니다. 목록은 "- " 대시 기호만 허용합니다.
+
+## 역할
+- 현재 차시의 활동에 대한 변형, 응용, 대체 활동 제안
+- 교실/실내 전환, 날씨 대응 활동 추천
+- 수업 운영 팁, 학생 관리 조언
+- ACE 모델 기반 수업 설계 조언
+${lessonSection}
+
+---
+
+## 📚 2022 개정 체육과 교육과정 성취기준 (보조 참조)
+${standardsCtx}
+
+---
+
+## 📋 등록된 활동 목록
+${activityCtx}`
 }
 
 /**

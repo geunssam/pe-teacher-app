@@ -1,5 +1,6 @@
 // AI 응답 카드 — 스트리밍 텍스트 표시 + 접기/펼치기 | 스타일→css/components/ai.css
 import { useState } from 'react'
+import { stripMarkdown } from '../../utils/stripMarkdown'
 
 /**
  * AI 응답 표시 카드
@@ -76,7 +77,7 @@ export default function AIResponseCard({
       {/* 콘텐츠 */}
       {!error && !collapsed && (
         <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
-          {text}
+          {stripMarkdown(text)}
           {loading && !text && (
             <span className="text-gray-400">생성 중...</span>
           )}
@@ -86,7 +87,7 @@ export default function AIResponseCard({
       {/* 접힌 상태 */}
       {!error && collapsed && (
         <p className="text-[11px] text-gray-400 truncate">
-          {text.slice(0, 60)}...
+          {stripMarkdown(text).slice(0, 60)}...
         </p>
       )}
     </div>

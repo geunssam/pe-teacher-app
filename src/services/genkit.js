@@ -37,12 +37,12 @@ export async function requestRecommendation({ query, filters, recentActivities }
 }
 
 /** 채팅 메시지 전송 */
-export async function sendChatMessage({ message, history }) {
+export async function sendChatMessage({ message, history, lessonContext }) {
   if (!GENKIT_BASE_URL) throw new Error('Genkit 서버가 설정되지 않았습니다 (VITE_GENKIT_URL)');
   const res = await fetch(`${GENKIT_BASE_URL}/chatFlow`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data: { message, history } }),
+    body: JSON.stringify({ data: { message, history, lessonContext } }),
   });
   if (!res.ok) throw new Error(`Genkit error: ${res.status}`);
   const json = await res.json();

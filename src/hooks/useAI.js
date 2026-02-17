@@ -1,7 +1,7 @@
 // AI 상태관리 훅 — loading/error/generate/chat 통합 관리 | 서비스→services/ai.js, 프롬프트→services/aiPrompts.js
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { generatePEContent, streamPEContent, createChatSession, isAIAvailable } from '../services/ai'
-import { buildChatSystemPrompt } from '../services/aiPrompts'
+import { buildChatSystemPrompt, buildLessonChatSystemPrompt } from '../services/aiPrompts'
 
 const COOLDOWN_MS = 3000
 
@@ -99,9 +99,11 @@ export function useAIChat() {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [lessonContext, setLessonContextState] = useState(null)
   const chatRef = useRef(null)
   const lastCallRef = useRef(0)
   const genkitAvailableRef = useRef(false)
+  const lessonContextRef = useRef(null)
 
   // Check Genkit availability on mount
   useEffect(() => {
@@ -110,9 +112,29 @@ export function useAIChat() {
     }).catch(() => {})
   }, [])
 
+  const setLessonContext = useCallback((ctx) => {
+    lessonContextRef.current = ctx
+    setLessonContextState(ctx)
+    // 컨텍스트 변경 시 대화 초기화 + 세션 리셋
+    setMessages([])
+    setError(null)
+    chatRef.current = null
+  }, [])
+
+  const clearLessonContext = useCallback(() => {
+    lessonContextRef.current = null
+    setLessonContextState(null)
+    setMessages([])
+    setError(null)
+    chatRef.current = null
+  }, [])
+
   const ensureChat = useCallback(() => {
     if (!chatRef.current) {
-      chatRef.current = createChatSession(buildChatSystemPrompt())
+      const systemPrompt = lessonContextRef.current
+        ? buildLessonChatSystemPrompt(lessonContextRef.current)
+        : buildChatSystemPrompt()
+      chatRef.current = createChatSession(systemPrompt)
     }
     return chatRef.current
   }, [])
@@ -149,7 +171,7 @@ export function useAIChat() {
           const history = messages
             .filter((m) => !m.streaming)
             .map((m) => ({ role: m.role, content: m.text }))
-          const response = await sendChatMessage({ message: text.trim(), history })
+          const response = await sendChatMessage({ message: text.trim(), history, lessonContext: lessonContextRef.current })
 
           setMessages((prev) =>
             prev.map((msg) =>
@@ -197,5 +219,5 @@ export function useAIChat() {
     chatRef.current = null
   }, [])
 
-  return { messages, loading, error, sendMessage, clearChat }
+  return { messages, loading, error, sendMessage, clearChat, lessonContext, setLessonContext, clearLessonContext }
 }

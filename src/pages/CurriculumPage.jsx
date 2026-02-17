@@ -314,6 +314,7 @@ export default function CurriculumPage() {
       {step === 2 && selectedUnit && (
         <LessonTimeline
           unit={selectedUnit}
+          units={units}
           getActivityById={getActivityByIdWithCustom}
           getStandardByCode={getStandardByCode}
           onActivityClick={setSelectedActivity}

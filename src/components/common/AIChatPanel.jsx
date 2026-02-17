@@ -3,19 +3,36 @@ import { useState, useRef, useEffect } from 'react'
 import { useAIChat } from '../../hooks/useAI'
 import { isAIAvailable } from '../../services/ai'
 import { checkGenkitHealth } from '../../services/genkit'
+import { stripMarkdown } from '../../utils/stripMarkdown'
 
 export default function AIChatPanel() {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
-  const { messages, loading, error, sendMessage, clearChat } = useAIChat()
+  const { messages, loading, error, sendMessage, clearChat, lessonContext, setLessonContext, clearLessonContext } = useAIChat()
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const [genkitReady, setGenkitReady] = useState(false)
+  const [contextLabel, setContextLabel] = useState('')
 
   // Check Genkit availability on mount
   useEffect(() => {
     checkGenkitHealth().then(setGenkitReady)
   }, [])
+
+  // 차시카드 AI 버튼 이벤트 리스닝
+  useEffect(() => {
+    const handler = (e) => {
+      const { type, lessonContext: ctx, displayLabel } = e.detail || {}
+      if (type === 'lesson-context' && ctx) {
+        setLessonContext(ctx)
+        setContextLabel(displayLabel || '')
+        setOpen(true)
+        setTimeout(() => inputRef.current?.focus(), 300)
+      }
+    }
+    window.addEventListener('pe-ai-chat-open', handler)
+    return () => window.removeEventListener('pe-ai-chat-open', handler)
+  }, [setLessonContext])
 
   // 새 메시지가 추가될 때 스크롤
   useEffect(() => {
@@ -97,21 +114,50 @@ export default function AIChatPanel() {
             </div>
           </div>
 
+          {/* 컨텍스트 배너 */}
+          {lessonContext && (
+            <div className="flex items-center justify-between px-4 py-2 bg-purple-50 border-b border-purple-100">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-xs shrink-0">📎</span>
+                <span className="text-[11px] text-purple-700 font-medium truncate">
+                  {contextLabel || `${lessonContext.unitInfo?.grade} ${lessonContext.lessonInfo?.lesson}차시`}
+                </span>
+              </div>
+              <button
+                onClick={() => { clearLessonContext(); setContextLabel('') }}
+                className="text-[10px] text-purple-400 hover:text-purple-600 shrink-0 ml-2"
+              >
+                해제
+              </button>
+            </div>
+          )}
+
           {/* 메시지 영역 */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[200px] max-h-[calc(70vh-130px)] scrollbar-hide">
             {messages.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-2xl mb-2">&#10024;</p>
-                <p className="text-sm font-medium text-gray-600 mb-1">체육 AI 도우미</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  {lessonContext ? `${contextLabel || '차시'} AI 도우미` : '체육 AI 도우미'}
+                </p>
                 <p className="text-xs text-gray-400 leading-relaxed">
-                  체육 수업에 대해 무엇이든 물어보세요
+                  {lessonContext
+                    ? '이 차시에 대해 무엇이든 물어보세요'
+                    : '체육 수업에 대해 무엇이든 물어보세요'}
                 </p>
                 <div className="mt-4 space-y-2">
-                  {[
-                    '3학년 실내 활동 추천해줘',
-                    '피구 수업 ACE 흐름 알려줘',
-                    '비 오는 날 체육 대체 활동은?',
-                  ].map((example) => (
+                  {(lessonContext
+                    ? [
+                        '이 활동을 교실에서 할 수 있게 변형해줘',
+                        '이 차시에 맞는 준비운동 추천해줘',
+                        '비 올 때 대체 활동을 알려줘',
+                      ]
+                    : [
+                        '3학년 실내 활동 추천해줘',
+                        '피구 수업 ACE 흐름 알려줘',
+                        '비 오는 날 체육 대체 활동은?',
+                      ]
+                  ).map((example) => (
                     <button
                       key={example}
                       onClick={() => {
@@ -133,7 +179,7 @@ export default function AIChatPanel() {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={msg.role === 'user' ? 'ai-chat-msg-user' : 'ai-chat-msg-model'}>
-                  <span className="whitespace-pre-wrap">{msg.text}</span>
+                  <span className="whitespace-pre-wrap">{msg.role === 'model' ? stripMarkdown(msg.text) : msg.text}</span>
                   {msg.streaming && (
                     <span className="inline-block w-1.5 h-3 ml-0.5 bg-[#A78BFA] rounded-sm animate-pulse" />
                   )}
