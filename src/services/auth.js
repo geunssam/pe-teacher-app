@@ -49,6 +49,7 @@ export async function onUserLogin(firebaseUser) {
         displayName: firebaseUser.displayName || '',
         email: firebaseUser.email || '',
         photoURL: firebaseUser.photoURL || '',
+        nickname: null,
         schoolLevel: null,
         grades: [],
         settings: {
@@ -60,6 +61,7 @@ export async function onUserLogin(firebaseUser) {
             stationName: '대전',
           },
         },
+        setupCompletedAt: null,
         createdAt: serverTimestamp(),
         lastLoginAt: serverTimestamp(),
       })
@@ -87,7 +89,7 @@ export async function deleteUserAccount() {
   const uid = user.uid
 
   // Delete all subcollections under users/{uid}
-  const subcollections = ['classes', 'editedLessons', 'myActivities', 'curriculum']
+  const subcollections = ['classes', 'editedLessons', 'myActivities', 'curriculum', 'savedActivities']
 
   for (const sub of subcollections) {
     const colRef = collection(db, 'users', uid, sub)

@@ -59,6 +59,11 @@ service cloud.firestore {
       match /knowledgeDocs/{docId} {
         allow read, write: if isOwner(uid);
       }
+
+      // savedActivities — 저장된 수업 활동 아카이브
+      match /savedActivities/{activityId} {
+        allow read, write: if isOwner(uid);
+      }
     }
 
     // 기본: 모든 접근 거부

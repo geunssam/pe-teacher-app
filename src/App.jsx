@@ -54,9 +54,19 @@ function AuthRoute({ children }) {
   return children
 }
 
-// 보호된 라우트 (학급 설정 필요)
+// 보호된 라우트 (학급 설정 필요 — Firestore 로딩 완료 대기)
 function ProtectedRoute({ children }) {
-  const { isSetupComplete } = useClassManager()
+  const { isSetupComplete, dataReady } = useClassManager()
+
+  // Firestore 데이터 로딩 완료 전에는 스피너 표시 (위저드 오리다이렉트 방지)
+  if (!dataReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary
+             rounded-full animate-spin mx-auto" />
+      </div>
+    )
+  }
 
   if (!isSetupComplete()) {
     return <Navigate to="/setup" replace />

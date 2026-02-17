@@ -1,5 +1,7 @@
 // 학급담임 훅 — 학급 목록, 학생 명단, 수업 기록 CRUD (Firestore + localStorage fallback) | 사용처→ClassesPage/SchedulePage/HomePage
-import { useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '../services/firebase'
 import { useLocalStorage } from './useLocalStorage'
 import { getUid } from './useDataSource'
 import { setDocument, getDocument, getCollection, commitBatchChunked } from '../services/firestore'
@@ -61,25 +63,34 @@ export function useClassManager() {
   const [rosters, setRosters] = useLocalStorage('pe_rosters', {})
   const [records, setRecords] = useLocalStorage('pe_class_records', {})
   const firestoreLoaded = useRef(false)
+  const [dataReady, setDataReady] = useState(false)
 
-  // Load from Firestore on mount (if authenticated)
+  // Load from Firestore when auth state is resolved (onAuthStateChanged)
+  // Fixes: 새로고침 시 localStorage 비어있으면 Firestore 로딩 전에 위저드로 리다이렉트되는 버그
   useEffect(() => {
-    const uid = getUid()
-    if (!uid || firestoreLoaded.current) return
-    firestoreLoaded.current = true
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // 비인증 상태 → localStorage만으로 판단
+        setDataReady(true)
+        return
+      }
 
-    async function loadFromFirestore() {
+      if (firestoreLoaded.current) {
+        setDataReady(true)
+        return
+      }
+      firestoreLoaded.current = true
+
       try {
         // 1. Load classSetup from user document
-        const userDoc = await getDocument(`users/${uid}`)
+        const userDoc = await getDocument(`users/${user.uid}`)
         if (userDoc?.classSetup) {
           setClassSetup(userDoc.classSetup)
         }
 
         // 2. Load classes collection
-        const classesDocs = await getCollection(`users/${uid}/classes`)
+        const classesDocs = await getCollection(`users/${user.uid}/classes`)
         if (classesDocs?.length) {
-          // Each class doc may contain roster and records as embedded fields
           const loadedClasses = []
           const loadedRosters = {}
           const loadedRecords = {}
@@ -92,7 +103,6 @@ export function useClassManager() {
               loadedRosters[id] = roster
             }
             if (classRecords) {
-              // Sort by date desc and limit to latest 50 for performance
               const sorted = Array.isArray(classRecords)
                 ? [...classRecords].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 50)
                 : classRecords
@@ -106,10 +116,12 @@ export function useClassManager() {
         }
       } catch (err) {
         console.warn('[useClassManager] Firestore load failed, using localStorage:', err.message)
+      } finally {
+        setDataReady(true)
       }
-    }
+    })
 
-    loadFromFirestore()
+    return () => unsubscribe()
   }, [])
 
   // Sync helpers for Firestore
@@ -166,16 +178,34 @@ export function useClassManager() {
   }, [])
 
   /**
-   * 학급 설정 초기화 (위저드 Step 1-4 완료 시)
+   * 학급 설정 초기화 (위저드 완료 시)
+   * Firestore 기존 학급 삭제 후 새로 생성 (중복 방지)
    *
    * @param {object} setup - { schoolLevel, grades: [{grade, count, studentCounts: []}] }
    */
-  const initializeClasses = (setup) => {
+  const initializeClasses = async (setup) => {
+    // 1. 기존 Firestore 학급 삭제 (중복 생성 방지)
+    const uid = getUid()
+    if (uid) {
+      try {
+        const existingClasses = await getCollection(`users/${uid}/classes`)
+        if (existingClasses.length > 0) {
+          const deleteOps = existingClasses.map((cls) => ({
+            type: 'delete',
+            path: `users/${uid}/classes/${cls.id}`,
+          }))
+          await commitBatchChunked(deleteOps)
+        }
+      } catch (err) {
+        console.warn('[useClassManager] Failed to delete existing classes:', err.message)
+      }
+    }
+
+    // 2. 새 학급 생성
     const newClasses = []
     const newRosters = {}
     const newRecords = {}
 
-    // 각 학년의 각 반 생성
     setup.grades.forEach((gradeInfo) => {
       const { grade, count, studentCounts } = gradeInfo
 
@@ -183,7 +213,6 @@ export function useClassManager() {
         const classId = generateClassId()
         const studentCount = studentCounts ? studentCounts[classNum - 1] : 25
 
-        // 학급 생성 (색상은 순환 할당)
         newClasses.push({
           id: classId,
           grade: grade,
@@ -196,7 +225,6 @@ export function useClassManager() {
           createdAt: new Date().toISOString(),
         })
 
-        // 빈 명단 생성 (번호만 할당)
         newRosters[classId] = Array.from({ length: studentCount }, (_, index) => ({
           id: generateStudentId(),
           num: index + 1,
@@ -205,20 +233,18 @@ export function useClassManager() {
           note: '',
         }))
 
-        // 수업 기록 배열 초기화
         newRecords[classId] = []
       }
     })
 
+    // 3. localStorage + Firestore 저장
     setClassSetup(setup)
     setClasses(newClasses)
     setRosters(newRosters)
     setRecords(newRecords)
 
-    // Sync to Firestore
     syncClassSetupToFirestore(setup)
     syncClassesToFirestore(newClasses)
-    const uid = getUid()
     if (uid) {
       for (const cls of newClasses) {
         syncRosterToFirestore(cls.id, newRosters[cls.id])
@@ -560,6 +586,7 @@ export function useClassManager() {
     classes,
     rosters,
     records,
+    dataReady,
 
     // 초기화
     initializeClasses,
