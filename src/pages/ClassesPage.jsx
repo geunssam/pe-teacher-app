@@ -4,6 +4,10 @@ import { useClassManager } from '../hooks/useClassManager'
 import GlassCard from '../components/common/GlassCard'
 import RosterEditor from '../components/classes/RosterEditor'
 import { formatRecordDate, getRecordSortValue } from '../utils/recordDate'
+import AIButton from '../components/common/AIButton'
+import AIResponseCard from '../components/common/AIResponseCard'
+import { useAI } from '../hooks/useAI'
+import { buildClassAnalysisPrompt } from '../services/aiPrompts'
 
 export default function ClassesPage() {
   const {
@@ -16,6 +20,16 @@ export default function ClassesPage() {
   } = useClassManager()
   const classesByGrade = getClassesByGrade()
   const [selectedClass, setSelectedClass] = useState(null)
+  const { loading: aiLoading, error: aiError, result: aiResult, generate: aiGenerate, reset: aiReset } = useAI()
+  const [analyzingClassId, setAnalyzingClassId] = useState(null)
+
+  const handleClassAnalysis = (classItem) => {
+    const classRecords = getClassRecords(classItem.id)
+    setAnalyzingClassId(classItem.id)
+    aiReset()
+    const prompt = buildClassAnalysisPrompt(classItem, classRecords)
+    aiGenerate(prompt)
+  }
 
   const getRecordDateLabel = (recordDate) => {
     return formatRecordDate(recordDate)
@@ -126,6 +140,30 @@ export default function ClassesPage() {
                           <p className="text-caption text-muted">아직 수업 기록이 없습니다</p>
                         </div>
                       )}
+
+                      {/* AI 분석 */}
+                      <div className="pt-2 border-t border-border mt-2">
+                        <AIButton
+                          label="AI 수업 분석"
+                          loading={aiLoading && analyzingClassId === classItem.id}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleClassAnalysis(classItem)
+                          }}
+                          size="sm"
+                        />
+                        {analyzingClassId === classItem.id && (
+                          <AIResponseCard
+                            text={aiResult || ''}
+                            loading={aiLoading}
+                            error={aiError}
+                            onClose={() => {
+                              aiReset()
+                              setAnalyzingClassId(null)
+                            }}
+                          />
+                        )}
+                      </div>
                     </GlassCard>
                   )
                 })}

@@ -1,6 +1,10 @@
-// 학급담임 훅 — 학급 목록, 학생 명단, 수업 기록 CRUD (localStorage 기반) | 사용처→ClassesPage/SchedulePage/HomePage, 저장소→useLocalStorage.js
+// 학급담임 훅 — 학급 목록, 학생 명단, 수업 기록 CRUD (Firestore + localStorage fallback) | 사용처→ClassesPage/SchedulePage/HomePage
+import { useCallback, useEffect, useRef } from 'react'
 import { useLocalStorage } from './useLocalStorage'
+import { getUid } from './useDataSource'
+import { setDocument, getDocument, getCollection, commitBatchChunked } from '../services/firestore'
 import { generateClassId, generateRecordId, generateStudentId } from '../utils/generateId'
+import { syncRecords as genkitSyncRecords } from '../services/genkit'
 
 /**
  * 학급 관리 Hook
@@ -9,6 +13,12 @@ import { generateClassId, generateRecordId, generateStudentId } from '../utils/g
  * - pe_class_setup: { schoolLevel, grades: [{grade, count, studentCount}] }
  * - pe_classes: [{ id, grade, classNum, studentCount, color, ... }]
  * - pe_rosters: { classId: [{ id, num, name, gender, ... }] }
+ *
+ * Firestore paths:
+ * - users/{uid} → { classSetup: { ... } }
+ * - users/{uid}/classes/{classId} → { grade, classNum, studentCount, color, ... }
+ * - users/{uid}/classes/{classId}/roster/{studentId} → { num, name, gender, note }
+ * - users/{uid}/classes/{classId}/records/{recordId} → { date, activity, domain, ... }
  */
 
 // 학급별 색상 프리셋
@@ -50,6 +60,110 @@ export function useClassManager() {
   const [classes, setClasses] = useLocalStorage('pe_classes', [])
   const [rosters, setRosters] = useLocalStorage('pe_rosters', {})
   const [records, setRecords] = useLocalStorage('pe_class_records', {})
+  const firestoreLoaded = useRef(false)
+
+  // Load from Firestore on mount (if authenticated)
+  useEffect(() => {
+    const uid = getUid()
+    if (!uid || firestoreLoaded.current) return
+    firestoreLoaded.current = true
+
+    async function loadFromFirestore() {
+      try {
+        // 1. Load classSetup from user document
+        const userDoc = await getDocument(`users/${uid}`)
+        if (userDoc?.classSetup) {
+          setClassSetup(userDoc.classSetup)
+        }
+
+        // 2. Load classes collection
+        const classesDocs = await getCollection(`users/${uid}/classes`)
+        if (classesDocs?.length) {
+          // Each class doc may contain roster and records as embedded fields
+          const loadedClasses = []
+          const loadedRosters = {}
+          const loadedRecords = {}
+
+          for (const classDoc of classesDocs) {
+            const { roster, records: classRecords, id, ...classData } = classDoc
+            loadedClasses.push({ id, ...classData })
+
+            if (roster) {
+              loadedRosters[id] = roster
+            }
+            if (classRecords) {
+              // Sort by date desc and limit to latest 50 for performance
+              const sorted = Array.isArray(classRecords)
+                ? [...classRecords].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 50)
+                : classRecords
+              loadedRecords[id] = sorted
+            }
+          }
+
+          if (loadedClasses.length) setClasses(loadedClasses)
+          if (Object.keys(loadedRosters).length) setRosters(loadedRosters)
+          if (Object.keys(loadedRecords).length) setRecords(loadedRecords)
+        }
+      } catch (err) {
+        console.warn('[useClassManager] Firestore load failed, using localStorage:', err.message)
+      }
+    }
+
+    loadFromFirestore()
+  }, [])
+
+  // Sync helpers for Firestore
+  const syncClassSetupToFirestore = useCallback((setup) => {
+    const uid = getUid()
+    if (uid) {
+      setDocument(`users/${uid}`, { classSetup: setup }, true).catch((err) => {
+        console.error('Failed to sync class setup:', err)
+      })
+    }
+  }, [])
+
+  const syncClassToFirestore = useCallback((classData) => {
+    const uid = getUid()
+    if (uid && classData?.id) {
+      setDocument(`users/${uid}/classes/${classData.id}`, classData, false).catch((err) => {
+        console.error('Failed to sync class:', err)
+      })
+    }
+  }, [])
+
+  const syncClassesToFirestore = useCallback((allClasses) => {
+    const uid = getUid()
+    if (!uid || !allClasses?.length) return
+
+    const ops = allClasses.map((cls) => ({
+      type: 'set',
+      path: `users/${uid}/classes/${cls.id}`,
+      data: cls,
+    }))
+    commitBatchChunked(ops).catch((err) => {
+      console.error('Failed to batch sync classes:', err)
+    })
+  }, [])
+
+  const syncRosterToFirestore = useCallback((classId, roster) => {
+    const uid = getUid()
+    if (!uid || !classId) return
+
+    // Store roster as a single document for simplicity
+    setDocument(`users/${uid}/classes/${classId}`, { roster }, true).catch((err) => {
+      console.error('Failed to sync roster:', err)
+    })
+  }, [])
+
+  const syncRecordsToFirestore = useCallback((classId, classRecords) => {
+    const uid = getUid()
+    if (!uid || !classId) return
+
+    // Store records as a single document for simplicity and cost
+    setDocument(`users/${uid}/classes/${classId}`, { records: classRecords }, true).catch((err) => {
+      console.error('Failed to sync records:', err)
+    })
+  }, [])
 
   /**
    * 학급 설정 초기화 (위저드 Step 1-4 완료 시)
@@ -101,6 +215,16 @@ export function useClassManager() {
     setRosters(newRosters)
     setRecords(newRecords)
 
+    // Sync to Firestore
+    syncClassSetupToFirestore(setup)
+    syncClassesToFirestore(newClasses)
+    const uid = getUid()
+    if (uid) {
+      for (const cls of newClasses) {
+        syncRosterToFirestore(cls.id, newRosters[cls.id])
+      }
+    }
+
     return { classes: newClasses, rosters: newRosters, records: newRecords }
   }
 
@@ -122,11 +246,14 @@ export function useClassManager() {
    * 학급 정보 업데이트
    */
   const updateClass = (classId, updates) => {
-    setClasses((prev) =>
-      prev.map((cls) =>
+    setClasses((prev) => {
+      const next = prev.map((cls) =>
         cls.id === classId ? { ...cls, ...updates, updatedAt: new Date().toISOString() } : cls
       )
-    )
+      const updated = next.find((cls) => cls.id === classId)
+      if (updated) syncClassToFirestore(updated)
+      return next
+    })
   }
 
   /**
@@ -192,13 +319,17 @@ export function useClassManager() {
       domain: normalizedDomain,
     }
 
-    setRecords((prev) => ({
-      ...prev,
-      [classId]: [nextRecord, ...(prev[classId] || [])],
-    }))
+    setRecords((prev) => {
+      const next = {
+        ...prev,
+        [classId]: [nextRecord, ...(prev[classId] || [])],
+      }
+      syncRecordsToFirestore(classId, next[classId])
+      return next
+    })
 
-    setClasses((prev) =>
-      prev.map((cls) =>
+    setClasses((prev) => {
+      const next = prev.map((cls) =>
         cls.id === classId
           ? {
               ...cls,
@@ -209,7 +340,15 @@ export function useClassManager() {
             }
           : cls
       )
-    )
+      const updated = next.find((cls) => cls.id === classId)
+      if (updated) syncClassToFirestore(updated)
+      return next
+    })
+
+    // Fire-and-forget: sync to Genkit RAG index
+    genkitSyncRecords([nextRecord]).catch(() => {
+      // Genkit sync is best-effort, silently ignore failures
+    })
   }
 
   /**
@@ -238,10 +377,11 @@ export function useClassManager() {
    * 명단 업데이트
    */
   const updateRoster = (classId, newRoster) => {
-    setRosters((prev) => ({
-      ...prev,
-      [classId]: newRoster,
-    }))
+    setRosters((prev) => {
+      const next = { ...prev, [classId]: newRoster }
+      syncRosterToFirestore(classId, newRoster)
+      return next
+    })
   }
 
   /**
@@ -257,16 +397,20 @@ export function useClassManager() {
       note: '',
     }
 
-    updateRoster(classId, [...roster, newStudent])
+    const newRoster = [...roster, newStudent]
+    updateRoster(classId, newRoster)
 
     // 학급의 studentCount도 업데이트
-    setClasses((prev) =>
-      prev.map((cls) =>
+    setClasses((prev) => {
+      const next = prev.map((cls) =>
         cls.id === classId
           ? { ...cls, studentCount: cls.studentCount + 1 }
           : cls
       )
-    )
+      const updated = next.find((cls) => cls.id === classId)
+      if (updated) syncClassToFirestore(updated)
+      return next
+    })
   }
 
   /**
@@ -284,13 +428,16 @@ export function useClassManager() {
     updateRoster(classId, updatedRoster)
 
     // 학급의 studentCount도 업데이트
-    setClasses((prev) =>
-      prev.map((cls) =>
+    setClasses((prev) => {
+      const next = prev.map((cls) =>
         cls.id === classId
           ? { ...cls, studentCount: updatedRoster.length }
           : cls
       )
-    )
+      const updated = next.find((cls) => cls.id === classId)
+      if (updated) syncClassToFirestore(updated)
+      return next
+    })
   }
 
   /**
@@ -336,13 +483,16 @@ export function useClassManager() {
 
     // 학생 수가 변경되었으면 학급 정보도 업데이트
     if (updatedRoster.length !== roster.length) {
-      setClasses((prev) =>
-        prev.map((cls) =>
+      setClasses((prev) => {
+        const next = prev.map((cls) =>
           cls.id === classId
             ? { ...cls, studentCount: updatedRoster.length }
             : cls
         )
-      )
+        const updated = next.find((cls) => cls.id === classId)
+        if (updated) syncClassToFirestore(updated)
+        return next
+      })
     }
   }
 
@@ -354,6 +504,7 @@ export function useClassManager() {
     setClasses([])
     setRosters({})
     setRecords({})
+    syncClassSetupToFirestore(null)
   }
 
   /**
@@ -368,11 +519,14 @@ export function useClassManager() {
    * 학급 색상 변경
    */
   const setClassColor = (classId, color) => {
-    setClasses((prev) =>
-      prev.map((cls) =>
+    setClasses((prev) => {
+      const next = prev.map((cls) =>
         cls.id === classId ? { ...cls, color } : cls
       )
-    )
+      const updated = next.find((cls) => cls.id === classId)
+      if (updated) syncClassToFirestore(updated)
+      return next
+    })
   }
 
   /**

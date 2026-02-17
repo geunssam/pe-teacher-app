@@ -1,0 +1,399 @@
+{
+  "meta": {
+    "version": "2.0.0",
+    "generatedAt": "2026-02-15T13:42:17.874Z",
+    "source": "fms_template.csv"
+  },
+  "schoolLevelDuration": {},
+  "gradeProgression": {},
+  "fmsGuide": [
+    {
+      "id": "fms_loco_walk_run",
+      "name": "걷기와 달리기",
+      "category": "이동",
+      "gradeBand": [
+        "3학년",
+        "4학년"
+      ],
+      "curriculumFocus": "기본 이동 리듬 습득",
+      "sportTranslation": "술래 놀이와 릴레이에서 출발과 감속으로 번역",
+      "skillExamples": [
+        "걷기",
+        "달리기",
+        "리듬 전환"
+      ],
+      "activityExamples": [
+        "한 발 술래잡기",
+        "의자 탈출",
+        "쇼트트랙"
+      ],
+      "assessmentPoints": [
+        "출발 반응",
+        "감속 안정",
+        "경로 유지"
+      ],
+      "description": "3 4학년 이동 기초의 핵심 축"
+    },
+    {
+      "id": "fms_loco_jump_hop",
+      "name": "점프와 호핑",
+      "category": "이동",
+      "gradeBand": [
+        "3학년",
+        "4학년"
+      ],
+      "curriculumFocus": "도약과 착지 안정 습득",
+      "sportTranslation": "전래 놀이와 부활 과제에서 반복 적용",
+      "skillExamples": [
+        "점핑",
+        "호핑",
+        "리핑"
+      ],
+      "activityExamples": [
+        "레인보우 술래",
+        "한 발 뛰기 놀이",
+        "줄넘기 술래"
+      ],
+      "assessmentPoints": [
+        "착지 균형",
+        "연속 수행",
+        "피로 후 자세 유지"
+      ],
+      "description": "기초 탄력과 균형을 동시에 기른다"
+    },
+    {
+      "id": "fms_loco_side_change",
+      "name": "사이드 이동과 방향 전환",
+      "category": "이동",
+      "gradeBand": [
+        "3학년",
+        "4학년"
+      ],
+      "curriculumFocus": "측면 이동과 회피 동작 습득",
+      "sportTranslation": "피구 회피와 가가볼 이동으로 전이",
+      "skillExamples": [
+        "사이드 스텝",
+        "슬라이딩",
+        "방향 전환"
+      ],
+      "activityExamples": [
+        "공 터치 피구",
+        "가가볼",
+        "도망자 체인지 술래"
+      ],
+      "assessmentPoints": [
+        "전환 속도",
+        "충돌 회피",
+        "시선 처리"
+      ],
+      "description": "게임 상황 회피 능력의 기반"
+    },
+    {
+      "id": "fms_loco_roll_crawl",
+      "name": "구르기와 기어가기",
+      "category": "이동",
+      "gradeBand": [
+        "3학년",
+        "4학년"
+      ],
+      "curriculumFocus": "몸 축 조절과 지면 접촉 감각 습득",
+      "sportTranslation": "준비운동과 안전 매트 활동으로 전이",
+      "skillExamples": [
+        "구르기",
+        "기어가기"
+      ],
+      "activityExamples": [
+        "교과서 구르기 활동",
+        "장애물 통과 게임"
+      ],
+      "assessmentPoints": [
+        "몸 축 정렬",
+        "회전 후 회복",
+        "안전 수행"
+      ],
+      "description": "신체 인식과 안전 수행 능력을 강화"
+    },
+    {
+      "id": "fms_nonloco_balance",
+      "name": "균형 잡기",
+      "category": "비이동",
+      "gradeBand": [
+        "3학년",
+        "4학년"
+      ],
+      "curriculumFocus": "정적 동적 균형 유지",
+      "sportTranslation": "전래 놀이 한 발 규칙과 코너 과제로 번역",
+      "skillExamples": [
+        "균형 잡기",
+        "버티기"
+      ],
+      "activityExamples": [
+        "한 발 뛰기 놀이",
+        "원마커 균형 활동"
+      ],
+      "assessmentPoints": [
+        "흔들림 최소화",
+        "지지면 활용",
+        "시선 고정"
+      ],
+      "description": "비이동 영역의 기본 안정성"
+    },
+    {
+      "id": "fms_nonloco_twist_turn",
+      "name": "비틀기와 돌기",
+      "category": "비이동",
+      "gradeBand": [
+        "3학년",
+        "4학년"
+      ],
+      "curriculumFocus": "몸통 회전과 자세 조절",
+      "sportTranslation": "표현 활동과 술래 변형에서 회전 과제로 사용",
+      "skillExamples": [
+        "돌기",
+        "비틀기",
+        "펴기"
+      ],
+      "activityExamples": [
+        "앨리펀트 술래",
+        "표현 활동 미션"
+      ],
+      "assessmentPoints": [
+        "회전 후 중심 회복",
+        "자세 통제"
+      ],
+      "description": "표현과 게임 전환 모두에 필요한 기초"
+    },
+    {
+      "id": "fms_nonloco_stretch",
+      "name": "구부리기와 늘리기",
+      "category": "비이동",
+      "gradeBand": [
+        "3학년",
+        "4학년"
+      ],
+      "curriculumFocus": "관절 가동성과 준비운동 습관 형성",
+      "sportTranslation": "수업 도입 루틴과 정리 루틴으로 연결",
+      "skillExamples": [
+        "구부리기",
+        "늘리기",
+        "펴기"
+      ],
+      "activityExamples": [
+        "컵 엘리베이터 준비운동",
+        "정리 스트레칭"
+      ],
+      "assessmentPoints": [
+        "가동 범위",
+        "호흡 연계",
+        "통증 없는 수행"
+      ],
+      "description": "수업 전후 루틴의 표준 요소"
+    },
+    {
+      "id": "fms_manip_throw_catch",
+      "name": "던지기와 받기",
+      "category": "조작",
+      "gradeBand": [
+        "3학년",
+        "4학년"
+      ],
+      "curriculumFocus": "공 조작 기본기 습득",
+      "sportTranslation": "피구 배구 보드게임의 입력 기술로 전이",
+      "skillExamples": [
+        "던지기",
+        "받기",
+        "굴리기"
+      ],
+      "activityExamples": [
+        "공 터치 피구",
+        "컵 배구",
+        "핑거 발리볼"
+      ],
+      "assessmentPoints": [
+        "정확도",
+        "타이밍",
+        "연결 성공률"
+      ],
+      "description": "조작 영역의 가장 기본 연결 기술"
+    },
+    {
+      "id": "fms_manip_kick_trap",
+      "name": "차기와 볼 멈추기",
+      "category": "조작",
+      "gradeBand": [
+        "4학년",
+        "5학년",
+        "6학년"
+      ],
+      "curriculumFocus": "발 조작 기초에서 스포츠 응용으로 확장",
+      "sportTranslation": "축구 패스 트래핑 드리블로 전이",
+      "skillExamples": [
+        "차기",
+        "볼 멈추기",
+        "공 몰기"
+      ],
+      "activityExamples": [
+        "축구 인사이드 패스 수업"
+      ],
+      "assessmentPoints": [
+        "첫 터치 질",
+        "패스 정확도",
+        "재이동 실행"
+      ],
+      "description": "5 6학년 스포츠 중심 전환의 핵심"
+    },
+    {
+      "id": "fms_manip_strike",
+      "name": "치기와 되받아치기",
+      "category": "조작",
+      "gradeBand": [
+        "3학년",
+        "4학년",
+        "5학년",
+        "6학년"
+      ],
+      "curriculumFocus": "도구와 손 타격 감각 습득",
+      "sportTranslation": "컵 탁구 핑거 베이스볼 라켓형 활동으로 전이",
+      "skillExamples": [
+        "치기",
+        "되받아치기"
+      ],
+      "activityExamples": [
+        "컵 탁구",
+        "핑거 베이스볼",
+        "채로 공치기"
+      ],
+      "assessmentPoints": [
+        "타점",
+        "방향 조절",
+        "성공 반복"
+      ],
+      "description": "필드형 네트형 공통 기반 기술"
+    },
+    {
+      "id": "fms_sport_space_creation",
+      "name": "공간 창출 이동",
+      "category": "통합",
+      "gradeBand": [
+        "5학년",
+        "6학년"
+      ],
+      "curriculumFocus": "FMS를 게임 전술로 통합",
+      "sportTranslation": "패스 후 이동과 빈 공간 점유로 번역",
+      "skillExamples": [
+        "달리기",
+        "방향 전환",
+        "협응"
+      ],
+      "activityExamples": [
+        "6학년 축구 패스 연계 활동"
+      ],
+      "assessmentPoints": [
+        "패스 후 이동 수행률",
+        "공간 인식"
+      ],
+      "description": "5 6학년 스포츠 중심 학습의 필수 요소"
+    },
+    {
+      "id": "fms_sport_pass_decision",
+      "name": "패스 의사결정",
+      "category": "통합",
+      "gradeBand": [
+        "5학년",
+        "6학년"
+      ],
+      "curriculumFocus": "FMS 조작을 전술 판단과 결합",
+      "sportTranslation": "네트형 영역형에서 연결 우선 판단으로 번역",
+      "skillExamples": [
+        "던지기",
+        "받기",
+        "차기"
+      ],
+      "activityExamples": [
+        "손족구 올터치",
+        "축구 패스 게임"
+      ],
+      "assessmentPoints": [
+        "턴오버 감소",
+        "연결 선택 정확도"
+      ],
+      "description": "기술과 전술을 함께 보는 평가 축"
+    },
+    {
+      "id": "fms_sport_attack_defense_transition",
+      "name": "공수 전환 반응",
+      "category": "통합",
+      "gradeBand": [
+        "5학년",
+        "6학년"
+      ],
+      "curriculumFocus": "전환 속도와 역할 교대 수행",
+      "sportTranslation": "술래와 가가볼에서 공격 수비 전환으로 번역",
+      "skillExamples": [
+        "달리기",
+        "반응",
+        "태그"
+      ],
+      "activityExamples": [
+        "가가볼 팀전",
+        "도망자 체인지 술래"
+      ],
+      "assessmentPoints": [
+        "전환 시간",
+        "역할 이해",
+        "위치 복귀"
+      ],
+      "description": "실전형 게임 수행 능력 강화"
+    },
+    {
+      "id": "fms_sport_coop_communication",
+      "name": "협동과 의사소통",
+      "category": "통합",
+      "gradeBand": [
+        "5학년",
+        "6학년"
+      ],
+      "curriculumFocus": "기술 수행 중 팀 상호작용 강화",
+      "sportTranslation": "올터치 규칙과 세트제 운영으로 번역",
+      "skillExamples": [
+        "받기",
+        "치기",
+        "협응"
+      ],
+      "activityExamples": [
+        "올터치 손족구",
+        "컵 배구 랠리"
+      ],
+      "assessmentPoints": [
+        "구호 사용",
+        "역할 분담",
+        "갈등 조정"
+      ],
+      "description": "스포츠 문화 향유 역량과 직결"
+    },
+    {
+      "id": "fms_sport_reflection",
+      "name": "수행 성찰",
+      "category": "통합",
+      "gradeBand": [
+        "5학년",
+        "6학년"
+      ],
+      "curriculumFocus": "기술 수행 결과를 언어로 점검",
+      "sportTranslation": "도입 전개 정리 루틴에서 자기평가로 번역",
+      "skillExamples": [
+        "자기평가",
+        "규칙 이해",
+        "전략 회고"
+      ],
+      "activityExamples": [
+        "수업 정리 회고 질문"
+      ],
+      "assessmentPoints": [
+        "핵심 큐 회상",
+        "다음 목표 설정"
+      ],
+      "description": "교사의 번역 작업을 완성하는 마무리 요소"
+    }
+  ]
+}

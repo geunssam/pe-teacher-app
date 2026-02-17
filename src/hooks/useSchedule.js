@@ -1,5 +1,10 @@
-// 교무부장 훅 — 시간표 CRUD (기본 시간표 + 주차별 오버라이드, ISO주 기준) | 사용처→SchedulePage/HomePage, 그리드UI→components/schedule/, 저장소→useLocalStorage.js
+// 교무부장 훅 — 시간표 CRUD (기본 시간표 + 주차별 오버라이드, ISO주 기준, Firestore + localStorage fallback) | 사용처→SchedulePage/HomePage
+import { useCallback, useEffect, useRef } from 'react'
 import { useLocalStorage } from './useLocalStorage'
+import { getUid } from './useDataSource'
+import { getDocument, createDebouncedWriter } from '../services/firestore'
+
+const debouncedWrite = createDebouncedWriter(300)
 
 /**
  * 시간표 관리 Hook (classpet 스타일)
@@ -7,6 +12,10 @@ import { useLocalStorage } from './useLocalStorage'
  * localStorage 스키마:
  * - pe_timetable_base: { "mon-1": { subject: "국어" }, "mon-2": { subject: "수학" }, ... }
  * - pe_timetable_weeks: { "2025-W06": { "mon-1": { subject: "체육" }, ... }, ... }
+ *
+ * Firestore paths:
+ * - users/{uid}/schedule/base → { timetable: { ... } }
+ * - users/{uid}/schedule/weeks → { [weekKey]: { ... } }
  */
 
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri']
@@ -67,6 +76,52 @@ export function getWeekRange(offset = 0) {
 export function useSchedule() {
   const [baseTimetable, setBaseTimetable] = useLocalStorage('pe_timetable_base', {})
   const [weekTimetables, setWeekTimetables] = useLocalStorage('pe_timetable_weeks', {})
+  const firestoreLoaded = useRef(false)
+
+  // Load from Firestore on mount (if authenticated)
+  useEffect(() => {
+    const uid = getUid()
+    if (!uid || firestoreLoaded.current) return
+    firestoreLoaded.current = true
+
+    async function loadFromFirestore() {
+      try {
+        // Load base timetable
+        const baseDoc = await getDocument(`users/${uid}/schedule/base`)
+        if (baseDoc?.timetable) {
+          setBaseTimetable(baseDoc.timetable)
+        }
+
+        // Load week timetables
+        const weeksDoc = await getDocument(`users/${uid}/schedule/weeks`)
+        if (weeksDoc) {
+          const { id, ...weekData } = weeksDoc
+          if (Object.keys(weekData).length) {
+            setWeekTimetables(weekData)
+          }
+        }
+      } catch (err) {
+        console.warn('[useSchedule] Firestore load failed, using localStorage:', err.message)
+      }
+    }
+
+    loadFromFirestore()
+  }, [])
+
+  // Sync helper for Firestore
+  const syncBaseToFirestore = useCallback((data) => {
+    const uid = getUid()
+    if (uid) {
+      debouncedWrite(`users/${uid}/schedule/base`, { timetable: data }, false)
+    }
+  }, [])
+
+  const syncWeeksToFirestore = useCallback((data) => {
+    const uid = getUid()
+    if (uid) {
+      debouncedWrite(`users/${uid}/schedule/weeks`, data, false)
+    }
+  }, [])
 
   /**
    * 특정 주의 시간표 가져오기 (기본 + 오버라이드 병합)
@@ -103,10 +158,11 @@ export function useSchedule() {
    * 기본 시간표 셀 업데이트
    */
   const updateBaseCell = (cellKey, data) => {
-    setBaseTimetable(prev => ({
-      ...prev,
-      [cellKey]: data
-    }))
+    setBaseTimetable(prev => {
+      const next = { ...prev, [cellKey]: data }
+      syncBaseToFirestore(next)
+      return next
+    })
   }
 
   /**
@@ -116,6 +172,7 @@ export function useSchedule() {
     setBaseTimetable(prev => {
       const newTable = { ...prev }
       delete newTable[cellKey]
+      syncBaseToFirestore(newTable)
       return newTable
     })
   }
@@ -125,6 +182,7 @@ export function useSchedule() {
    */
   const setWeekOverride = (weekKey, cellKey, data) => {
     setWeekTimetables(prev => {
+      let next
       const weekData = prev[weekKey] || {}
 
       if (data === null) {
@@ -134,24 +192,20 @@ export function useSchedule() {
 
         // 주 데이터가 비었으면 주 자체 삭제
         if (Object.keys(newWeekData).length === 0) {
-          const newWeeks = { ...prev }
-          delete newWeeks[weekKey]
-          return newWeeks
+          next = { ...prev }
+          delete next[weekKey]
+        } else {
+          next = { ...prev, [weekKey]: newWeekData }
         }
-
-        return {
+      } else {
+        next = {
           ...prev,
-          [weekKey]: newWeekData
+          [weekKey]: { ...weekData, [cellKey]: data }
         }
       }
 
-      return {
-        ...prev,
-        [weekKey]: {
-          ...weekData,
-          [cellKey]: data
-        }
-      }
+      syncWeeksToFirestore(next)
+      return next
     })
   }
 
@@ -193,6 +247,8 @@ export function useSchedule() {
   const clearSchedule = () => {
     setBaseTimetable({})
     setWeekTimetables({})
+    syncBaseToFirestore({})
+    syncWeeksToFirestore({})
   }
 
   /**

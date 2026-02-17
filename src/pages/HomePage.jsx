@@ -1,10 +1,11 @@
-// 🏠 오늘 탭 — 날씨 요약 + 오늘 시간표 + 최근 수업 기록 | 위젯→components/home/, 날씨데이터→services/weather/
+// 🏠 오늘 탭 — 날씨 요약 + AI 제안 + 오늘 시간표 + 최근 수업 기록 | 위젯→components/home/, 날씨데이터→services/weather/
 import { Link } from 'react-router-dom'
 import { useClassManager } from '../hooks/useClassManager'
 import GlassCard from '../components/common/GlassCard'
 import HourlyWeatherSummary from '../components/home/HourlyWeatherSummary'
 import TodaySchedule from '../components/home/TodaySchedule'
 import RecentLessons from '../components/home/RecentLessons'
+import AIDailySuggestion from '../components/home/AIDailySuggestion'
 
 export default function HomePage() {
   const { classes, getClassesByGrade } = useClassManager()
@@ -15,6 +16,11 @@ export default function HomePage() {
       <h1 className="text-page-title mb-lg">🏠 오늘</h1>
 
       <div className="space-y-lg">
+        {/* AI 오늘의 제안 */}
+        <GlassCard accent="home">
+          <AIDailySuggestion />
+        </GlassCard>
+
         {/* 시간별 날씨 요약 */}
         <GlassCard accent="weather">
           <HourlyWeatherSummary />

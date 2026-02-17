@@ -1,0 +1,23 @@
+{
+  "name": "pe-genkit-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx genkit start -- npx tsx src/index.ts",
+    "start": "node --env-file=.env --import tsx/esm src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@genkit-ai/dev-local-vectorstore": "^1.14.0",
+    "@genkit-ai/express": "^1.28.0",
+    "@genkit-ai/google-genai": "^1.14.0",
+    "genkit": "^1.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "genkit-cli": "^1.28.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.0"
+  }
+}

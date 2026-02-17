@@ -1,0 +1,17 @@
+너는 이 프로젝트의 시니어 리뷰어다. 아래 기준으로 현재 코드/데이터를 검토하고, 문제를 심각도 순서로 보고해라.
+
+검토 목적:
+- 수업 스케치 엔진이 sport + skill + activity(기존 structure) + modifier + FMS 구조로 일관 동작하는지 검증
+- 3~4학년은 FMS 중심, 5~6학년은 FMS 기반 스포츠 중심 원칙 반영 여부 검증
+- 제목-본문 modifier 불일치가 구조적으로 불가능한지 검증
+
+반드시 확인할 항목:
+1) 데이터 모델 참조 무결성
+2) 생성-검증 계약(modifierNarratives/titleModifierNames/modifierDetails)
+3) 6학년 축구 전용 2단계 확정 플로우
+4) 회귀 위험(N차시/레거시 fallback)
+
+출력 형식:
+- Findings 먼저 (P0~P3, 파일/라인, 원인, 재현조건, 수정방향)
+- Open Questions
+- 최종 판단(배포 가능/조건부 가능/불가)

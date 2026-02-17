@@ -1,8 +1,9 @@
-// ⚙️ 설정 — 학교 위치, 측정소 선택, 앱 환경설정 | 지도→components/settings/LocationMapPicker.jsx, 위치로직→hooks/useLocationPicker.js, 저장→hooks/useSettings.js
+// ⚙️ 설정 — 프로필, 학교 위치, 측정소 선택, 앱 환경설정, 로그아웃/계정삭제 | 지도→components/settings/LocationMapPicker.jsx, 위치로직→hooks/useLocationPicker.js, 저장→hooks/useSettings.js
 import { lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLocationPicker } from '../hooks/useLocationPicker'
 import { useClassManager } from '../hooks/useClassManager'
+import { useAuthContext } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
 import GlassCard from '../components/common/GlassCard'
@@ -22,6 +23,7 @@ function buildNearestStationMessage(baseName, stationName, distanceKm = null) {
 
 export default function SettingsPage() {
   const navigate = useNavigate()
+  const { user, logout, deleteAccount } = useAuthContext()
   const {
     location,
     detecting,
@@ -63,10 +65,42 @@ export default function SettingsPage() {
     }
   }
 
+  // 로그아웃
+  const handleLogout = async () => {
+    const confirmed = await confirm(
+      '로그아웃하시겠습니까?',
+      '로그아웃',
+      '취소'
+    )
+
+    if (confirmed) {
+      await logout()
+      toast.success('로그아웃되었습니다')
+    }
+  }
+
+  // 계정 삭제
+  const handleDeleteAccount = async () => {
+    const confirmed = await confirm(
+      '계정을 삭제하시겠습니까?\n\n모든 수업 데이터가 영구적으로 삭제되며\n복구할 수 없습니다.',
+      '계정 삭제',
+      '취소'
+    )
+
+    if (confirmed) {
+      try {
+        await deleteAccount()
+        toast.success('계정이 삭제되었습니다')
+      } catch (err) {
+        toast.error('계정 삭제에 실패했습니다. 다시 로그인 후 시도해주세요.')
+      }
+    }
+  }
+
   return (
     <div className="page-container">
       <div className="flex items-center justify-between mb-lg">
-        <h1 className="text-page-title">⚙️ 설정</h1>
+        <h1 className="text-page-title">설정</h1>
         <button
           onClick={() => navigate(-1)}
           className="py-2 px-4 bg-white/60 rounded-lg font-semibold hover:bg-white/80 transition-all border border-white/80"
@@ -76,10 +110,35 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-xl">
+        {/* 프로필 */}
+        {user && (
+          <GlassCard>
+            <h2 className="text-card-title mb-md">내 프로필</h2>
+            <div className="flex items-center gap-4">
+              {user.photoURL && (
+                <img
+                  src={user.photoURL}
+                  alt="프로필"
+                  className="w-12 h-12 rounded-full border-2 border-white/60 shadow-sm"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              <div>
+                <div className="text-body font-semibold text-text">
+                  {user.displayName || '사용자'}
+                </div>
+                <div className="text-caption text-textMuted">
+                  {user.email}
+                </div>
+              </div>
+            </div>
+          </GlassCard>
+        )}
+
         {/* 학교 위치 설정 */}
         <GlassCard>
           <div className="flex items-center justify-between gap-sm mb-md">
-            <h2 className="text-card-title m-0">📍 학교 위치 설정</h2>
+            <h2 className="text-card-title m-0">학교 위치 설정</h2>
 
             <div className="flex items-center gap-2 shrink-0">
               <button
@@ -88,14 +147,14 @@ export default function SettingsPage() {
                 className="py-2 px-3 rounded-lg font-semibold text-sm transition-all text-white disabled:opacity-60"
                 style={{ backgroundColor: '#7C9EF5' }}
               >
-                {detecting ? '📍 확인중' : '📍 자동설정'}
+                {detecting ? '확인중' : '자동설정'}
               </button>
 
               <button
                 onClick={openMapPicker}
                 className="py-2 px-3 bg-primary/10 text-primary rounded-lg font-semibold text-sm hover:bg-primary/20 transition-all border border-primary/30"
               >
-                🗺️ 지도에서 찾기
+                지도에서 찾기
               </button>
             </div>
           </div>
@@ -104,12 +163,11 @@ export default function SettingsPage() {
           {location.address && (
             <div className="mb-lg p-md bg-success/10 rounded-xl border border-success/30">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">✅</span>
                 <span className="text-body font-semibold text-text">{location.name}</span>
               </div>
-              <div className="text-caption text-textMuted ml-7 space-y-0.5">
-                <div>📍 {location.address}</div>
-                <div>🌫️ 측정소: {location.stationName}</div>
+              <div className="text-caption text-textMuted space-y-0.5">
+                <div>{location.address}</div>
+                <div>측정소: {location.stationName}</div>
               </div>
             </div>
           )}
@@ -117,7 +175,7 @@ export default function SettingsPage() {
 
         {/* 학급 설정 초기화 */}
         <GlassCard>
-          <h2 className="text-card-title mb-md">🏫 학급 관리</h2>
+          <h2 className="text-card-title mb-md">학급 관리</h2>
           <p className="text-body text-muted mb-md">
             학급 설정을 다시 하거나 초기화할 수 있습니다.
           </p>
@@ -126,19 +184,38 @@ export default function SettingsPage() {
             onClick={handleResetClasses}
             className="w-full py-3 px-4 bg-warning/20 text-warning rounded-lg font-semibold hover:bg-warning/30 transition-all border border-warning/30"
           >
-            🔄 학급 설정 초기화
+            학급 설정 초기화
           </button>
         </GlassCard>
 
         {/* 앱 정보 */}
         <GlassCard>
-          <h2 className="text-card-title mb-md">ℹ️ 앱 정보</h2>
+          <h2 className="text-card-title mb-md">앱 정보</h2>
           <div className="space-y-sm text-body text-muted">
             <div>버전: 1.0.0 (Beta)</div>
             <div>개발: 초등 체육교사를 위한 PWA</div>
             <div className="text-caption">
               데이터 출처: 기상청, 에어코리아
             </div>
+          </div>
+        </GlassCard>
+
+        {/* 계정 관리 */}
+        <GlassCard>
+          <h2 className="text-card-title mb-md">계정 관리</h2>
+          <div className="space-y-3">
+            <button
+              onClick={handleLogout}
+              className="w-full py-3 px-4 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all border border-gray-200"
+            >
+              로그아웃
+            </button>
+            <button
+              onClick={handleDeleteAccount}
+              className="w-full py-3 px-4 bg-danger/10 text-danger rounded-lg font-semibold hover:bg-danger/20 transition-all border border-danger/30"
+            >
+              계정 삭제
+            </button>
           </div>
         </GlassCard>
       </div>

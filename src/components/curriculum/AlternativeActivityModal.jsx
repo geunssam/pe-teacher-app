@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import Modal from '../common/Modal'
+import AIButton from '../common/AIButton'
+import AIResponseCard from '../common/AIResponseCard'
+import { useAI } from '../../hooks/useAI'
+import { buildAlternativeRecommendPrompt } from '../../services/aiPrompts'
 
 const DIFFICULTY_LABEL = {
   1: '쉬움',
@@ -420,6 +424,13 @@ export default function AlternativeActivityModal({ open, lesson, onClose, onSave
   const [wrapupNext, setWrapupNext] = useState('')
   const [wrapupSafety, setWrapupSafety] = useState('')
 
+  const { loading: aiLoading, error: aiError, result: aiResult, generate: aiGenerate, reset: aiReset } = useAI()
+
+  const handleAIRecommend = () => {
+    const prompt = buildAlternativeRecommendPrompt(lesson)
+    aiGenerate(prompt)
+  }
+
   useEffect(() => {
     if (!open) return
     const preset = QUICK_PRESETS[selectedPreset] ?? QUICK_PRESETS.marker
@@ -596,6 +607,21 @@ export default function AlternativeActivityModal({ open, lesson, onClose, onSave
           >
             {showAdvanced ? '간단 편집 닫기' : '고급 편집'}
           </button>
+        </div>
+
+        {/* AI 추천 섹션 */}
+        <div className="mb-4">
+          <AIButton
+            label="AI 대체활동 추천"
+            loading={aiLoading}
+            onClick={handleAIRecommend}
+          />
+          <AIResponseCard
+            text={aiResult || ''}
+            loading={aiLoading}
+            error={aiError}
+            onClose={aiReset}
+          />
         </div>
 
         <p className="text-xs text-gray-500 mb-4">

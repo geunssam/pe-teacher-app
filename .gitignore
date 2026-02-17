@@ -30,3 +30,14 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+
+# Tool configs
+.bkit/
+.claude/
+
+# Large binary/asset files
+교육과정 asset/
+src/data/assets/*.zip
+
+# Temp/scratch files
+ json 동기화

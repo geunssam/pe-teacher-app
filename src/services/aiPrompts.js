@@ -1,4 +1,11 @@
 // AI 프롬프트 빌더 — 기능별 프롬프트 템플릿 | 사용처→hooks/useAI.js, components/*
+import standards from '../data/curriculum/standards.json'
+import g3Sports from '../data/curriculum/activities/grade3_sports.json'
+import g3Movement from '../data/curriculum/activities/grade3_movement.json'
+import g4Sports from '../data/curriculum/activities/grade4_sports.json'
+import g5Sports from '../data/curriculum/activities/grade5_sports.json'
+import g6Sports from '../data/curriculum/activities/grade6_sports.json'
+import unitTemplates from '../data/curriculum/unitTemplates.json'
 
 /**
  * 활동 설명 보강 프롬프트
@@ -206,25 +213,109 @@ ${recentText}
 }
 
 /**
- * AI 채팅 시스템 프롬프트
+ * 교육과정 에셋에서 성취기준 텍스트를 압축 추출
+ */
+function buildStandardsContext() {
+  const lines = []
+  for (const [band, bandData] of Object.entries(standards.gradeBands || {})) {
+    lines.push(`\n### ${band}`)
+    for (const [domain, domainData] of Object.entries(bandData.domains || {})) {
+      lines.push(`#### ${domain} 영역 — ${domainData.focus}`)
+      for (const s of domainData.standards || []) {
+        lines.push(`- ${s.code} ${s.text}`)
+      }
+    }
+  }
+  return lines.join('\n')
+}
+
+/**
+ * 활동 DB에서 컴팩트 목록 추출 (이름, 성취기준코드, 장소, ACE 단계)
+ */
+function buildActivityContext() {
+  const allFiles = [
+    { grade: '3학년', domain: '스포츠', data: g3Sports },
+    { grade: '3학년', domain: '운동', data: g3Movement },
+    { grade: '4학년', domain: '스포츠', data: g4Sports },
+    { grade: '5학년', domain: '스포츠', data: g5Sports },
+    { grade: '6학년', domain: '스포츠', data: g6Sports },
+  ]
+  const lines = []
+  for (const { grade, domain, data } of allFiles) {
+    const acts = (data.activities || []).map(
+      (a) => `  - ${a.name} (${a.acePhase || '?'}, ${(a.space || []).join('/')}) [${(a.standardCodes || []).join(', ')}]`
+    )
+    if (acts.length) {
+      lines.push(`\n#### ${grade} ${domain}`)
+      lines.push(...acts)
+    }
+  }
+  return lines.join('\n')
+}
+
+/**
+ * 단원 템플릿 컴팩트 목록
+ */
+function buildUnitContext() {
+  const lines = []
+  for (const t of unitTemplates.templates || []) {
+    lines.push(`- ${t.title} (${t.grade}, ${t.domain}, ${t.totalLessons}차시) [${(t.standardCodes || []).join(', ')}]`)
+  }
+  return lines.join('\n')
+}
+
+/**
+ * AI 채팅 시스템 프롬프트 — 로컬 교육과정 에셋 그라운딩 포함
  */
 export function buildChatSystemPrompt() {
+  const standardsCtx = buildStandardsContext()
+  const activityCtx = buildActivityContext()
+  const unitCtx = buildUnitContext()
+
   return `당신은 "체육 AI 도우미"입니다. 초등학교 체육교사를 돕는 전문 AI 어시스턴트입니다.
 
-역할:
+## 핵심 규칙 (반드시 준수)
+
+1. **아래 제공된 "2022 개정 교육과정" 데이터만을 근거로 답변합니다.**
+   - 제공된 데이터에 없는 성취기준 코드나 내용을 절대 만들어내지 마세요.
+   - 2015 개정 교육과정이나 다른 버전의 교육과정 정보를 사용하지 마세요.
+   - 데이터에 없는 내용을 질문받으면 "현재 등록된 교육과정 데이터에 해당 정보가 없습니다"라고 솔직히 답하세요.
+
+2. 한국어로 답변합니다.
+3. 초등학생 수준에 맞는 활동을 추천합니다.
+4. 안전을 최우선으로 고려합니다.
+5. 답변은 간결하고 실용적으로 작성합니다 (300자 이내 권장).
+6. 성취기준을 인용할 때는 반드시 코드(예: [4체02-03])와 함께 표기합니다.
+
+## 역할
+- 2022 개정 체육과 교육과정 성취기준 안내
 - 체육 수업 활동 추천 및 설명
-- ACE 모델(Acquire-Challenge-Engage) 기반 수업 설계 조언
+- ACE 모델(활동-경쟁-평가) 기반 수업 설계 조언
 - FMS(기본운동기술) 관련 질문 답변
 - 날씨/환경에 따른 실내외 활동 전환 조언
 - 학급 관리 및 수업 운영 팁
 
-규칙:
-- 한국어로 답변합니다
-- 초등학생 수준에 맞는 활동을 추천합니다
-- 안전을 최우선으로 고려합니다
-- 답변은 간결하고 실용적으로 작성합니다 (200자 이내 권장)
-- 확신할 수 없는 정보는 솔직히 "확인이 필요합니다"라고 말합니다
-- 이모지를 적절히 활용하여 친근하게 소통합니다`
+---
+
+## 📚 2022 개정 체육과 교육과정 성취기준 (참조 데이터)
+
+교육과정: ${standards.meta?.curriculum || '2022 개정'}
+출처: ${standards.meta?.extractedFrom || '체육과교육과정'}
+${standardsCtx}
+
+---
+
+## 📋 등록된 활동 목록
+${activityCtx}
+
+---
+
+## 📖 단원 계획 템플릿
+${unitCtx}
+
+---
+
+위 데이터가 당신이 참조할 수 있는 전체 교육과정 자료입니다. 이 범위를 벗어난 정보는 제공하지 마세요.`
 }
 
 /**

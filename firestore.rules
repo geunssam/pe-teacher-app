@@ -1,0 +1,64 @@
+rules_version='2'
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================
+    // 헬퍼 함수
+    // ========================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // ========================================
+    // users/{uid} — 교사 프로필
+    // ========================================
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      // classes/{classId} — 학급
+      match /classes/{classId} {
+        allow read, write: if isOwner(uid);
+
+        // roster — 학생 명단 (개인정보)
+        match /roster/{studentId} {
+          allow read, write: if isOwner(uid);
+        }
+
+        // records — 수업 기록
+        match /records/{recordId} {
+          allow read, write: if isOwner(uid);
+        }
+      }
+
+      // schedule — 시간표
+      match /schedule/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // editedLessons — 편집된 ACE 수업안
+      match /editedLessons/{activityId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // myActivities — 내 활동
+      match /myActivities/{activityId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // curriculum — 교육과정 커스텀
+      match /curriculum/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // 기본: 모든 접근 거부
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

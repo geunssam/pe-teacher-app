@@ -15,8 +15,11 @@ import { generateId } from '../utils/generateId'
 const VIEW_CHIPS = [
   { key: 'all', label: '전체' },
   { key: 'textbook', label: '교과서' },
+  { key: 'grade', label: '학년별' },
   { key: 'archive', label: '내 활동' },
 ]
+
+const GRADE_TABS = ['3', '4', '5', '6']
 
 export default function CurriculumPage() {
   const navigate = useNavigate()
@@ -27,8 +30,9 @@ export default function CurriculumPage() {
   } = useCurriculum()
   const { getEditedAceLesson } = useEditedAceLesson()
 
-  // --- 뷰 모드: 'all' | 'textbook' | 'archive' | 'addForm' ---
+  // --- 뷰 모드: 'all' | 'textbook' | 'grade' | 'archive' | 'addForm' ---
   const [viewMode, setViewMode] = useState('all')
+  const [selectedGrade, setSelectedGrade] = useState('3')
   const [selectedUnit, setSelectedUnit] = useState(null)
   const [selectedActivity, setSelectedActivity] = useState(null)
   const [isAlternativeModalOpen, setIsAlternativeModalOpen] = useState(false)
@@ -49,12 +53,14 @@ export default function CurriculumPage() {
   const pageTitle = useMemo(() => {
     if (viewMode === 'archive') return '내 활동'
     if (viewMode === 'addForm') return '활동 추가'
+    if (viewMode === 'grade') return '학년별 활동'
     return '교육과정 단원'
   }, [viewMode])
 
   const pageDesc = useMemo(() => {
     if (viewMode === 'archive') return '직접 추가한 활동을 관리합니다'
     if (viewMode === 'addForm') return '새로운 활동을 추가합니다'
+    if (viewMode === 'grade') return '학년을 선택하면 해당 단원을 볼 수 있습니다'
     return '단원을 선택하면 차시별 수업 흐름을 확인할 수 있습니다'
   }, [viewMode])
 
@@ -238,6 +244,52 @@ export default function CurriculumPage() {
             />
           ))}
         </div>
+      )}
+
+      {/* Step 1 - 학년별 뷰 (UnitCard 그리드) */}
+      {step === 1 && viewMode === 'grade' && (
+        <>
+          {/* 학년 서브 탭 */}
+          <div className="flex items-center gap-2 mb-4">
+            {GRADE_TABS.map((g) => (
+              <button
+                key={g}
+                onClick={() => setSelectedGrade(g)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                  selectedGrade === g
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                }`}
+              >
+                {g}학년
+              </button>
+            ))}
+          </div>
+
+          {/* 단원 카드 그리드 */}
+          {units.filter((u) => u.grade === selectedGrade + '학년').length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {units
+                .filter((u) => u.grade === selectedGrade + '학년')
+                .map((unit) => (
+                  <UnitCard
+                    key={unit.id}
+                    unit={unit}
+                    onClick={() => {
+                      setSelectedUnit(unit)
+                      setSelectedActivity(null)
+                      closeAlternativeModal()
+                    }}
+                  />
+                ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="text-3xl mb-3">📂</div>
+              <p className="text-sm text-gray-500">{selectedGrade}학년 단원이 아직 없습니다</p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Step 1 - 내 활동 목록 */}

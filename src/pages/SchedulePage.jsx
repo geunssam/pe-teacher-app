@@ -11,6 +11,9 @@ import AceLessonFlow from '../components/curriculum/AceLessonFlow'
 import { fetchAirQualityData, fetchWeatherData } from '../services/weather'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
+import AIButton from '../components/common/AIButton'
+import { useAI } from '../hooks/useAI'
+import { buildActivitySuggestionPrompt } from '../services/aiPrompts'
 import { judgeOutdoorClass } from '../data/mockWeather'
 import { formatRecordDate } from '../utils/recordDate'
 
@@ -220,6 +223,8 @@ export default function SchedulePage() {
   const [lessonRecommendation, setLessonRecommendation] = useState(null)
   const [recommendationError, setRecommendationError] = useState('')
   const [pendingActivity, setPendingActivity] = useState(null)
+  const aiSuggest = useAI()
+  const [aiSuggestions, setAiSuggestions] = useState([])
 
   // 수업설계에서 전달받은 활동 감지
   useEffect(() => {
@@ -966,6 +971,62 @@ export default function SchedulePage() {
                         </button>
                       ))}
                     </div>
+                  </div>
+
+                  {/* AI 추천 활동 */}
+                  <div className="mt-3 pt-3 border-t border-white/60">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AIButton
+                        label="AI 추천"
+                        loading={aiSuggest.loading}
+                        onClick={async () => {
+                          const recentActs = records
+                            ?.flatMap((r) => r.records || [])
+                            .slice(0, 10)
+                            .map((r) => r.activity)
+                            .filter(Boolean)
+                          const prompt = buildActivitySuggestionPrompt({
+                            domain: lessonForm.domain,
+                            weather: lessonRecommendation?.weather
+                              ? {
+                                  temperature: lessonRecommendation.weather.t1h,
+                                  condition: lessonRecommendation.judgment?.text,
+                                  pm10: lessonRecommendation.judgment?.checks?.pm10?.value,
+                                }
+                              : null,
+                            grade: state.lessonLogTarget?.className,
+                            recentActivities: recentActs,
+                          })
+                          const result = await aiSuggest.generate(prompt)
+                          if (result) {
+                            const items = result.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 3)
+                            setAiSuggestions(items)
+                          }
+                        }}
+                      />
+                      {aiSuggest.error && (
+                        <span className="text-[10px] text-red-400">{aiSuggest.error}</span>
+                      )}
+                    </div>
+                    {aiSuggestions.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {aiSuggestions.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => handleApplySuggestion(s)}
+                            className="px-2.5 py-1.5 rounded-lg text-sm border transition-all hover:scale-[1.02]"
+                            style={{
+                              backgroundColor: 'rgba(167, 139, 250, 0.08)',
+                              borderColor: 'rgba(167, 139, 250, 0.2)',
+                              color: '#5B21B6',
+                            }}
+                          >
+                            &#10024; {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

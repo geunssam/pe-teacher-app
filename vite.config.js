@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5176,
       open: true,
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+      },
       proxy: {
         '/api/naver-search': {
           target: 'https://openapi.naver.com',
@@ -27,6 +30,11 @@ export default defineConfig(({ mode }) => {
               if (secret) proxyReq.setHeader('X-Naver-Client-Secret', secret)
             })
           },
+        },
+        '/genkit': {
+          target: 'http://localhost:3400',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/genkit/, ''),
         },
       },
     },

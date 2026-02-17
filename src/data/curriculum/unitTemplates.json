@@ -386,6 +386,958 @@
           "standardCodes": ["[4체02-04]", "[4체02-08]"]
         }
       ]
+    },
+    {
+      "id": "unit_g4_tech_sports",
+      "title": "기술형 스포츠 기본 기능 익히기",
+      "gradeBand": "3-4학년군",
+      "grade": "4학년",
+      "domain": "스포츠",
+      "subDomain": "기술형스포츠",
+      "standardCodes": ["[4체02-01]", "[4체02-02]", "[4체02-03]", "[4체02-05]", "[4체02-08]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["체조", "달리기", "발차기"],
+      "totalLessons": 7,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4, 5, 6, 7], "focus": "기술형 스포츠 기본 움직임 기술 탐색 및 시도" },
+        "C": { "lessons": [], "focus": "" },
+        "E": { "lessons": [], "focus": "" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "기술형 스포츠 움직임 기술 알아보기",
+          "activityIds": ["g4s_tech_intro"], "fmsFocus": [],
+          "description": "기술형 스포츠의 의미와 유형(동작형·기록형·투기형)을 이해하고 관련 움직임 기술을 파악한다.",
+          "standardCodes": ["[4체02-01]", "[4체02-02]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "앞구르기",
+          "activityIds": ["g4s_front_roll"], "fmsFocus": ["구르기"],
+          "description": "턱 당기기, 등 둥글리기, 앞구르기를 단계적으로 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-05]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "뒤구르기",
+          "activityIds": ["g4s_back_roll"], "fmsFocus": ["구르기"],
+          "description": "손바닥 짚기를 배우고, 뒤구르기를 단계적으로 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-05]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "옆돌기",
+          "activityIds": ["g4s_cartwheel"], "fmsFocus": ["구르기", "회전하기"],
+          "description": "토끼뛰기에서 물구나무서기, 옆돌기까지 단계적으로 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-05]"]
+        },
+        {
+          "lesson": 5, "acePhase": "A",
+          "title": "전력 달리기",
+          "activityIds": ["g4s_sprint"], "fmsFocus": ["달리기"],
+          "description": "출발 자세와 팔 흔들기를 배우고, 30m 전력 달리기를 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-05]", "[4체02-08]"]
+        },
+        {
+          "lesson": 6, "acePhase": "A",
+          "title": "방향 바꾸며 달리기",
+          "activityIds": ["g4s_direction_run"], "fmsFocus": ["달리기", "방향전환"],
+          "description": "T자 달리기, 거울 달리기 등 민첩성 중심 달리기를 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-05]", "[4체02-08]"]
+        },
+        {
+          "lesson": 7, "acePhase": "A",
+          "title": "발차기",
+          "activityIds": ["g4s_kick"], "fmsFocus": ["차기"],
+          "description": "앞차기의 기본 동작을 익히고 발차기 패드를 활용하여 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-05]", "[4체02-08]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g4_strategy_sports",
+      "title": "전략형 스포츠 기본 기능 익히기",
+      "gradeBand": "3-4학년군",
+      "grade": "4학년",
+      "domain": "스포츠",
+      "subDomain": "전략형스포츠",
+      "standardCodes": ["[4체02-03]", "[4체02-04]", "[4체02-06]", "[4체02-09]"],
+      "fmsCategories": ["조작", "이동"],
+      "relatedActivities": ["던지기와 잡기", "차기와 멈추기", "드리블", "치기와 받기", "라켓 치기"],
+      "totalLessons": 5,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4, 5], "focus": "전략형 스포츠 기본 조작 움직임 기술 탐색" },
+        "C": { "lessons": [], "focus": "" },
+        "E": { "lessons": [], "focus": "" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "공 던지기와 잡기",
+          "activityIds": ["g4s_throw_catch"], "fmsFocus": ["던지기", "잡기"],
+          "description": "오버핸드·언더핸드 던지기와 양손 받기를 익히고 피구형 게임에 적용한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-06]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "공 차기와 멈추기",
+          "activityIds": ["g4s_kick_stop"], "fmsFocus": ["차기", "멈추기"],
+          "description": "인사이드 킥과 발바닥 멈추기를 익히고 미니 축구 패스 게임에 적용한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-06]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "공몰기",
+          "activityIds": ["g4s_ball_dribble"], "fmsFocus": ["튀기기", "몰기"],
+          "description": "손·발 드리블 기초를 익히고 지그재그 코스에서 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-04]", "[4체02-06]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "공치기와 받기",
+          "activityIds": ["g4s_hit_receive"], "fmsFocus": ["치기", "받기"],
+          "description": "비치볼 쳐올리기와 언더핸드 주고받기를 익히고 풍선 배구에 적용한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-04]", "[4체02-06]"]
+        },
+        {
+          "lesson": 5, "acePhase": "A",
+          "title": "라켓으로 치기",
+          "activityIds": ["g4s_racket_hit"], "fmsFocus": ["치기"],
+          "description": "라켓 그립과 스윙을 익히고 미니 배드민턴 1대1 게임에 적용한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-04]", "[4체02-06]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g4_eco_sports",
+      "title": "생태형 스포츠 기본 기능 익히기",
+      "gradeBand": "3-4학년군",
+      "grade": "4학년",
+      "domain": "스포츠",
+      "subDomain": "생태형스포츠",
+      "standardCodes": ["[4체02-01]", "[4체02-02]", "[4체02-03]", "[4체02-04]", "[4체02-07]", "[4체02-10]"],
+      "fmsCategories": ["비이동", "이동"],
+      "relatedActivities": ["균형 잡기", "타기", "오르기"],
+      "totalLessons": 4,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4], "focus": "생태형 스포츠 기본 움직임 기술 탐색 및 시도" },
+        "C": { "lessons": [], "focus": "" },
+        "E": { "lessons": [], "focus": "" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "생태형 스포츠 움직임 기술 알아보기",
+          "activityIds": ["g4s_eco_intro"], "fmsFocus": [],
+          "description": "생태형 스포츠의 의미와 유형(자연환경형·생활환경형)을 이해하고 관련 움직임 기술을 파악한다.",
+          "standardCodes": ["[4체02-01]", "[4체02-02]", "[4체02-07]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "균형 잡고 이동하기",
+          "activityIds": ["g4s_balance_move"], "fmsFocus": ["균형 잡기", "걷기"],
+          "description": "다양한 불안정 환경에서 균형을 잡으며 이동하는 기술을 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-07]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "타고 버티기",
+          "activityIds": ["g4s_ride_hold"], "fmsFocus": ["균형 잡기", "매달리기"],
+          "description": "짐볼·스쿠터보드 등을 활용하여 타고 버티는 움직임을 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-04]", "[4체02-07]", "[4체02-10]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "잡고 오르기",
+          "activityIds": ["g4s_climb"], "fmsFocus": ["매달리기", "오르기"],
+          "description": "3점 지지 원칙을 배우고 늑목·클라이밍 벽에서 잡고 오르기를 시도한다.",
+          "standardCodes": ["[4체02-03]", "[4체02-04]", "[4체02-07]", "[4체02-10]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g5_tech_sports",
+      "title": "기술형 스포츠 기능과 도전",
+      "gradeBand": "5-6학년군",
+      "grade": "5학년",
+      "domain": "스포츠",
+      "subDomain": "기술형스포츠",
+      "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-03]", "[6체02-10]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["이어달리기", "멀리뛰기", "수영", "매트 구르기", "태권도"],
+      "totalLessons": 8,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4, 5, 6], "focus": "기술형 스포츠 기본 기능 습득 및 연습" },
+        "C": { "lessons": [], "focus": "" },
+        "E": { "lessons": [7, 8], "focus": "기술 종합 수행 및 발표, 성찰" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "빠르게 이어달리기",
+          "activityIds": ["g5s_relay_run"], "fmsFocus": ["달리기"],
+          "description": "배턴 전달 기술을 배우고 모둠 이어달리기를 시도한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-03]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "다양한 방법의 멀리뛰기",
+          "activityIds": ["g5s_long_jump"], "fmsFocus": ["점프", "착지"],
+          "description": "도움닫기, 발 구름, 착지를 단계적으로 배우고 멀리뛰기를 시도한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-03]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "자유형 수영",
+          "activityIds": ["g5s_freestyle_swim"], "fmsFocus": [],
+          "description": "자유형(크롤) 팔 돌리기와 발차기 기본 동작을 이해하고 시도한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "평영 수영",
+          "activityIds": ["g5s_breaststroke"], "fmsFocus": [],
+          "description": "평영 팔·다리 동작과 호흡법을 이해하고 시도한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]"]
+        },
+        {
+          "lesson": 5, "acePhase": "A",
+          "title": "매트에서 구르기",
+          "activityIds": ["g5s_mat_roll"], "fmsFocus": ["구르기"],
+          "description": "앞구르기·뒤구르기 기능을 심화하고 연속 동작을 시도한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-10]"]
+        },
+        {
+          "lesson": 6, "acePhase": "A",
+          "title": "태권도 기본 동작",
+          "activityIds": ["g5s_taekwondo_basic"], "fmsFocus": ["차기", "막기"],
+          "description": "서기·막기·지르기·앞차기와 태극 1장 기본 동작을 익힌다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-10]"]
+        },
+        {
+          "lesson": 7, "acePhase": "E",
+          "title": "매트 작품 발표",
+          "activityIds": ["g5s_mat_performance"], "fmsFocus": ["구르기"],
+          "description": "구르기 기술을 조합한 작품을 모둠별로 구성하고 발표한다.",
+          "standardCodes": ["[6체02-02]", "[6체02-03]", "[6체02-10]"]
+        },
+        {
+          "lesson": 8, "acePhase": "E",
+          "title": "태권도 겨루기",
+          "activityIds": ["g5s_taekwondo_sparring"], "fmsFocus": ["차기", "막기"],
+          "description": "약속 겨루기와 풍선 겨루기를 통해 태권도 기술을 종합적으로 적용한다.",
+          "standardCodes": ["[6체02-02]", "[6체02-03]", "[6체02-10]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g5_strategy_sports",
+      "title": "전략형 스포츠 기능과 게임",
+      "gradeBand": "5-6학년군",
+      "grade": "5학년",
+      "domain": "스포츠",
+      "subDomain": "전략형스포츠",
+      "standardCodes": ["[6체02-04]", "[6체02-05]", "[6체02-06]", "[6체02-11]"],
+      "fmsCategories": ["조작", "이동"],
+      "relatedActivities": ["럭비", "축구", "발야구", "배구", "플라잉디스크"],
+      "totalLessons": 8,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3], "focus": "전략형 스포츠 유형 이해 및 기본 기능 습득" },
+        "C": { "lessons": [4, 5, 6, 7, 8], "focus": "규칙을 적용한 게임과 전략적 수행" },
+        "E": { "lessons": [], "focus": "" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "전략형 스포츠 이론",
+          "activityIds": ["g5s_territory_intro"], "fmsFocus": [],
+          "description": "영역형·필드형·네트형 전략형 스포츠의 의미와 유형을 이해한다.",
+          "standardCodes": ["[6체02-04]", "[6체02-05]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "럭비형 기본 기능",
+          "activityIds": ["g5s_rugby_basic"], "fmsFocus": ["달리기", "던지기", "잡기"],
+          "description": "럭비공 안고 달리기, 옆 패스, 태그 피하기를 배운다.",
+          "standardCodes": ["[6체02-04]", "[6체02-05]", "[6체02-11]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "축구형 기본 기능",
+          "activityIds": ["g5s_soccer_basic"], "fmsFocus": ["차기", "몰기"],
+          "description": "인사이드 패스와 공몰기 기초를 배우고 꽃이 피었습니다 놀이에 적용한다.",
+          "standardCodes": ["[6체02-04]", "[6체02-05]", "[6체02-11]"]
+        },
+        {
+          "lesson": 4, "acePhase": "C",
+          "title": "럭비형 게임",
+          "activityIds": ["g5s_rugby_game"], "fmsFocus": ["달리기", "패스"],
+          "description": "태그 럭비 규칙을 적용하여 전략적 게임을 수행한다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        },
+        {
+          "lesson": 5, "acePhase": "C",
+          "title": "축구형 게임",
+          "activityIds": ["g5s_soccer_game"], "fmsFocus": ["차기", "패스"],
+          "description": "골대 2개 변형 규칙으로 축구형 게임을 수행하며 공간 활용 전략을 익힌다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        },
+        {
+          "lesson": 6, "acePhase": "C",
+          "title": "필드형 게임",
+          "activityIds": ["g5s_field_game"], "fmsFocus": ["차기", "던지기", "잡기"],
+          "description": "발야구 규칙을 적용하여 공격·수비 전략을 게임에서 수행한다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        },
+        {
+          "lesson": 7, "acePhase": "C",
+          "title": "배구형 게임",
+          "activityIds": ["g5s_volleyball_game"], "fmsFocus": ["치기", "받기"],
+          "description": "배구형 게임에서 언더핸드 패스와 네트 넘기기를 적용한다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        },
+        {
+          "lesson": 8, "acePhase": "C",
+          "title": "플라잉디스크",
+          "activityIds": ["g5s_flying_disc"], "fmsFocus": ["던지기", "잡기"],
+          "description": "백핸드 던지기와 캐치 기술을 배우고 얼티밋 게임에 적용한다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g5_eco_sports",
+      "title": "생태형 스포츠 자연 속 활동",
+      "gradeBand": "5-6학년군",
+      "grade": "5학년",
+      "domain": "스포츠",
+      "subDomain": "생태형스포츠",
+      "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-09]", "[6체02-12]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["클라이밍", "오리엔티어링", "하이킹"],
+      "totalLessons": 3,
+      "aceDistribution": {
+        "A": { "lessons": [1, 3], "focus": "생태형 스포츠 기본 기능 습득" },
+        "C": { "lessons": [2], "focus": "지도 읽기와 코스 탐색 전략 수행" },
+        "E": { "lessons": [], "focus": "" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "클라이밍 활동",
+          "activityIds": ["g5s_climbing"], "fmsFocus": ["매달리기", "오르기"],
+          "description": "그립 종류와 트래버스 기술을 배우고 클라이밍 벽(또는 늑목)에서 시도한다.",
+          "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-12]"]
+        },
+        {
+          "lesson": 2, "acePhase": "C",
+          "title": "오리엔티어링",
+          "activityIds": ["g5s_orienteering"], "fmsFocus": ["달리기", "걷기"],
+          "description": "지도 읽기와 나침반 활용법을 배우고 학교 주변 코스를 탐색한다.",
+          "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-09]", "[6체02-12]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "하이킹과 캠핑",
+          "activityIds": ["g5s_hiking_camping"], "fmsFocus": ["걷기"],
+          "description": "등산 보행법과 매듭법을 배우고 LNT 원칙을 이해한다.",
+          "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-12]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g6_tech_sports",
+      "title": "기술형 스포츠 응용과 도전",
+      "gradeBand": "5-6학년군",
+      "grade": "6학년",
+      "domain": "스포츠",
+      "subDomain": "기술형스포츠",
+      "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-03]", "[6체02-10]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["멀리 던지기", "높이뛰기", "스케이팅", "뜀틀", "씨름"],
+      "totalLessons": 9,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4, 5, 6], "focus": "기술형 스포츠 기본 기능 습득 및 응용" },
+        "C": { "lessons": [7, 8, 9], "focus": "게임과 경기에서 기술 전략 적용" },
+        "E": { "lessons": [], "focus": "" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "다양한 물체 멀리 던지기",
+          "activityIds": ["g6s_throw_far"], "fmsFocus": ["던지기"],
+          "description": "물체별 그립과 던지기 폼을 배우고 기록을 측정한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-10]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "다양한 방법의 높이뛰기",
+          "activityIds": ["g6s_high_jump"], "fmsFocus": ["점프", "착지"],
+          "description": "가위뛰기를 중심으로 도움닫기와 발구름 기술을 시도한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-10]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "스케이팅 기본 기능 익히기",
+          "activityIds": ["g6s_skating_basic"], "fmsFocus": ["균형 잡기", "활주"],
+          "description": "펭귄 걷기, 한 발 밀기, T-스톱 등 스케이팅 기본 동작을 익힌다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-10]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "스케이팅으로 빠르게 나아가기",
+          "activityIds": ["g6s_skating_speed"], "fmsFocus": ["활주", "방향전환"],
+          "description": "크로스오버와 코스 주행 기술을 익히고 타임 트라이얼에 도전한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-03]", "[6체02-10]"]
+        },
+        {
+          "lesson": 5, "acePhase": "A",
+          "title": "뜀틀에서 응용 동작 수행하기",
+          "activityIds": ["g6s_vault"], "fmsFocus": ["점프", "구르기"],
+          "description": "뜀틀에서 앞구르기와 다리 벌려 넘기를 단계적으로 시도한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-10]"]
+        },
+        {
+          "lesson": 6, "acePhase": "A",
+          "title": "씨름과 친해지기",
+          "activityIds": ["g6s_ssireum_intro"], "fmsFocus": ["밀기", "당기기"],
+          "description": "씨름 예절, 샅바 매기, 기본 자세를 배우고 무릎 씨름·닭싸움을 시도한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-10]"]
+        },
+        {
+          "lesson": 7, "acePhase": "C",
+          "title": "표적형 게임 하기",
+          "activityIds": ["g6s_target_game"], "fmsFocus": ["던지기", "굴리기"],
+          "description": "고리 던지기, 볼링, 보치아 등 표적형 게임에서 정확성 전략을 적용한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-03]", "[6체02-10]"]
+        },
+        {
+          "lesson": 8, "acePhase": "C",
+          "title": "다트형 게임 하기",
+          "activityIds": ["g6s_dart_game"], "fmsFocus": ["던지기"],
+          "description": "안전 다트를 활용하여 정확성 도전 게임과 301 다운 게임을 수행한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-03]", "[6체02-10]"]
+        },
+        {
+          "lesson": 9, "acePhase": "C",
+          "title": "씨름 경기 하기",
+          "activityIds": ["g6s_ssireum_match"], "fmsFocus": ["밀기", "당기기"],
+          "description": "앞무릎치기·밭다리걸기 기술을 배우고 학급 씨름 대회를 진행한다.",
+          "standardCodes": ["[6체02-01]", "[6체02-02]", "[6체02-03]", "[6체02-10]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g6_strategy_sports",
+      "title": "전략형 스포츠 경기와 전략",
+      "gradeBand": "5-6학년군",
+      "grade": "6학년",
+      "domain": "스포츠",
+      "subDomain": "전략형스포츠",
+      "standardCodes": ["[6체02-04]", "[6체02-05]", "[6체02-06]", "[6체02-11]"],
+      "fmsCategories": ["조작", "이동"],
+      "relatedActivities": ["농구", "하키", "야구", "배드민턴"],
+      "totalLessons": 6,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2], "focus": "전략형 스포츠 기본 기능 습득" },
+        "C": { "lessons": [3, 4, 5, 6], "focus": "전략을 적용한 게임 수행" },
+        "E": { "lessons": [], "focus": "" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "농구형 게임 기본 기능",
+          "activityIds": ["g6s_basketball_basic"], "fmsFocus": ["튀기기", "던지기", "잡기"],
+          "description": "드리블, 체스트 패스, 레이업 기초를 배우고 키프 어웨이 게임에 적용한다.",
+          "standardCodes": ["[6체02-04]", "[6체02-05]", "[6체02-11]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "하키형 게임 기본 기능",
+          "activityIds": ["g6s_hockey_basic"], "fmsFocus": ["치기", "몰기"],
+          "description": "플로어볼 스틱으로 드리블, 패스, 슛 기초를 배운다.",
+          "standardCodes": ["[6체02-04]", "[6체02-05]", "[6체02-11]"]
+        },
+        {
+          "lesson": 3, "acePhase": "C",
+          "title": "농구형 게임 하기",
+          "activityIds": ["g6s_basketball_game"], "fmsFocus": ["패스", "드리블", "슈팅"],
+          "description": "4대4 농구형 게임에서 전략 토의와 팀 플레이를 적용한다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        },
+        {
+          "lesson": 4, "acePhase": "C",
+          "title": "하키형 게임 하기",
+          "activityIds": ["g6s_hockey_game"], "fmsFocus": ["패스", "드리블", "슛"],
+          "description": "4대4 하키형 게임에서 삼각형 공격 패턴과 전략을 적용한다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        },
+        {
+          "lesson": 5, "acePhase": "C",
+          "title": "야구형 게임",
+          "activityIds": ["g6s_baseball_game"], "fmsFocus": ["치기", "던지기", "잡기"],
+          "description": "티볼 규칙으로 공격·수비 전략을 적용한 야구형 게임을 수행한다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        },
+        {
+          "lesson": 6, "acePhase": "C",
+          "title": "배드민턴형 게임",
+          "activityIds": ["g6s_badminton_game"], "fmsFocus": ["치기"],
+          "description": "서브, 랠리, 빈 공간 공략 전략을 적용한 배드민턴 게임을 수행한다.",
+          "standardCodes": ["[6체02-05]", "[6체02-06]", "[6체02-11]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g6_eco_sports",
+      "title": "생태형 스포츠 생활환경 탐험",
+      "gradeBand": "5-6학년군",
+      "grade": "6학년",
+      "domain": "스포츠",
+      "subDomain": "생태형스포츠",
+      "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-09]", "[6체02-12]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["자전거", "롤러스케이팅", "수상 활동", "눈 위 활동"],
+      "totalLessons": 4,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4], "focus": "생활환경형·자연환경형 생태형 스포츠 기본 기능 습득" },
+        "C": { "lessons": [], "focus": "" },
+        "E": { "lessons": [], "focus": "" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "자전거 타기",
+          "activityIds": ["g6s_bicycle"], "fmsFocus": ["균형 잡기", "페달링"],
+          "description": "자전거 안전점검, 균형 잡기, 출발·직선·멈추기, 교통 안전을 배운다.",
+          "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-09]", "[6체02-12]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "롤러스케이팅",
+          "activityIds": ["g6s_roller_skating"], "fmsFocus": ["균형 잡기", "활주"],
+          "description": "안전 넘어지기, V자 걷기, 직선·곡선 코스 주행을 시도한다.",
+          "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-09]", "[6체02-12]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "수상 활동",
+          "activityIds": ["g6s_water_activity"], "fmsFocus": ["균형 잡기"],
+          "description": "카약·카누 기본 동작을 이해하고 시뮬레이션 및 물안전 교육을 한다.",
+          "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-12]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "눈 위 활동",
+          "activityIds": ["g6s_snow_activity"], "fmsFocus": ["균형 잡기", "활주"],
+          "description": "스키 기본 자세와 안전 제동법을 이해하고 시뮬레이션으로 체험한다.",
+          "standardCodes": ["[6체02-07]", "[6체02-08]", "[6체02-12]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g4_fitness_advanced",
+      "title": "체력운동을 계획하고 실천해요",
+      "gradeBand": "3-4학년군",
+      "grade": "4학년",
+      "domain": "운동",
+      "subDomain": "체력운동",
+      "standardCodes": ["[4체01-01]", "[4체01-02]", "[4체01-05]", "[4체01-06]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["심폐지구력 운동", "유연성 운동", "근력·근지구력 운동", "생활 속 운동"],
+      "totalLessons": 8,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4, 5], "focus": "체력 요소별 운동 방법 탐색 및 실천" },
+        "C": { "lessons": [6, 7], "focus": "체력운동을 활용한 릴레이·서킷 게임" },
+        "E": { "lessons": [8], "focus": "나만의 운동 계획 세우기 및 실천 점검" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "나의 체력 알아보기",
+          "activityIds": ["g4m_fitness_check"], "fmsFocus": [],
+          "description": "건강 체력 요소(심폐지구력, 유연성, 근력, 근지구력)를 이해하고 간단한 체력 측정을 한다.",
+          "standardCodes": ["[4체01-01]", "[4체01-02]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "심폐지구력 운동하기",
+          "activityIds": ["g4m_cardio_training"], "fmsFocus": ["달리기", "점프"],
+          "description": "오래 달리기, 줄넘기 등 심폐지구력 향상 운동을 시도한다.",
+          "standardCodes": ["[4체01-02]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "유연성 운동하기",
+          "activityIds": ["g4m_flexibility_training"], "fmsFocus": ["굽히기", "뻗기"],
+          "description": "스트레칭과 체조를 통해 유연성을 기른다.",
+          "standardCodes": ["[4체01-02]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "근력·근지구력 운동하기",
+          "activityIds": ["g4m_strength_training"], "fmsFocus": ["밀기", "버티기"],
+          "description": "짝 운동, 생활도구 활용 등으로 근력·근지구력을 기른다.",
+          "standardCodes": ["[4체01-02]"]
+        },
+        {
+          "lesson": 5, "acePhase": "A",
+          "title": "생활 속 운동 찾기",
+          "activityIds": ["g4m_daily_exercise"], "fmsFocus": [],
+          "description": "맨손체조, 계단 오르기 등 생활 속 운동을 찾아 실천한다.",
+          "standardCodes": ["[4체01-02]", "[4체01-05]"]
+        },
+        {
+          "lesson": 6, "acePhase": "C",
+          "title": "체력 릴레이 게임",
+          "activityIds": ["g4m_sup_fitness_relay"], "fmsFocus": ["달리기", "점프"],
+          "description": "다양한 체력 운동을 릴레이 형태로 수행하는 게임을 한다.",
+          "standardCodes": ["[4체01-02]", "[4체01-05]"],
+          "alternativeActivityIds": ["g4m_sup_jump_rope_challenge"]
+        },
+        {
+          "lesson": 7, "acePhase": "C",
+          "title": "체력 서킷 챌린지",
+          "activityIds": ["g4m_sup_fitness_circuit"], "fmsFocus": [],
+          "description": "5~6개 스테이션을 돌며 다양한 체력 운동을 수행한다.",
+          "standardCodes": ["[4체01-02]", "[4체01-05]"],
+          "alternativeActivityIds": ["g4m_sup_jump_rope_challenge"]
+        },
+        {
+          "lesson": 8, "acePhase": "E",
+          "title": "나만의 운동 계획 세우고 실천하기",
+          "activityIds": ["g4m_fitness_plan_practice"], "fmsFocus": [],
+          "description": "체력 측정 결과를 바탕으로 나만의 운동 계획을 세우고 실천을 다짐한다.",
+          "standardCodes": ["[4체01-05]", "[4체01-06]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g4_healthy_life",
+      "title": "건강한 생활을 실천해요",
+      "gradeBand": "3-4학년군",
+      "grade": "4학년",
+      "domain": "운동",
+      "subDomain": "건강활동",
+      "standardCodes": ["[4체01-03]", "[4체01-04]", "[4체01-06]"],
+      "fmsCategories": [],
+      "relatedActivities": ["바른 자세", "식생활과 수면", "정서 관리", "건강 실천"],
+      "totalLessons": 5,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3], "focus": "건강한 생활 습관 탐색 (자세·식생활·정서)" },
+        "C": { "lessons": [4], "focus": "건강 지식과 체력을 결합한 미션 게임" },
+        "E": { "lessons": [5], "focus": "건강한 생활 실천 계획 및 성찰" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "바른 자세와 건강",
+          "activityIds": ["g4m_posture_health"], "fmsFocus": [],
+          "description": "바른 자세의 중요성을 이해하고 자세 교정 스트레칭을 배운다.",
+          "standardCodes": ["[4체01-03]", "[4체01-04]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "균형 잡힌 식생활과 수면",
+          "activityIds": ["g4m_nutrition_rest"], "fmsFocus": [],
+          "description": "균형 잡힌 식사와 충분한 수면이 건강에 미치는 영향을 탐색한다.",
+          "standardCodes": ["[4체01-03]", "[4체01-04]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "스트레스와 정서 관리",
+          "activityIds": ["g4m_stress_management"], "fmsFocus": [],
+          "description": "스트레스의 원인과 증상을 이해하고 운동을 통한 정서 관리 방법을 익힌다.",
+          "standardCodes": ["[4체01-03]", "[4체01-04]"]
+        },
+        {
+          "lesson": 4, "acePhase": "C",
+          "title": "건강 미션 게임",
+          "activityIds": ["g4m_sup_health_mission"], "fmsFocus": ["달리기", "점프"],
+          "description": "건강 퀴즈와 체력 미션을 결합한 모둠별 게임을 한다.",
+          "standardCodes": ["[4체01-04]", "[4체01-06]"]
+        },
+        {
+          "lesson": 5, "acePhase": "E",
+          "title": "건강한 생활 실천 점검",
+          "activityIds": ["g4m_healthy_life_plan"], "fmsFocus": [],
+          "description": "나의 건강 생활 습관을 점검하고 실천 계획을 세운다.",
+          "standardCodes": ["[4체01-04]", "[4체01-06]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g5_fitness_types",
+      "title": "건강 체력과 운동 체력을 길러요",
+      "gradeBand": "5-6학년군",
+      "grade": "5학년",
+      "domain": "운동",
+      "subDomain": "체력운동",
+      "standardCodes": ["[6체01-01]", "[6체01-02]", "[6체01-05]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["심폐지구력 운동", "유연성·근력 운동", "순발력·민첩성 운동", "평형성·협응력 운동"],
+      "totalLessons": 9,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4, 5, 6], "focus": "건강 체력과 운동 체력 요소별 운동 탐색 및 측정" },
+        "C": { "lessons": [7, 8], "focus": "체력 챌린지 대회 및 타바타 게임" },
+        "E": { "lessons": [9], "focus": "체력 향상 계획 수립 및 성찰" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "건강 체력과 운동 체력 알아보기",
+          "activityIds": ["g5m_fitness_types_intro"], "fmsFocus": [],
+          "description": "건강 체력과 운동 체력의 의미와 요소를 구분하여 이해한다.",
+          "standardCodes": ["[6체01-01]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "심폐지구력 운동 탐색",
+          "activityIds": ["g5m_cardio_endurance"], "fmsFocus": ["달리기", "점프"],
+          "description": "도미노 줄넘기, 8자 마라톤 줄넘기 등 심폐지구력 운동을 탐색한다.",
+          "standardCodes": ["[6체01-01]", "[6체01-02]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "근력·근지구력과 유연성 운동",
+          "activityIds": ["g5m_muscle_flexibility"], "fmsFocus": ["굽히기", "뻗기", "밀기", "버티기"],
+          "description": "요가, 스트레칭, 짝 활동 등으로 근력·근지구력과 유연성을 기른다.",
+          "standardCodes": ["[6체01-01]", "[6체01-02]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "순발력과 민첩성 운동",
+          "activityIds": ["g5m_agility_speed"], "fmsFocus": ["달리기", "점프", "방향전환"],
+          "description": "순발력과 민첩성을 기르는 다양한 운동을 탐색하고 시도한다.",
+          "standardCodes": ["[6체01-01]", "[6체01-02]"]
+        },
+        {
+          "lesson": 5, "acePhase": "A",
+          "title": "평형성과 협응력 운동",
+          "activityIds": ["g5m_balance_coordination"], "fmsFocus": ["균형 잡기"],
+          "description": "밸런스 보드, 공 주고받으며 이동하기 등 평형성과 협응력 운동을 한다.",
+          "standardCodes": ["[6체01-01]", "[6체01-02]"]
+        },
+        {
+          "lesson": 6, "acePhase": "A",
+          "title": "체력 측정하기",
+          "activityIds": ["g5m_fitness_measurement"], "fmsFocus": [],
+          "description": "건강 체력과 운동 체력을 요소별로 측정하고 기록한다.",
+          "standardCodes": ["[6체01-02]", "[6체01-05]"]
+        },
+        {
+          "lesson": 7, "acePhase": "C",
+          "title": "체력 챌린지 대회",
+          "activityIds": ["g5m_sup_fitness_challenge"], "fmsFocus": [],
+          "description": "건강 체력 올림픽 — 모둠별 체력 요소 종합 측정 대회를 한다.",
+          "standardCodes": ["[6체01-02]", "[6체01-05]"]
+        },
+        {
+          "lesson": 8, "acePhase": "C",
+          "title": "타바타 운동 게임",
+          "activityIds": ["g5m_sup_tabata_game"], "fmsFocus": [],
+          "description": "20초 운동 + 10초 휴식 타바타 형식의 순환 운동 게임을 한다.",
+          "standardCodes": ["[6체01-02]", "[6체01-05]"]
+        },
+        {
+          "lesson": 9, "acePhase": "E",
+          "title": "나의 체력 향상 계획",
+          "activityIds": ["g5m_fitness_improvement_plan"], "fmsFocus": [],
+          "description": "체력 측정 결과를 분석하고 나만의 체력 향상 계획을 세운다.",
+          "standardCodes": ["[6체01-02]", "[6체01-05]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g5_growth_development",
+      "title": "성장과 발달을 이해해요",
+      "gradeBand": "5-6학년군",
+      "grade": "5학년",
+      "domain": "운동",
+      "subDomain": "건강활동",
+      "standardCodes": ["[6체01-03]", "[6체01-04]", "[6체01-06]"],
+      "fmsCategories": [],
+      "relatedActivities": ["성장 발달 이해", "운동과 성장", "정서·사회적 성장", "건강한 관계"],
+      "totalLessons": 5,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3], "focus": "성장 발달의 의미·특성과 운동의 관계 이해" },
+        "C": { "lessons": [4], "focus": "성장과 건강 관련 릴레이 활동" },
+        "E": { "lessons": [5], "focus": "나의 성장 과정 성찰 및 다짐" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "성장 발달의 의미와 특성",
+          "activityIds": ["g5m_growth_understanding"], "fmsFocus": [],
+          "description": "사춘기 신체 변화(이차 성징)를 이해하고 성장 발달의 의미를 안다.",
+          "standardCodes": ["[6체01-03]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "운동과 성장 발달의 관계",
+          "activityIds": ["g5m_exercise_and_growth"], "fmsFocus": [],
+          "description": "운동이 뇌와 신체 성장에 미치는 긍정적 영향을 파악한다.",
+          "standardCodes": ["[6체01-03]", "[6체01-05]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "정서적·사회적 성장 이해",
+          "activityIds": ["g5m_emotional_social_growth"], "fmsFocus": [],
+          "description": "감정 이해, 양성평등, 건강한 관계 맺기를 탐색한다.",
+          "standardCodes": ["[6체01-03]", "[6체01-06]"]
+        },
+        {
+          "lesson": 4, "acePhase": "C",
+          "title": "성장 응원 릴레이",
+          "activityIds": ["g5m_sup_growth_activity"], "fmsFocus": [],
+          "description": "성장과 건강 관련 미션 수행 릴레이를 하며 함께 성장하는 경험을 나눈다.",
+          "standardCodes": ["[6체01-03]", "[6체01-06]"]
+        },
+        {
+          "lesson": 5, "acePhase": "E",
+          "title": "나의 성장 일기",
+          "activityIds": ["g5m_growth_reflection"], "fmsFocus": [],
+          "description": "나의 성장 과정을 되돌아보고 건강한 성장을 위한 실천을 다짐한다.",
+          "standardCodes": ["[6체01-03]", "[6체01-06]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g6_fitness_mastery",
+      "title": "체력을 측정하고 꾸준히 운동해요",
+      "gradeBand": "5-6학년군",
+      "grade": "6학년",
+      "domain": "운동",
+      "subDomain": "체력운동",
+      "standardCodes": ["[6체01-01]", "[6체01-02]", "[6체01-05]"],
+      "fmsCategories": ["이동", "비이동"],
+      "relatedActivities": ["운동 체력 측정", "심폐지구력 심화", "근력·근지구력 심화", "맞춤 운동"],
+      "totalLessons": 9,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3, 4, 5, 6], "focus": "체력 요소 심화 이해·측정·실천" },
+        "C": { "lessons": [7, 8], "focus": "체력 올림픽 및 짝 운동 게임" },
+        "E": { "lessons": [9], "focus": "체력 포트폴리오 작성 및 발표" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "체력 요소 심화 이해",
+          "activityIds": ["g6m_fitness_analysis"], "fmsFocus": [],
+          "description": "운동 체력 4요소(순발력, 민첩성, 평형성, 협응성)를 심화 이해한다.",
+          "standardCodes": ["[6체01-01]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "건강 체력 측정하기",
+          "activityIds": ["g6m_fitness_test_health"], "fmsFocus": [],
+          "description": "유연성, 근력, 근지구력, 심폐지구력을 측정하고 기록한다.",
+          "standardCodes": ["[6체01-02]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "운동 체력 측정하기",
+          "activityIds": ["g6m_fitness_test_motor"], "fmsFocus": [],
+          "description": "순발력, 민첩성, 평형성, 협응성을 측정하고 기록한다.",
+          "standardCodes": ["[6체01-02]"]
+        },
+        {
+          "lesson": 4, "acePhase": "A",
+          "title": "심폐지구력 심화 운동",
+          "activityIds": ["g6m_cardio_advanced"], "fmsFocus": ["달리기", "점프"],
+          "description": "인터벌 달리기, 셔틀런, 음악줄넘기 등 심폐지구력 심화 운동을 한다.",
+          "standardCodes": ["[6체01-01]", "[6체01-02]", "[6체01-05]"]
+        },
+        {
+          "lesson": 5, "acePhase": "A",
+          "title": "근력·근지구력 심화 운동",
+          "activityIds": ["g6m_strength_advanced"], "fmsFocus": ["밀기", "버티기", "굽히기"],
+          "description": "파트너 운동, 서킷 트레이닝, 코어 운동으로 근력·근지구력을 심화한다.",
+          "standardCodes": ["[6체01-01]", "[6체01-02]", "[6체01-05]"]
+        },
+        {
+          "lesson": 6, "acePhase": "A",
+          "title": "나에게 맞는 운동 실천",
+          "activityIds": ["g6m_custom_workout"], "fmsFocus": [],
+          "description": "체력 측정 결과 기반으로 부족한 체력 요소 운동을 선택하여 실천한다.",
+          "standardCodes": ["[6체01-02]", "[6체01-05]"]
+        },
+        {
+          "lesson": 7, "acePhase": "C",
+          "title": "체력 올림픽",
+          "activityIds": ["g6m_sup_fitness_olympics"], "fmsFocus": [],
+          "description": "순발력·민첩성·평형성·협응성 종합 대회를 모둠별로 진행한다.",
+          "standardCodes": ["[6체01-02]", "[6체01-05]"]
+        },
+        {
+          "lesson": 8, "acePhase": "C",
+          "title": "짝과 함께 운동해요",
+          "activityIds": ["g6m_sup_partner_workout"], "fmsFocus": [],
+          "description": "2인 1조 짝 운동 게임으로 체력을 기르고 협동심을 배운다.",
+          "standardCodes": ["[6체01-02]", "[6체01-05]"]
+        },
+        {
+          "lesson": 9, "acePhase": "E",
+          "title": "나의 체력 포트폴리오",
+          "activityIds": ["g6m_fitness_portfolio"], "fmsFocus": [],
+          "description": "체력 측정 결과를 종합 분석하고 체력 향상 포트폴리오를 작성하여 발표한다.",
+          "standardCodes": ["[6체01-02]", "[6체01-05]"]
+        }
+      ]
+    },
+    {
+      "id": "unit_g6_safety_life",
+      "title": "안전하게 생활해요",
+      "gradeBand": "5-6학년군",
+      "grade": "6학년",
+      "domain": "운동",
+      "subDomain": "건강활동",
+      "standardCodes": ["[6체01-04]", "[6체01-06]"],
+      "fmsCategories": [],
+      "relatedActivities": ["운동 안전", "응급 처치", "건강 위해 요인", "안전 실천"],
+      "totalLessons": 5,
+      "aceDistribution": {
+        "A": { "lessons": [1, 2, 3], "focus": "운동 안전·응급 처치·건강 위해 요인 이해" },
+        "C": { "lessons": [4], "focus": "안전 상황 역할극 및 CPR 실습" },
+        "E": { "lessons": [5], "focus": "안전한 생활 실천 다짐 및 성찰" }
+      },
+      "lessonPlan": [
+        {
+          "lesson": 1, "acePhase": "A",
+          "title": "운동 안전사고 예방",
+          "activityIds": ["g6m_exercise_safety"], "fmsFocus": [],
+          "description": "운동 중 안전사고 유형과 '상황 파악→도움 요청→대처' 3단계를 배운다.",
+          "standardCodes": ["[6체01-04]"]
+        },
+        {
+          "lesson": 2, "acePhase": "A",
+          "title": "응급 처치 기초",
+          "activityIds": ["g6m_first_aid_basics"], "fmsFocus": [],
+          "description": "심폐소생술(CPR) 기초와 AED 사용법을 이해하고 체험한다.",
+          "standardCodes": ["[6체01-04]", "[6체01-06]"]
+        },
+        {
+          "lesson": 3, "acePhase": "A",
+          "title": "건강을 해치는 요인",
+          "activityIds": ["g6m_health_risk_factors"], "fmsFocus": [],
+          "description": "흡연·음주·약물 오남용의 위험성과 재난 대처법을 파악한다.",
+          "standardCodes": ["[6체01-04]", "[6체01-06]"]
+        },
+        {
+          "lesson": 4, "acePhase": "C",
+          "title": "안전 상황 시뮬레이션",
+          "activityIds": ["g6m_sup_safety_simulation"], "fmsFocus": [],
+          "description": "다양한 안전 상황 역할극과 CPR 실습으로 대처 능력을 기른다.",
+          "standardCodes": ["[6체01-04]", "[6체01-06]"]
+        },
+        {
+          "lesson": 5, "acePhase": "E",
+          "title": "안전한 생활 실천 다짐",
+          "activityIds": ["g6m_safety_pledge"], "fmsFocus": [],
+          "description": "안전 지식을 종합 정리하고 안전 실천 다짐서를 작성하여 발표한다.",
+          "standardCodes": ["[6체01-04]", "[6체01-06]"]
+        }
+      ]
     }
   ]
 }
