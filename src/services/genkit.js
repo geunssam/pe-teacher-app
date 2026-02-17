@@ -49,6 +49,32 @@ export async function sendChatMessage({ message, history }) {
   return json.result;
 }
 
+/** 텍스트 문서 업로드 (AI 학습용) */
+export async function uploadTextDocument({ title, content, docId }) {
+  if (!GENKIT_BASE_URL) throw new Error('Genkit 서버가 설정되지 않았습니다 (VITE_GENKIT_URL)');
+  const res = await fetch(`${GENKIT_BASE_URL}/ingestDocumentFlow`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: { title, content, sourceType: 'text', docId } }),
+  });
+  if (!res.ok) throw new Error(`Genkit error: ${res.status}`);
+  const json = await res.json();
+  return json.result;
+}
+
+/** PDF 문서 업로드 (AI 학습용, base64 인코딩) */
+export async function uploadPdfDocument({ title, base64, docId }) {
+  if (!GENKIT_BASE_URL) throw new Error('Genkit 서버가 설정되지 않았습니다 (VITE_GENKIT_URL)');
+  const res = await fetch(`${GENKIT_BASE_URL}/uploadPdfFlow`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: { title, base64, docId } }),
+  });
+  if (!res.ok) throw new Error(`Genkit error: ${res.status}`);
+  const json = await res.json();
+  return json.result;
+}
+
 /** 수업 기록 동기화 (RAG 인덱싱) */
 export async function syncRecords(records) {
   if (!GENKIT_BASE_URL) throw new Error('Genkit 서버가 설정되지 않았습니다 (VITE_GENKIT_URL)');

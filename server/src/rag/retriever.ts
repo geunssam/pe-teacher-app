@@ -5,6 +5,7 @@ import type { Document } from 'genkit/retriever';
 const activityRetriever = devLocalRetrieverRef('pe_activities');
 const curriculumRetriever = devLocalRetrieverRef('pe_curriculum');
 const recordRetriever = devLocalRetrieverRef('pe_records');
+const knowledgeRetriever = devLocalRetrieverRef('pe_knowledge');
 
 /**
  * Search activities, sports, and skills by semantic similarity.
@@ -43,6 +44,20 @@ export async function searchRecords(
 ): Promise<Document[]> {
   return ai.retrieve({
     retriever: recordRetriever,
+    query,
+    options: { k },
+  });
+}
+
+/**
+ * Search teacher-uploaded knowledge documents by semantic similarity.
+ */
+export async function searchKnowledge(
+  query: string,
+  k: number = 5,
+): Promise<Document[]> {
+  return ai.retrieve({
+    retriever: knowledgeRetriever,
     query,
     options: { k },
   });

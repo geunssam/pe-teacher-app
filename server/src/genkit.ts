@@ -20,6 +20,10 @@ export const ai = genkit({
         indexName: 'pe_records',
         embedder,
       },
+      {
+        indexName: 'pe_knowledge',
+        embedder,
+      },
     ]),
   ],
   model: 'googleai/gemini-2.5-flash',

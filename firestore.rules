@@ -54,6 +54,11 @@ service cloud.firestore {
       match /curriculum/{docId} {
         allow read, write: if isOwner(uid);
       }
+
+      // knowledgeDocs — AI 학습 자료 메타데이터
+      match /knowledgeDocs/{docId} {
+        allow read, write: if isOwner(uid);
+      }
     }
 
     // 기본: 모든 접근 거부

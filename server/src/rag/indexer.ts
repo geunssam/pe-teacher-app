@@ -8,17 +8,20 @@ import {
   skillToDocument,
   standardToDocument,
   recordToDocument,
+  knowledgeChunkToDocument,
   type Activity,
   type CurriculumActivity,
   type Sport,
   type Skill,
   type Standard,
   type ClassRecord,
+  type KnowledgeChunk,
 } from './dataLoader.js';
 
 const activityIndexer = devLocalIndexerRef('pe_activities');
 const curriculumIndexer = devLocalIndexerRef('pe_curriculum');
 const recordIndexer = devLocalIndexerRef('pe_records');
+const knowledgeIndexer = devLocalIndexerRef('pe_knowledge');
 
 // --- Rate-limit-safe batch indexing ---
 
@@ -108,5 +111,23 @@ export async function indexRecords(
   }
 
   const embedded = await indexInBatches(recordIndexer, records.map(recordToDocument), '수업기록');
+  return { embedded };
+}
+
+/**
+ * Index knowledge chunks from teacher-uploaded documents.
+ */
+export async function indexKnowledgeChunks(
+  chunks: KnowledgeChunk[],
+): Promise<{ embedded: number }> {
+  if (chunks.length === 0) {
+    return { embedded: 0 };
+  }
+
+  const embedded = await indexInBatches(
+    knowledgeIndexer,
+    chunks.map(knowledgeChunkToDocument),
+    '교사자료',
+  );
   return { embedded };
 }

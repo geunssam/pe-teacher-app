@@ -81,6 +81,32 @@ export interface Standard {
   fmsCategories?: string[];
 }
 
+// --- Knowledge chunk shape (uploaded by teacher) ---
+
+export interface KnowledgeChunk {
+  id: string;
+  docId: string;
+  title: string;
+  content: string;
+  chunkIndex: number;
+  sourceType: 'pdf' | 'text';
+}
+
+export function knowledgeChunkToDocument(chunk: KnowledgeChunk): Document {
+  const text = [
+    `제목: ${chunk.title}`,
+    `출처: ${chunk.sourceType === 'pdf' ? 'PDF 업로드' : '텍스트 입력'}`,
+    `내용:\n${chunk.content}`,
+  ].join('\n');
+
+  return Document.fromText(text, {
+    docId: chunk.docId,
+    chunkIndex: chunk.chunkIndex,
+    sourceType: chunk.sourceType,
+    title: chunk.title,
+  });
+}
+
 // --- Class record shape (from localStorage pe_class_records) ---
 
 export interface ClassRecord {

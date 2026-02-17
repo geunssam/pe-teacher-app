@@ -1,16 +1,21 @@
-// 자료실 페이지 — 종목/기술/활동/변형 서브탭 + 검색 + CRUD | 훅→useModuleLibrary, 컴포넌트→components/library/
-import { useState, useMemo } from 'react'
+// 자료실 페이지 — 종목/기술/활동/변형/AI자료 서브탭 + 검색 + CRUD | 훅→useModuleLibrary, 컴포넌트→components/library/
+import { useState, useMemo, lazy, Suspense } from 'react'
 import { useModuleLibrary } from '../hooks/useModuleLibrary'
 import ModuleItemCard from '../components/library/ModuleItemCard'
 import ModuleDetailModal from '../components/library/ModuleDetailModal'
 import ModuleAddForm from '../components/library/ModuleAddForm'
 import toast from 'react-hot-toast'
 
+const KnowledgeManager = lazy(
+  () => import('../components/settings/KnowledgeManager')
+)
+
 const SUB_TABS = [
   { key: 'sports', label: '종목', emoji: '⚽' },
   { key: 'skills', label: '기술', emoji: '🎯' },
   { key: 'activities', label: '활동', emoji: '🏃' },
   { key: 'modifiers', label: '변형', emoji: '🔧' },
+  { key: 'ai', label: '참고자료', emoji: '📑' },
 ]
 
 export default function LibraryPage() {
@@ -86,8 +91,12 @@ export default function LibraryPage() {
         ))}
       </div>
 
-      {/* Add form mode */}
-      {isAddMode ? (
+      {/* AI 자료 탭 */}
+      {activeTab === 'ai' ? (
+        <Suspense fallback={<div className="text-center py-8 text-sm text-gray-400">불러오는 중...</div>}>
+          <KnowledgeManager />
+        </Suspense>
+      ) : isAddMode ? (
         <ModuleAddForm
           type={activeTab}
           onSave={handleAdd}

@@ -1,6 +1,6 @@
 import { z } from 'genkit';
 import { ai } from '../genkit.js';
-import { searchActivities, searchRecords } from '../rag/retriever.js';
+import { searchActivities, searchRecords, searchKnowledge } from '../rag/retriever.js';
 import { parseIntent } from '../utils/intentParser.js';
 
 // --- Schemas ---
@@ -83,9 +83,10 @@ export const recommendFlow = ai.defineFlow(
       .join(' ');
 
     // RAG search in parallel
-    const [activityDocs, recordDocs] = await Promise.all([
+    const [activityDocs, recordDocs, knowledgeDocs] = await Promise.all([
       searchActivities(searchQuery, 8),
       searchRecords(searchQuery, 5),
+      searchKnowledge(searchQuery, 3).catch(() => []),
     ]);
 
     // Build context for LLM
@@ -120,6 +121,11 @@ export const recommendFlow = ai.defineFlow(
           .join(', ')
       : '제한 없음';
 
+    const knowledgeContext =
+      knowledgeDocs.length > 0
+        ? knowledgeDocs.map((doc) => doc.text).join('\n---\n')
+        : '';
+
     const userPrompt = `[교사 요청]
 ${input.query}
 
@@ -134,8 +140,9 @@ ${activityContext}
 
 [최근 수업 기록]
 ${recordContext}
+${knowledgeContext ? `\n[교사 참고 자료]\n${knowledgeContext}` : ''}
 
-위 관련 활동 중에서 3개를 추천해 주세요.`;
+위 관련 활동 중에서 3개를 추천해 주세요. 교사 참고 자료가 있다면 적극 반영하세요.`;
 
     const result = await ai.generate({
       system: SYSTEM_PROMPT,

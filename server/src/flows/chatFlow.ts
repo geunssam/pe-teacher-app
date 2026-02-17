@@ -1,6 +1,6 @@
 import { z } from 'genkit';
 import { ai } from '../genkit.js';
-import { searchActivities, searchCurriculum } from '../rag/retriever.js';
+import { searchActivities, searchCurriculum, searchKnowledge } from '../rag/retriever.js';
 
 const ChatInputSchema = z.object({
   message: z.string().describe('User message'),
@@ -30,7 +30,8 @@ const CHAT_SYSTEM_PROMPT = `당신은 초등 체육 수업 전문 AI 어시스�
 - 한국어로 답변합니다.
 - 간결하고 실용적인 답변을 제공합니다.
 - 안전 관련 내용은 반드시 포함합니다.
-- 관련 활동이 있으면 구체적으로 안내합니다.`;
+- 관련 활동이 있으면 구체적으로 안내합니다.
+- [교사 업로드 자료]가 있으면 적극 참고하여 답변합니다.`;
 
 export const chatFlow = ai.defineFlow(
   {
@@ -39,10 +40,11 @@ export const chatFlow = ai.defineFlow(
     outputSchema: ChatOutputSchema,
   },
   async (input) => {
-    // RAG: search for relevant context
-    const [activityDocs, curriculumDocs] = await Promise.all([
+    // RAG: search for relevant context (parallel)
+    const [activityDocs, curriculumDocs, knowledgeDocs] = await Promise.all([
       searchActivities(input.message, 5),
       searchCurriculum(input.message, 3),
+      searchKnowledge(input.message, 3).catch(() => []),
     ]);
 
     const contextParts: string[] = [];
@@ -58,6 +60,13 @@ export const chatFlow = ai.defineFlow(
       contextParts.push(
         '[교육과정 정보]',
         curriculumDocs.map((doc) => doc.text).join('\n---\n'),
+      );
+    }
+
+    if (knowledgeDocs.length > 0) {
+      contextParts.push(
+        '[교사 업로드 자료]',
+        knowledgeDocs.map((doc) => doc.text).join('\n---\n'),
       );
     }
 

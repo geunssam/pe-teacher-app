@@ -7,6 +7,8 @@ import { startFlowServer } from '@genkit-ai/express';
 import { chatFlow } from './flows/chatFlow.js';
 import { recommendFlow } from './flows/recommendFlow.js';
 import { syncRecordsFlow } from './flows/syncRecordsFlow.js';
+import { ingestDocumentFlow } from './flows/ingestDocumentFlow.js';
+import { uploadPdfFlow } from './flows/uploadPdfFlow.js';
 
 import { indexStaticData } from './rag/indexer.js';
 import type {
@@ -145,11 +147,12 @@ async function main(): Promise<void> {
   const port = Number(process.env.PORT) || 3400;
 
   startFlowServer({
-    flows: [chatFlow, recommendFlow, syncRecordsFlow],
+    flows: [chatFlow, recommendFlow, syncRecordsFlow, ingestDocumentFlow, uploadPdfFlow],
     port,
     cors: {
       origin: '*',  // dev mode: allow all origins
     },
+    jsonParserOptions: { limit: '10mb' },  // PDF base64 uploads (5MB file → ~6.7MB base64)
   });
 
   console.log(`[server] Flow API server listening on http://localhost:${port}`);
@@ -157,6 +160,8 @@ async function main(): Promise<void> {
   console.log(`  POST http://localhost:${port}/chatFlow`);
   console.log(`  POST http://localhost:${port}/recommendFlow`);
   console.log(`  POST http://localhost:${port}/syncRecordsFlow`);
+  console.log(`  POST http://localhost:${port}/ingestDocumentFlow`);
+  console.log(`  POST http://localhost:${port}/uploadPdfFlow`);
 }
 
 main().catch(console.error);
