@@ -7,10 +7,11 @@ import { useClassManager } from '../hooks/useClassManager'
 import { useSettings } from '../hooks/useSettings'
 import { useSchedule } from '../hooks/useSchedule'
 import { useAuthContext } from '../contexts/AuthContext'
-import { findStationsWithFallback } from '../utils/stationFinder'
+import { useLocationPicker } from '../hooks/useLocationPicker'
 import { setDocument } from '../services/firestore'
 import { getUid } from '../hooks/useDataSource'
 import LocationMapPicker from '../components/settings/LocationMapPicker'
+import StationPicker from '../components/weather/StationPicker'
 import toast from 'react-hot-toast'
 
 const TOTAL_STEPS = 6
@@ -100,18 +101,26 @@ export default function SetupWizard() {
   const { updateLocation } = useSettings()
   const { updateBaseCell, WEEKDAYS, WEEKDAY_LABELS, MAX_PERIODS } = useSchedule()
   const { user } = useAuthContext()
+  const {
+    location,
+    detecting,
+    showMapPicker,
+    pendingLocation,
+    nearbyStations,
+    stationPickerSource,
+    detectCurrentLocation,
+    selectFromMap,
+    confirmStation,
+    cancelStationPicker,
+    openMapPicker,
+    closeMapPicker,
+  } = useLocationPicker()
 
   const [currentStep, setCurrentStep] = useState(1)
   const [saving, setSaving] = useState(false)
 
   // Step 1: 학교급
   const [schoolLevel, setSchoolLevel] = useState(null)
-
-  // Step 2: 학교 위치
-  const [selectedSchool, setSelectedSchool] = useState(null)
-  const [showMapPicker, setShowMapPicker] = useState(false)
-  const [stationCandidates, setStationCandidates] = useState([])
-  const [selectedStation, setSelectedStation] = useState(null)
 
   // Step 3: 담당 학년
   const [selectedGrades, setSelectedGrades] = useState([])
@@ -146,50 +155,15 @@ export default function SetupWizard() {
   }
 
   // =============================================
-  // Step 2: 학교 위치 (LocationMapPicker 모달 사용)
+  // Step 2: 학교 위치 (useLocationPicker 훅 사용)
   // =============================================
-  const handleMapSelect = useCallback(async (lat, lon, placeInfo) => {
-    setShowMapPicker(false)
-
-    const name = placeInfo?.name || '선택한 위치'
-    const address = placeInfo?.address || placeInfo?.jibunAddress || ''
-
-    setSelectedSchool({ name, address, lat, lon })
-
-    // 측정소 후보 3개 가져오기
-    try {
-      const stations = await findStationsWithFallback(lat, lon, address)
-      if (stations && stations.length > 0) {
-        setStationCandidates(stations.slice(0, 3))
-        setSelectedStation(stations[0].stationName)
-        updateLocation({ name, address, lat, lon, stationName: stations[0].stationName })
-      } else {
-        setStationCandidates([])
-        setSelectedStation('대전')
-        updateLocation({ name, address, lat, lon, stationName: '대전' })
-      }
-    } catch (err) {
-      console.warn('Station matching failed:', err)
-      setStationCandidates([])
-      setSelectedStation('대전')
-      updateLocation({ name, address, lat, lon, stationName: '대전' })
+  const handleStep2Next = () => {
+    if (!location.lat || !location.lon) {
+      toast.error('학교 위치를 설정해주세요')
+      return
     }
-  }, [updateLocation])
-
-  const handleStationSelect = useCallback((stationName) => {
-    setSelectedStation(stationName)
-    if (selectedSchool) {
-      updateLocation({
-        name: selectedSchool.name,
-        address: selectedSchool.address,
-        lat: selectedSchool.lat,
-        lon: selectedSchool.lon,
-        stationName,
-      })
-    }
-  }, [selectedSchool, updateLocation])
-
-  const handleStep2Next = () => goNext()
+    goNext()
+  }
   const handleStep2Skip = () => goNext()
 
   // =============================================
@@ -386,82 +360,75 @@ export default function SetupWizard() {
               지도에서 학교를 검색하면 날씨와 대기질 측정소가 자동으로 설정됩니다
             </p>
 
-            {/* 선택 완료 안내 */}
-            {selectedSchool ? (
-              <>
-                <div className="p-md bg-success/10 border border-success/30 rounded-xl mb-md">
-                  <div className="flex items-start gap-sm">
-                    <div className="mt-0.5 text-success shrink-0">
+            {/* 현재 위치 정보 */}
+            <div className="p-md bg-white/60 rounded-xl border border-white/80 mb-lg">
+              <div className="flex items-start justify-between gap-md mb-md">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-sm mb-xs">
+                    <div className="text-primary shrink-0">
                       <LocationIcon />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-body-bold text-success">{selectedSchool.name}</p>
-                      <p className="text-caption text-success/80">{selectedSchool.address}</p>
-                    </div>
+                    <p className="text-body-bold truncate">
+                      {location.address || '위치 미설정'}
+                    </p>
                   </div>
+                  {location.stationName && (
+                    <p className="text-caption text-muted">
+                      🌫️ {location.stationName} 측정소 기준
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-sm shrink-0">
                   <button
-                    onClick={() => setShowMapPicker(true)}
-                    className="mt-sm text-caption text-primary underline"
+                    onClick={detectCurrentLocation}
+                    disabled={detecting}
+                    className="p-2 bg-white/60 hover:bg-white/80 rounded-lg transition-all border border-white/80 disabled:opacity-50"
+                    title="현재 위치로 설정"
                   >
-                    다시 선택하기
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={openMapPicker}
+                    className="p-2 bg-white/60 hover:bg-white/80 rounded-lg transition-all border border-white/80"
+                    title="지도에서 위치 선택"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                      <line x1="8" y1="2" x2="8" y2="18" />
+                      <line x1="16" y1="6" x2="16" y2="22" />
+                    </svg>
                   </button>
                 </div>
-
-                {/* 측정소 선택 */}
-                {stationCandidates.length > 0 && (
-                  <div className="mb-md">
-                    <p className="text-caption text-muted mb-sm">대기질 측정소 선택</p>
-                    <div className="grid grid-cols-3 gap-sm">
-                      {stationCandidates.map((station) => (
-                        <button
-                          key={station.stationName}
-                          onClick={() => handleStationSelect(station.stationName)}
-                          className={`p-sm rounded-xl border transition-all text-center ${
-                            selectedStation === station.stationName
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className="text-xs font-semibold truncate">{station.stationName}</div>
-                          <div className="text-[10px] text-muted truncate">~{station.distance?.toFixed(1)}km</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <button
-                onClick={() => setShowMapPicker(true)}
-                className="w-full p-lg rounded-xl border-2 border-dashed border-primary/40
-                           hover:border-primary hover:bg-primary/5 transition-all
-                           flex flex-col items-center gap-sm text-primary"
-              >
-                <span className="text-2xl">🗺️</span>
-                <span className="text-body-bold">지도에서 학교 검색하기</span>
-                <span className="text-caption text-muted">
-                  학교명을 검색하거나 지도를 클릭하여 위치를 선택하세요
-                </span>
-              </button>
-            )}
+              </div>
+              <p className="text-caption text-muted">
+                💡 GPS 버튼으로 현재 위치를 감지하거나, 지도 버튼으로 학교를 검색하세요
+              </p>
+            </div>
 
             <NavButtons
               onBack={goBack}
               onNext={handleStep2Next}
+              nextDisabled={!location.lat || !location.lon}
               showSkip
               onSkip={handleStep2Skip}
             />
-
-            {/* LocationMapPicker 모달 */}
-            {showMapPicker && (
-              <LocationMapPicker
-                initialLat={selectedSchool?.lat ?? 36.3504}
-                initialLon={selectedSchool?.lon ?? 127.3845}
-                initialAddress={selectedSchool?.address || ''}
-                onSelect={handleMapSelect}
-                onCancel={() => setShowMapPicker(false)}
-              />
-            )}
           </div>
         )}
 
@@ -699,6 +666,31 @@ export default function SetupWizard() {
         )}
 
       </div>
+
+      {/* ===== 모달들 (최상위 레벨) ===== */}
+      {/* 측정소 선택 모달 */}
+      {pendingLocation && nearbyStations.length > 0 && (
+        <StationPicker
+          locationName={pendingLocation.address || pendingLocation.name}
+          source={stationPickerSource}
+          stations={nearbyStations}
+          centerLat={pendingLocation.lat}
+          centerLon={pendingLocation.lon}
+          onSelect={(station) => confirmStation(station)}
+          onCancel={cancelStationPicker}
+        />
+      )}
+
+      {/* 지도 위치 선택 모달 */}
+      {showMapPicker && (
+        <LocationMapPicker
+          initialLat={location.lat}
+          initialLon={location.lon}
+          initialAddress={location.address || ''}
+          onSelect={selectFromMap}
+          onCancel={closeMapPicker}
+        />
+      )}
     </div>
   )
 }

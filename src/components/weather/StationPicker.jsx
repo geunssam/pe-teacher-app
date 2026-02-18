@@ -47,7 +47,7 @@ export default function StationPicker({
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-md rounded-[24px] border border-white/60 p-5"
+        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-[24px] border border-white/60 p-5"
         style={{
           background: 'linear-gradient(145deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6))',
           backdropFilter: 'blur(12px)',

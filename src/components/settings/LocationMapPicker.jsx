@@ -255,8 +255,9 @@ export default function LocationMapPicker({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-4xl h-[85vh] bg-bg rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto">
+      <div className="min-h-full flex items-center justify-center">
+        <div className="w-full max-w-4xl h-[85vh] bg-bg rounded-3xl overflow-hidden shadow-2xl flex flex-col my-8">
         {/* 헤더 */}
         <div className="p-4 bg-gradient-to-r from-primary/90 to-primary/70 text-white shrink-0">
           <h2 className="text-lg font-bold">🗺️ 지도에서 위치 선택</h2>
@@ -356,6 +357,7 @@ export default function LocationMapPicker({
           >
             이 위치로 설정
           </button>
+        </div>
         </div>
       </div>
     </div>
