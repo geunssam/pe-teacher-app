@@ -2,8 +2,11 @@
 import standards from '../data/curriculum/standards.json'
 import g3Sports from '../data/curriculum/activities/grade3_sports.json'
 import g3Movement from '../data/curriculum/activities/grade3_movement.json'
+import g4Movement from '../data/curriculum/activities/grade4_movement.json'
 import g4Sports from '../data/curriculum/activities/grade4_sports.json'
+import g5Movement from '../data/curriculum/activities/grade5_movement.json'
 import g5Sports from '../data/curriculum/activities/grade5_sports.json'
+import g6Movement from '../data/curriculum/activities/grade6_movement.json'
 import g6Sports from '../data/curriculum/activities/grade6_sports.json'
 import unitTemplates from '../data/curriculum/unitTemplates.json'
 
@@ -237,8 +240,11 @@ function buildActivityContext() {
     { grade: '3학년', domain: '스포츠', data: g3Sports },
     { grade: '3학년', domain: '운동', data: g3Movement },
     { grade: '4학년', domain: '스포츠', data: g4Sports },
+    { grade: '4학년', domain: '운동', data: g4Movement },
     { grade: '5학년', domain: '스포츠', data: g5Sports },
+    { grade: '5학년', domain: '운동', data: g5Movement },
     { grade: '6학년', domain: '스포츠', data: g6Sports },
+    { grade: '6학년', domain: '운동', data: g6Movement },
   ]
   const lines = []
   for (const { grade, domain, data } of allFiles) {

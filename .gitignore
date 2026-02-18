@@ -41,3 +41,15 @@ src/data/assets/*.zip
 
 # Temp/scratch files
  json 동기화
+
+# bkit/PDCA tool artifacts
+docs/.bkit-memory.json
+docs/.pdca-status.json
+docs/.pdca-snapshots/
+**/docs/.bkit-memory.json
+**/docs/.pdca-status.json
+**/docs/.pdca-snapshots/
+
+# Preview/scratch files
+*.preview.html
+PEhub*
