@@ -129,6 +129,8 @@ export const judgeOutdoorClass = (weather, air) => {
     pm10Grade: Math.max(1, Math.min(4, Math.floor(toNumber(air?.pm10Grade, 1)))),
     pm25Value: toNumber(air?.pm25Value, 15),
     pm25Grade: Math.max(1, Math.min(4, Math.floor(toNumber(air?.pm25Grade, 1)))),
+    uvIndex: toNumber(air?.uvIndex, 3),
+    uvGrade: Math.max(1, Math.min(5, Math.floor(toNumber(air?.uvGrade, 2)))),
   }
 
   const checks = {
@@ -142,14 +144,39 @@ export const judgeOutdoorClass = (weather, air) => {
       label: '미세먼지',
       value: `${safeAir.pm10Value}㎍/㎥ (${getGradeInfo(safeAir.pm10Grade).text})`,
     },
+    pm25: {
+      pass: safeAir.pm25Value <= 35,
+      label: '초미세먼지',
+      value: `${safeAir.pm25Value}㎍/㎥ (${getGradeInfo(safeAir.pm25Grade).text})`,
+    },
     temp: {
       pass: safeWeather.t1h >= -5 && safeWeather.t1h <= 33,
       label: '기온',
       value: `${safeWeather.t1h}℃`,
     },
+    uv: {
+      pass: safeAir.uvIndex < 11,
+      label: '자외선',
+      value: `${safeAir.uvIndex}/11+`,
+    },
     pm10Warning: {
       pass: safeAir.pm10Value <= 50,
       label: '미세먼지 주의',
+      value: '',
+    },
+    pm25Warning: {
+      pass: safeAir.pm25Value <= 15,
+      label: '초미세먼지 주의',
+      value: '',
+    },
+    uvWarning: {
+      pass: safeAir.uvIndex < 8,
+      label: '자외선 주의',
+      value: '',
+    },
+    tempWarning: {
+      pass: safeWeather.t1h >= 0 && safeWeather.t1h <= 28,
+      label: '기온 주의',
       value: '',
     },
   }
@@ -159,17 +186,20 @@ export const judgeOutdoorClass = (weather, air) => {
     emoji: '✅',
     text: '야외 수업 최적',
     color: '#059669',
+    bg: 'rgba(5, 150, 105, 0.08)',
     reason: '',
     checks,
   }
 
+  // 실내 권장 (빨강) - 강수, 미세먼지 나쁨, 극한 기온, 자외선 위험
   if (!checks.rain.pass) {
     return {
       ...baseResult,
-      status: 'not-recommended',
+      status: 'bad',
       emoji: '❌',
       text: '실내 수업 추천',
-      color: '#F57C7C',
+      color: '#DC2626',
+      bg: 'rgba(220, 38, 38, 0.08)',
       reason: `${checks.rain.value} 예보`,
     }
   }
@@ -177,35 +207,113 @@ export const judgeOutdoorClass = (weather, air) => {
   if (!checks.pm10.pass) {
     return {
       ...baseResult,
-      status: 'not-recommended',
+      status: 'bad',
       emoji: '❌',
       text: '실내 수업 권장',
-      color: '#F57C7C',
+      color: '#DC2626',
+      bg: 'rgba(220, 38, 38, 0.08)',
       reason: '미세먼지 나쁨',
+    }
+  }
+
+  if (!checks.pm25.pass) {
+    return {
+      ...baseResult,
+      status: 'bad',
+      emoji: '❌',
+      text: '실내 수업 권장',
+      color: '#DC2626',
+      bg: 'rgba(220, 38, 38, 0.08)',
+      reason: '초미세먼지 나쁨',
     }
   }
 
   if (!checks.temp.pass) {
     return {
       ...baseResult,
-      status: 'not-recommended',
+      status: 'bad',
       emoji: '❌',
       text: '실내 수업 권장',
-      color: '#F57C7C',
-      reason: safeWeather.t1h < -5 ? '기온이 너무 낮음' : '기온이 너무 높음',
+      color: '#DC2626',
+      bg: 'rgba(220, 38, 38, 0.08)',
+      reason: safeWeather.t1h < -5 ? '한파 주의' : '폭염 주의',
     }
   }
 
+  if (!checks.uv.pass) {
+    return {
+      ...baseResult,
+      status: 'bad',
+      emoji: '❌',
+      text: '실내 수업 권장',
+      color: '#DC2626',
+      bg: 'rgba(220, 38, 38, 0.08)',
+      reason: '자외선 위험',
+    }
+  }
+
+  // 주의 (노랑) - 미세먼지 보통, 자외선 매우높음, 기온 주의
   if (!checks.pm10Warning.pass) {
     return {
       ...baseResult,
       status: 'caution',
       emoji: '⚠️',
-      text: '야외 가능 (마스크 권장)',
+      text: '야외 가능 (마스크)',
       color: '#D97706',
-      reason: '미세먼지 보통~나쁨 수준',
+      bg: 'rgba(217, 119, 6, 0.08)',
+      reason: '미세먼지 보통',
     }
   }
 
+  if (!checks.pm25Warning.pass) {
+    return {
+      ...baseResult,
+      status: 'caution',
+      emoji: '⚠️',
+      text: '야외 가능 (마스크)',
+      color: '#D97706',
+      bg: 'rgba(217, 119, 6, 0.08)',
+      reason: '초미세먼지 보통',
+    }
+  }
+
+  if (!checks.uvWarning.pass) {
+    return {
+      ...baseResult,
+      status: 'caution',
+      emoji: '⚠️',
+      text: '야외 가능 (자외선 차단)',
+      color: '#D97706',
+      bg: 'rgba(217, 119, 6, 0.08)',
+      reason: '자외선 매우높음',
+    }
+  }
+
+  if (!checks.tempWarning.pass) {
+    return {
+      ...baseResult,
+      status: 'caution',
+      emoji: '⚠️',
+      text: '야외 가능 (온도 주의)',
+      color: '#D97706',
+      bg: 'rgba(217, 119, 6, 0.08)',
+      reason: safeWeather.t1h < 0 ? '추위 주의' : '더위 주의',
+    }
+  }
+
+  // 양호 (연두) - 모든 조건 양호하지만 최적은 아님
+  if (safeAir.pm10Value > 30 || safeAir.pm25Value > 15 || safeAir.uvIndex >= 6 || safeWeather.t1h < 10 || safeWeather.t1h > 25) {
+    return {
+      ...baseResult,
+      status: 'good',
+      emoji: '😊',
+      text: '야외 수업 양호',
+      color: '#84CC16',
+      bg: 'rgba(132, 204, 22, 0.08)',
+      reason: '무난한 날씨',
+    }
+  }
+
+  // 최적 (초록) - 모든 조건 완벽
   return baseResult
 }

@@ -40,7 +40,7 @@ function InfoCard({ bg, emoji, title, value, valueColor, detail }) {
  * 기상 종합 카드
  * 6개 항목을 3x2 그리드 배치, 모든 카드 3줄 통일
  */
-export default function WeatherDetail({ weather, air, judgment }) {
+export default function WeatherDetail({ weather, air, judgment, onShowStandards }) {
   if (!weather) return null
 
   const skyInfo = SKY_CODE[weather.sky] || SKY_CODE[1]
@@ -62,7 +62,17 @@ export default function WeatherDetail({ weather, air, judgment }) {
 
   return (
     <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-xl border border-white/80 shadow-glass-strong">
-      <h3 className="text-card-title mb-md">기상 종합</h3>
+      <div className="flex items-center justify-between mb-md">
+        <h3 className="text-card-title">기상 종합</h3>
+        <button
+          onClick={onShowStandards}
+          className="px-3 py-1.5 bg-white/60 hover:bg-white/80 rounded-lg transition-all border border-white/80 flex items-center gap-1.5"
+          title="야외수업 기준 보기"
+        >
+          <span className="text-sm">📋</span>
+          <span className="text-sm font-semibold">권고 기준 보기</span>
+        </button>
+      </div>
 
       <div className="grid grid-cols-3 gap-2">
         <InfoCard bg={displayBg} emoji={displayEmoji} title="날씨" value={displayText} valueColor={displayColor} detail={`습도 ${weather.reh}%`} />

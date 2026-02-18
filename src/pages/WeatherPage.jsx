@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import WeatherDetail from '../components/weather/WeatherDetail'
 import AirQuality from '../components/weather/AirQuality'
 import HourlyForecast from '../components/weather/HourlyForecast'
+import OutdoorStandardsModal from '../components/weather/OutdoorStandardsModal'
 import StationPicker from '../components/weather/StationPicker'
 import LocationMapPicker from '../components/settings/LocationMapPicker'
 import { fetchWeatherData, fetchAirQualityData, fetchHourlyForecast } from '../services/weather'
@@ -32,6 +33,7 @@ export default function WeatherPage() {
   const [hourly, setHourly] = useState([])
   const [judgment, setJudgment] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showStandardsModal, setShowStandardsModal] = useState(false)
 
   const loadWeatherData = useCallback(async (silent = false) => {
     setLoading(true)
@@ -166,7 +168,12 @@ export default function WeatherPage() {
 
       {/* 컨텐츠: 기상 종합 → 시간별 → 대기질 상세 */}
       <div className="space-y-lg">
-        <WeatherDetail weather={weather} air={air} judgment={judgment} />
+        <WeatherDetail
+          weather={weather}
+          air={air}
+          judgment={judgment}
+          onShowStandards={() => setShowStandardsModal(true)}
+        />
         <HourlyForecast forecast={hourly} />
         <AirQuality air={air} />
       </div>
@@ -193,6 +200,11 @@ export default function WeatherPage() {
           onSelect={selectFromMap}
           onCancel={closeMapPicker}
         />
+      )}
+
+      {/* 야외수업 기준 모달 */}
+      {showStandardsModal && (
+        <OutdoorStandardsModal onClose={() => setShowStandardsModal(false)} />
       )}
     </div>
   )

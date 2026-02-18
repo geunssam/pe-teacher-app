@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-18T02:07:57.310Z",
+  "lastUpdated": "2026-02-18T02:59:08.904Z",
   "activeFeatures": [
     "recommend",
     "오늘체육뭐하지",
@@ -24,7 +24,8 @@
     "settings",
     "layout",
     "naverLocal.js",
-    "weather"
+    "weather",
+    "data"
   ],
   "primaryFeature": "recommend",
   "features": {
@@ -52,9 +53,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-15T00:15:19.228Z",
-        "lastUpdated": "2026-02-18T02:07:57.310Z"
+        "lastUpdated": "2026-02-18T02:39:40.719Z"
       },
-      "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/pages/SetupWizard.jsx"
+      "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/pages/WeatherPage.jsx"
     },
     "curriculum": {
       "phase": "do",
@@ -325,9 +326,22 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-18T02:01:48.652Z",
-        "lastUpdated": "2026-02-18T02:01:48.652Z"
+        "lastUpdated": "2026-02-18T02:59:08.904Z"
       },
-      "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/components/weather/StationPicker.jsx"
+      "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/components/weather/OutdoorStandardsModal.jsx"
+    },
+    "data": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T02:31:46.687Z",
+        "lastUpdated": "2026-02-18T02:35:58.885Z"
+      },
+      "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/data/mockWeather.js"
     }
   },
   "pipeline": {
@@ -338,7 +352,7 @@
   "session": {
     "startedAt": "2026-02-15T00:05:28.796Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-18T02:07:57.310Z"
+    "lastActivity": "2026-02-18T02:59:08.904Z"
   },
   "history": [
     {
@@ -2180,6 +2194,210 @@
     {
       "timestamp": "2026-02-18T02:07:57.310Z",
       "feature": "오늘체육뭐하지",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:14:08.616Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:14:33.037Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:14:50.831Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:31:46.687Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:32:16.521Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:32:28.302Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:32:36.473Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:32:44.982Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:34:59.891Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:35:06.627Z",
+      "feature": "오늘체육뭐하지",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:35:24.129Z",
+      "feature": "오늘체육뭐하지",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:35:35.800Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:35:45.202Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:35:58.885Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:38:53.216Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:39:12.745Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:39:20.258Z",
+      "feature": "오늘체육뭐하지",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:39:26.157Z",
+      "feature": "오늘체육뭐하지",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:39:33.108Z",
+      "feature": "오늘체육뭐하지",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:39:40.719Z",
+      "feature": "오늘체육뭐하지",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:42:38.947Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:42:52.779Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:43:12.689Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:43:23.250Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:43:33.934Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:44:20.137Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:48:40.853Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:48:55.935Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:49:03.907Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:49:11.619Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:58:39.250Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:58:53.029Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:58:58.358Z",
+      "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:59:08.904Z",
+      "feature": "weather",
       "phase": "do",
       "action": "updated"
     }
