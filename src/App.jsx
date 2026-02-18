@@ -1,6 +1,6 @@
 // 앱 루트 — React Router 설정, Auth 통합, 탭 레이아웃, ProtectedRoute(인증+학급설정 필수) | 탭메뉴→constants/navigation.jsx, 레이아웃→components/layout/
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { useClassManager } from './hooks/useClassManager'
 import { AuthProvider, useAuthContext } from './contexts/AuthContext'
@@ -8,6 +8,8 @@ import Header from './components/layout/Header'
 import AIChatPanel from './components/common/AIChatPanel'
 import { useConfirm } from './components/common/ConfirmDialog'
 import MigrationPrompt from './components/common/MigrationPrompt'
+import ErrorBoundary from './components/common/ErrorBoundary'
+import LoadingSpinner from './components/common/LoadingSpinner'
 
 // 페이지 이동 시 스크롤을 최상단으로
 function ScrollToTop() {
@@ -20,31 +22,23 @@ function ScrollToTop() {
   return null
 }
 
-// Pages
-import HomePage from './pages/HomePage'
-import WeatherPage from './pages/WeatherPage'
-import SchedulePage from './pages/SchedulePage'
-import CurriculumPage from './pages/CurriculumPage'
-
-import ClassesPage from './pages/ClassesPage'
-import LibraryPage from './pages/LibraryPage'
-import SetupWizard from './pages/SetupWizard'
-import SettingsPage from './pages/SettingsPage'
-import LoginPage from './pages/LoginPage'
+// Lazy-loaded pages (코드 스플리팅)
+const HomePage = lazy(() => import('./pages/HomePage'))
+const WeatherPage = lazy(() => import('./pages/WeatherPage'))
+const SchedulePage = lazy(() => import('./pages/SchedulePage'))
+const CurriculumPage = lazy(() => import('./pages/CurriculumPage'))
+const ClassesPage = lazy(() => import('./pages/ClassesPage'))
+const LibraryPage = lazy(() => import('./pages/LibraryPage'))
+const SetupWizard = lazy(() => import('./pages/SetupWizard'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
 
 // 인증 보호 라우트 (로그인 필수)
 function AuthRoute({ children }) {
   const { user, loading } = useAuthContext()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-textMuted">로딩 중...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   if (!user) {
@@ -60,12 +54,7 @@ function ProtectedRoute({ children }) {
 
   // Firestore 데이터 로딩 완료 전에는 스피너 표시 (위저드 오리다이렉트 방지)
   if (!dataReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary
-             rounded-full animate-spin mx-auto" />
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   if (!isSetupComplete()) {
@@ -85,7 +74,9 @@ function App() {
           v7_relativeSplatPath: true,
         }}
       >
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </Router>
     </AuthProvider>
   )
@@ -122,14 +113,7 @@ function AppContent() {
 
   // Show loading spinner during auth initialization
   if (loading && location.pathname !== '/login') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-textMuted">로딩 중...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   return (
@@ -142,92 +126,108 @@ function AppContent() {
 
       {/* 메인 콘텐츠 */}
       <main className="main-content">
-        <Routes>
-          {/* 로그인 페이지 */}
-          <Route path="/login" element={
-            user ? <Navigate to="/" replace /> : <LoginPage />
-          } />
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            {/* 로그인 페이지 */}
+            <Route path="/login" element={
+              user ? <Navigate to="/" replace /> : <LoginPage />
+            } />
 
-          {/* 학급 설정 위저드 */}
-          <Route path="/setup" element={
-            <AuthRoute>
-              <SetupWizard />
-            </AuthRoute>
-          } />
+            {/* 학급 설정 위저드 */}
+            <Route path="/setup" element={
+              <AuthRoute>
+                <SetupWizard />
+              </AuthRoute>
+            } />
 
-          {/* 보호된 라우트들 */}
-          <Route
-            path="/"
-            element={
-              <AuthRoute>
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/weather"
-            element={
-              <AuthRoute>
-                <ProtectedRoute>
-                  <WeatherPage />
-                </ProtectedRoute>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/schedule"
-            element={
-              <AuthRoute>
-                <ProtectedRoute>
-                  <SchedulePage />
-                </ProtectedRoute>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/curriculum"
-            element={
-              <AuthRoute>
-                <ProtectedRoute>
-                  <CurriculumPage />
-                </ProtectedRoute>
-              </AuthRoute>
-            }
-          />
+            {/* 보호된 라우트들 */}
+            <Route
+              path="/"
+              element={
+                <AuthRoute>
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <HomePage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                </AuthRoute>
+              }
+            />
+            <Route
+              path="/weather"
+              element={
+                <AuthRoute>
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <WeatherPage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                </AuthRoute>
+              }
+            />
+            <Route
+              path="/schedule"
+              element={
+                <AuthRoute>
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <SchedulePage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                </AuthRoute>
+              }
+            />
+            <Route
+              path="/curriculum"
+              element={
+                <AuthRoute>
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <CurriculumPage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                </AuthRoute>
+              }
+            />
 
-          <Route
-            path="/classes"
-            element={
-              <AuthRoute>
-                <ProtectedRoute>
-                  <ClassesPage />
-                </ProtectedRoute>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/library"
-            element={
-              <AuthRoute>
-                <ProtectedRoute>
-                  <LibraryPage />
-                </ProtectedRoute>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <AuthRoute>
-                <ProtectedRoute>
-                  <SettingsPage />
-                </ProtectedRoute>
-              </AuthRoute>
-            }
-          />
-        </Routes>
+            <Route
+              path="/classes"
+              element={
+                <AuthRoute>
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <ClassesPage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                </AuthRoute>
+              }
+            />
+            <Route
+              path="/library"
+              element={
+                <AuthRoute>
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <LibraryPage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                </AuthRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <AuthRoute>
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <SettingsPage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                </AuthRoute>
+              }
+            />
+          </Routes>
+        </Suspense>
       </main>
 
       {/* 마이그레이션 프롬프트 (신규 로그인 + 기존 localStorage 데이터 존재 시) */}
