@@ -51,8 +51,6 @@ export function useRecordManager({ records, setRecords, setClasses, syncRecordsT
       createdAt: now,
       classId,
       activity: '수업 활동',
-      domain: '스포츠',
-      sequence: nextSequence,
       ...record,
       sequence: Number.isFinite(nextSequence) ? nextSequence : currentCount + 1,
       domain: normalizedDomain,

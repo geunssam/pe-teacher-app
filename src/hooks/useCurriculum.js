@@ -7,15 +7,17 @@ import { generateId } from '../utils/generateId'
 import unitTemplatesData from '../data/curriculum/unitTemplates.json'
 import standardsData from '../data/curriculum/standards.json'
 
-// 3~6학년 전체 활동 import (현재 존재하는 파일만)
+// 3~6학년 전체 활동 import
 import g3Movement from '../data/curriculum/activities/grade3_movement.json'
 import g3Sports from '../data/curriculum/activities/grade3_sports.json'
 import g4Movement from '../data/curriculum/activities/grade4_movement.json'
 import g4Sports from '../data/curriculum/activities/grade4_sports.json'
+import g5Movement from '../data/curriculum/activities/grade5_movement.json'
 import g5Sports from '../data/curriculum/activities/grade5_sports.json'
+import g6Movement from '../data/curriculum/activities/grade6_movement.json'
 import g6Sports from '../data/curriculum/activities/grade6_sports.json'
 
-const ALL_SOURCES = [g3Movement, g3Sports, g4Movement, g4Sports, g5Sports, g6Sports]
+const ALL_SOURCES = [g3Movement, g3Sports, g4Movement, g4Sports, g5Movement, g5Sports, g6Movement, g6Sports]
 
 export function useCurriculum() {
   const units = useMemo(() => unitTemplatesData.templates, [])

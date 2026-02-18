@@ -1,7 +1,8 @@
 // 학생 명단 편집 — 학급별 학생 이름 추가/수정/삭제 | 부모→pages/ClassesPage.jsx, 데이터→hooks/useClassManager.js
 import { useState, useEffect } from 'react'
 import { HexColorPicker } from 'react-colorful'
-import { useClassManager, CLASS_COLOR_PRESETS } from '../../hooks/useClassManager'
+import { useClassManager } from '../../hooks/useClassManager'
+import { CLASS_COLOR_PRESETS } from '../../constants/classColors'
 import toast from 'react-hot-toast'
 import { confirm } from '../common/ConfirmDialog'
 import { generateStudentId } from '../../utils/generateId'
