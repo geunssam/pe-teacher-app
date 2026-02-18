@@ -47,7 +47,7 @@ export default function AIButton({
           </svg>
         </span>
       ) : (
-        <span className="text-sm">&#10024;</span>
+        <img src="/ai-sparkle-sm.png" alt="" width="14" height="14" className="pointer-events-none" />
       )}
       <span>{loading ? 'AI가 생각하고 있어요...' : label}</span>
     </button>

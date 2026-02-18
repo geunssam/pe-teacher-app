@@ -32,7 +32,7 @@ export default function AIDailySuggestion({ weather, schedule, recentRecords }) 
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5 mb-1.5">
-          <span className="text-sm">&#10024;</span>
+          <img src="/ai-sparkle-sm.png" alt="" width="16" height="16" className="pointer-events-none" />
           <span className="text-[11px] font-bold" style={{ color: '#7C3AED' }}>
             AI 오늘의 제안
           </span>
