@@ -7,6 +7,9 @@ import { getUid } from './useDataSource'
 import { setDocument, getDocument, getCollection, commitBatchChunked } from '../services/firestore'
 import { generateClassId, generateRecordId, generateStudentId } from '../utils/generateId'
 import { syncRecords as genkitSyncRecords } from '../services/genkit'
+import { toLocalDateString } from '../utils/recordDate'
+import { CLASS_COLOR_PRESETS } from '../constants/classColors'
+export { CLASS_COLOR_PRESETS } from '../constants/classColors'
 import toast from 'react-hot-toast'
 
 // Firestore 비호환 데이터 정제 (undefined → null, 순환 참조 제거)
@@ -40,40 +43,6 @@ function trimLargeFields(record) {
  * - users/{uid}/classes/{classId}/roster/{studentId} → { num, name, gender, note }
  * - users/{uid}/classes/{classId}/records/{recordId} → { date, activity, domain, ... }
  */
-
-// 학급별 색상 프리셋
-export const CLASS_COLOR_PRESETS = [
-  { name: '분홍색', bg: '#FCE7F3', text: '#9F1239' },
-  { name: '파란색', bg: '#DBEAFE', text: '#1E40AF' },
-  { name: '초록색', bg: '#D1FAE5', text: '#065F46' },
-  { name: '노란색', bg: '#FEF3C7', text: '#92400E' },
-  { name: '보라색', bg: '#EDE9FE', text: '#5B21B6' },
-  { name: '주황색', bg: '#FFEDD5', text: '#9A3412' },
-  { name: '청록색', bg: '#CCFBF1', text: '#115E59' },
-  { name: '빨간색', bg: '#FEE2E2', text: '#991B1B' },
-]
-
-const toLocalDateString = (value) => {
-  if (!value) return ''
-
-  if (value instanceof Date) {
-    const year = value.getFullYear()
-    const month = String(value.getMonth() + 1).padStart(2, '0')
-    const day = String(value.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  if (typeof value === 'string') {
-    return value.slice(0, 10)
-  }
-
-  const fallback = new Date(value)
-  if (Number.isNaN(fallback.getTime())) {
-    return ''
-  }
-
-  return toLocalDateString(fallback)
-}
 
 export function useClassManager() {
   const [classSetup, setClassSetup] = useLocalStorage('pe_class_setup', null)
@@ -630,7 +599,6 @@ export function useClassManager() {
     // 색상 관리
     getClassColor,
     setClassColor,
-    CLASS_COLOR_PRESETS,
 
     // 명단 관리
     updateRoster,
