@@ -4,8 +4,9 @@ import { HexColorPicker } from 'react-colorful'
 import { useClassManager, CLASS_COLOR_PRESETS } from '../../hooks/useClassManager'
 import toast from 'react-hot-toast'
 import { confirm } from '../common/ConfirmDialog'
-import { getRecordSortValue, formatRecordDate } from '../../utils/recordDate'
 import { generateStudentId } from '../../utils/generateId'
+import { exportHistoryPdf } from '../../utils/exportHistoryPdf'
+import HistoryTab from './HistoryTab'
 
 export default function RosterEditor({ classInfo, onClose }) {
   const { getRoster, getClassRecords, updateRoster, setClassColor } = useClassManager()
@@ -51,7 +52,7 @@ export default function RosterEditor({ classInfo, onClose }) {
       id: generateStudentId(),
       num: localRoster.length + 1,
       name: '',
-      gender: '남', // 기본값을 남자로 설정
+      gender: '남',
       note: '',
     }
     setLocalRoster((prev) => [...prev, newStudent])
@@ -68,7 +69,7 @@ export default function RosterEditor({ classInfo, onClose }) {
           .filter((student) => student.id !== studentId)
           .map((student, index) => ({
             ...student,
-            num: index + 1, // 번호 재정렬
+            num: index + 1,
           }))
       )
       setHasChanges(true)
@@ -83,12 +84,11 @@ export default function RosterEditor({ classInfo, onClose }) {
     }
 
     const names = bulkText
-      .split(/[\n,]/) // 줄바꿈 또는 쉼표로 분리
+      .split(/[\n,]/)
       .map((name) => name.trim())
       .filter((name) => name.length > 0)
 
     const updatedRoster = names.map((name, index) => {
-      // 기존 학생이 있으면 이름만 업데이트, 없으면 새로 생성
       const existingStudent = localRoster[index]
 
       if (existingStudent) {
@@ -98,7 +98,7 @@ export default function RosterEditor({ classInfo, onClose }) {
           id: generateStudentId(),
           num: index + 1,
           name,
-          gender: '남', // 기본값을 남자로 설정
+          gender: '남',
           note: '',
         }
       }
@@ -138,178 +138,7 @@ export default function RosterEditor({ classInfo, onClose }) {
     onClose()
   }
 
-  const handleExportHistoryPdf = () => {
-    if (!classRecords || classRecords.length === 0) {
-      toast.error('출력할 수업 이력이 없습니다')
-      return
-    }
-
-    const className = `${classInfo.grade}학년 ${classInfo.classNum}반`
-    const escapeHtml = (text) =>
-      String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-
-    const sortedRecords = [...classRecords].sort(
-      (a, b) =>
-        getRecordSortValue(b.recordedAt || b.createdAt || b.date) -
-        getRecordSortValue(a.recordedAt || a.createdAt || a.date)
-    )
-
-    const getRecordText = (record, ...candidates) => {
-      for (const key of candidates) {
-        const value = record?.[key]
-        if (value === undefined || value === null) {
-          continue
-        }
-
-        const trimmed = String(value).trim()
-        if (trimmed) {
-          return trimmed
-        }
-      }
-      return '-'
-    }
-
-    const getRecordDisplayDate = (record) =>
-      formatRecordDate(record?.recordedAt || record?.createdAt || record?.date)
-    const getRecordClassDate = (record) =>
-      record?.classDate ? formatRecordDate(record.classDate) : ''
-
-    const rows = sortedRecords
-      .map((record, index) => {
-        const recordDate = getRecordDisplayDate(record)
-        const classDate = getRecordClassDate(record)
-        const activity = getRecordText(record, 'activity', 'title', 'name')
-        const domain = getRecordText(record, 'domain', 'lessonType')
-        const sequence =
-          Number.isFinite(Number(record.sequence)) && Number(record.sequence) > 0
-            ? String(Math.trunc(Number(record.sequence)))
-            : '-'
-        const dayLabel = record.dayLabel || '-'
-        const periodLabel = record.period ? `${record.period}교시` : '차시 미기록'
-        const variation = getRecordText(record, 'variation', 'description')
-        const memo = getRecordText(record, 'memo', 'memoText', 'note', 'description')
-        const performance = getRecordText(record, 'performance', 'grade', 'level')
-        const classDateLabel =
-          classDate && classDate !== recordDate
-            ? ` · 수업일 ${classDate}`
-            : ''
-
-        return `<tr>
-          <td>${escapeHtml(index + 1)}</td>
-          <td>${escapeHtml(activity || '수업 활동')}</td>
-          <td>${escapeHtml(domain || '스포츠')}</td>
-          <td>${escapeHtml(sequence)}</td>
-          <td>${escapeHtml(dayLabel)}</td>
-          <td>${escapeHtml(periodLabel)}</td>
-          <td>${escapeHtml(performance)}</td>
-          <td>${escapeHtml(variation)}</td>
-          <td>${escapeHtml(memo)}</td>
-          <td>${escapeHtml(recordDate)}${escapeHtml(classDateLabel)}</td>
-        </tr>`
-      })
-      .join('')
-
-    const printContentHtml = `<!doctype html>
-      <html lang="ko">
-        <head>
-          <meta charset="UTF-8" />
-          <title>${className} 수업 이력</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
-            h1 { margin: 0 0 8px; }
-            p { margin: 4px 0 16px; color: #64748b; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-size: 12px; }
-            thead { background: #f8fafc; }
-            .small { color: #64748b; }
-          </style>
-        </head>
-        <body>
-          <h1>${className} 수업 이력</h1>
-          <p>총 ${sortedRecords.length}건</p>
-        <table>
-          <thead>
-            <tr>
-              <th>번호</th>
-              <th>활동</th>
-              <th>도메인</th>
-              <th>차시</th>
-              <th>요일</th>
-              <th>교시</th>
-              <th>평가</th>
-              <th>변형</th>
-              <th>메모</th>
-              <th>날짜</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows}
-          </tbody>
-            </table>
-        </body>
-      </html>
-    `
-
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer')
-
-    if (!printWindow) {
-      toast.error('팝업이 차단되어 출력할 수 없습니다')
-      return
-    }
-
-    let isPrinted = false
-    const cleanup = () => {
-      if (isPrinted) return
-      isPrinted = true
-      if (printWindow && !printWindow.closed) {
-        printWindow.close()
-      }
-    }
-
-    const doPrint = () => {
-      if (!printWindow || printWindow.closed || !printWindow.document) return
-      try {
-        printWindow.focus()
-        printWindow.print()
-      } catch (_error) {
-        // pass
-      }
-      setTimeout(cleanup, 800)
-    }
-
-    printWindow.addEventListener(
-      'load',
-      () => {
-        setTimeout(doPrint, 200)
-      },
-      { once: true }
-    )
-
-    printWindow.document.open()
-    printWindow.document.write(printContentHtml)
-    printWindow.document.close()
-    setTimeout(() => {
-      doPrint()
-    }, 900)
-  }
-
-  const getRecordText = (record, ...candidates) => {
-    for (const key of candidates) {
-      const value = record?.[key]
-      if (value === undefined || value === null) {
-        continue
-      }
-
-      const trimmed = String(value).trim()
-      if (trimmed) return trimmed
-    }
-    return ''
-  }
+  const handleExportHistoryPdf = () => exportHistoryPdf(classInfo, classRecords)
 
   const genderStats = localRoster.reduce(
     (acc, student) => {
@@ -356,7 +185,7 @@ export default function RosterEditor({ classInfo, onClose }) {
                 : 'text-textMuted hover:text-text'
             }`}
           >
-            👤 명단 관리
+            명단 관리
           </button>
           <button
             onClick={() => setActiveTab('color')}
@@ -366,7 +195,7 @@ export default function RosterEditor({ classInfo, onClose }) {
                 : 'text-textMuted hover:text-text'
             }`}
           >
-            🎨 색상 설정
+            색상 설정
           </button>
           <button
             onClick={() => setActiveTab('history')}
@@ -376,7 +205,7 @@ export default function RosterEditor({ classInfo, onClose }) {
                 : 'text-textMuted hover:text-text'
             }`}
           >
-            📖 수업 이력
+            수업 이력
           </button>
         </div>
 
@@ -406,7 +235,7 @@ export default function RosterEditor({ classInfo, onClose }) {
                     className="py-2 px-4 rounded-lg font-semibold hover:opacity-90 transition-all text-sm"
                     style={{ backgroundColor: '#B4E4C1', color: '#2D5F3F' }}
                   >
-                    📝 이름 일괄입력
+                    이름 일괄입력
                   </button>
                   <button
                     onClick={handleAddStudent}
@@ -423,7 +252,7 @@ export default function RosterEditor({ classInfo, onClose }) {
                       color: isEditMode ? '#B71C1C' : '#5B21B6'
                     }}
                   >
-                    {isEditMode ? '✓ 완료' : '✏️ 편집'}
+                    {isEditMode ? '완료' : '편집'}
                   </button>
                   <button
                     onClick={handleSave}
@@ -447,7 +276,7 @@ export default function RosterEditor({ classInfo, onClose }) {
               {showBulkInput && (
                 <div className="mb-md p-md bg-white/60 backdrop-blur-sm rounded-xl border border-white/80">
                   <label className="block font-semibold mb-2 text-text">
-                    📝 이름 일괄 입력 (줄바꿈 또는 쉼표로 구분)
+                    이름 일괄 입력 (줄바꿈 또는 쉼표로 구분)
                   </label>
                   <textarea
                     value={bulkText}
@@ -482,7 +311,6 @@ export default function RosterEditor({ classInfo, onClose }) {
                     key={student.id}
                     className="bg-white/80 backdrop-blur-sm rounded-lg p-2 hover:bg-white/95 transition-all border border-white/60 flex items-center gap-2 relative"
                   >
-                    {/* 삭제 버튼 (편집 모드일 때만 표시) */}
                     {isEditMode && (
                       <button
                         onClick={() => handleRemoveStudent(student.id)}
@@ -496,12 +324,10 @@ export default function RosterEditor({ classInfo, onClose }) {
                       </button>
                     )}
 
-                    {/* 번호 */}
                     <div className="w-7 text-center font-bold text-sm" style={{ color: '#A78BFA' }}>
                       {student.num}
                     </div>
 
-                    {/* 이름 */}
                     <input
                       type="text"
                       value={student.name}
@@ -510,7 +336,6 @@ export default function RosterEditor({ classInfo, onClose }) {
                       className="flex-1 py-1.5 px-2 bg-white/60 border border-white/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm font-medium min-w-0"
                     />
 
-                    {/* 성별 토글 */}
                     <button
                       type="button"
                       onClick={() => handleGenderChange(student.id, student.gender === '남' ? '여' : '남')}
@@ -578,7 +403,6 @@ export default function RosterEditor({ classInfo, onClose }) {
               <div>
                 <h3 className="font-semibold text-text mb-2 text-sm">커스텀 색상</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  {/* 배경 색상 */}
                   <div>
                     <label className="block text-xs font-medium text-text mb-1">
                       배경 색상
@@ -596,7 +420,6 @@ export default function RosterEditor({ classInfo, onClose }) {
                     />
                   </div>
 
-                  {/* 텍스트 색상 */}
                   <div>
                     <label className="block text-xs font-medium text-text mb-1">
                       텍스트 색상
@@ -615,7 +438,6 @@ export default function RosterEditor({ classInfo, onClose }) {
                   </div>
                 </div>
 
-                {/* 적용 버튼 */}
                 <button
                   onClick={() => {
                     const customColor = { bg: customBgColor, text: customTextColor, name: '커스텀' }
@@ -653,7 +475,6 @@ export default function RosterEditor({ classInfo, onClose }) {
             </p>
 
             <div className="flex gap-3">
-              {/* 저장 후 닫기 - 하늘색 */}
               <button
                 onClick={handleSaveAndClose}
                 className="flex-1 py-3 px-4 rounded-xl font-semibold transition-all leading-tight"
@@ -662,7 +483,6 @@ export default function RosterEditor({ classInfo, onClose }) {
                 저장 후<br />닫기
               </button>
 
-              {/* 취소 - 노란색 */}
               <button
                 onClick={() => setShowCloseConfirm(false)}
                 className="flex-1 py-3 px-4 rounded-xl font-semibold transition-all"
@@ -671,7 +491,6 @@ export default function RosterEditor({ classInfo, onClose }) {
                 취소
               </button>
 
-              {/* 닫기 - 빨간색 */}
               <button
                 onClick={handleCloseWithoutSave}
                 className="flex-1 py-3 px-4 rounded-xl font-semibold transition-all"
@@ -681,171 +500,6 @@ export default function RosterEditor({ classInfo, onClose }) {
               </button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// 수업 이력 탭
-  function HistoryTab({ classInfo, classRecords, onExportPdf }) {
-  const className = classInfo
-    ? `${classInfo.grade}학년 ${classInfo.classNum}반`
-    : '학급'
-  const records = [...(classRecords || [])].sort((a, b) => {
-      return (
-        getRecordSortValue(b.recordedAt || b.createdAt || b.date) -
-        getRecordSortValue(a.recordedAt || a.createdAt || a.date)
-      )
-  })
-  const hasHistory = records.length > 0
-  const totalRecords = records.length
-
-  const getRecordText = (record, ...candidates) => {
-    for (const key of candidates) {
-      const value = record?.[key]
-      if (value === undefined || value === null) {
-        continue
-      }
-
-      const trimmed = String(value).trim()
-      if (trimmed) return trimmed
-    }
-    return ''
-  }
-  const getRecordDisplayDate = (record) =>
-    formatRecordDate(record?.recordedAt || record?.createdAt || record?.date)
-  const getRecordClassDate = (record) => formatRecordDate(record?.classDate)
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-md">
-        <h3 className="font-semibold text-text">
-          {className} 이력
-        </h3>
-        <button
-          onClick={onExportPdf}
-          className="py-2 px-4 rounded-lg font-semibold text-sm transition-all"
-          style={{ backgroundColor: '#1F2937', color: '#F8FAFC' }}
-        >
-          📄 PDF 출력
-        </button>
-      </div>
-          {hasHistory ? (
-            <div className="space-y-md">
-              <p className="text-caption text-muted">
-                총 {totalRecords}차시 이력
-              </p>
-              {records.slice(0, 10).map((record, index) => {
-                const dayLabel = record.dayLabel || '-'
-                const rawSequence = Number(record.sequence)
-                const periodNumber =
-                  Number.isFinite(rawSequence) && rawSequence > 0
-                    ? Math.trunc(rawSequence)
-                    : totalRecords - index
-                const periodLabel = record.period ? `${record.period}교시` : '차시 미기록'
-                const subtitle = [dayLabel, periodLabel].filter(Boolean)
-                const activity = getRecordText(record, 'activity', 'name')
-                const domain = getRecordText(record, 'domain', 'lessonType')
-                const performance = getRecordText(record, 'performance', 'grade')
-                const variation = getRecordText(record, 'variation', 'adjustment')
-                const memo = getRecordText(record, 'memo', 'notes', 'memoText', 'note', 'description')
-                const activityDate = getRecordDisplayDate(record)
-                const classDate = getRecordClassDate(record)
-                const hasDetail = !!(performance || variation || memo || record.aceLesson)
-                const hasClassDate = classDate && classDate !== activityDate
-
-                return (
-                  <div
-                    key={record.id || `${record.classId}-${record.recordedAt || record.createdAt || record.date || 'nodate'}-${index}`}
-                    className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/80 space-y-2"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-text">
-                    {activity || '수업 활동'}
-                  </span>
-                  <span className="px-3 py-1 bg-primary/20 text-primary rounded-lg font-medium text-sm">
-                    {domain || '스포츠'}
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-textMuted">
-                  {periodNumber}차시 · {activityDate}
-                  {hasClassDate ? <span className="ml-2">· 수업일 {classDate}</span> : null}
-                </p>
-                <p className="text-sm text-textMuted">{subtitle.join(' · ')}</p>
-                {performance && <p className="text-sm text-text">평가: {performance}</p>}
-                {variation && <p className="text-sm text-text">변형: {variation}</p>}
-                {memo && <p className="text-sm text-text">메모: {memo}</p>}
-
-                {/* ACE 수업 흐름 (수업설계에서 배정된 기록) */}
-                {record.aceLesson && (
-                  <div className="mt-2 p-2.5 rounded-lg border border-[#7C9EF5]/20 bg-[#7C9EF5]/5">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px]">📋</span>
-                        <span className="text-[11px] font-bold text-gray-800">ACE 수업 흐름</span>
-                        {record.aceLesson._templateLabel && (
-                          <span className="text-[9px] bg-[#7C9EF5]/15 text-[#7C9EF5] rounded-full px-1.5 py-0.5 font-medium">
-                            {record.aceLesson._templateLabel}
-                          </span>
-                        )}
-                      </div>
-                      {record.aceLesson.totalMinutes && (
-                        <span className="text-[10px] text-gray-400">{record.aceLesson.totalMinutes}분</span>
-                      )}
-                    </div>
-                    {record.aceLesson.totalMinutes && (
-                      <div className="flex rounded-full overflow-hidden h-1 mb-1.5 bg-gray-100">
-                        {record.aceLesson.intro?.minutes > 0 && (
-                          <div className="bg-gray-300" style={{ width: `${(record.aceLesson.intro.minutes / record.aceLesson.totalMinutes) * 100}%` }} />
-                        )}
-                        {record.aceLesson.acquire?.minutes > 0 && (
-                          <div className="bg-[#7C9EF5]" style={{ width: `${(record.aceLesson.acquire.minutes / record.aceLesson.totalMinutes) * 100}%` }} />
-                        )}
-                        {record.aceLesson.challenge?.minutes > 0 && (
-                          <div className="bg-[#F5A67C]" style={{ width: `${(record.aceLesson.challenge.minutes / record.aceLesson.totalMinutes) * 100}%` }} />
-                        )}
-                        {record.aceLesson.engage?.minutes > 0 && (
-                          <div className="bg-[#A78BFA]" style={{ width: `${(record.aceLesson.engage.minutes / record.aceLesson.totalMinutes) * 100}%` }} />
-                        )}
-                        {record.aceLesson.wrapup?.minutes > 0 && (
-                          <div className="bg-gray-300" style={{ width: `${(record.aceLesson.wrapup.minutes / record.aceLesson.totalMinutes) * 100}%` }} />
-                        )}
-                      </div>
-                    )}
-                    <div className="space-y-0.5 text-[10px]">
-                      {record.aceLesson.acquire && (
-                        <div className="flex gap-1.5">
-                          <span className="shrink-0 text-[#7C9EF5] font-semibold w-10">A {record.aceLesson.acquire.minutes}′</span>
-                          <span className="text-gray-600 truncate">{record.aceLesson.acquire.goal || record.aceLesson.acquire.drills?.[0]?.name || ''}</span>
-                        </div>
-                      )}
-                      {record.aceLesson.challenge && (
-                        <div className="flex gap-1.5">
-                          <span className="shrink-0 text-[#F5A67C] font-semibold w-10">C {record.aceLesson.challenge.minutes}′</span>
-                          <span className="text-gray-600 truncate">{record.aceLesson.challenge.goal || record.aceLesson.challenge.missions?.[0]?.name || ''}</span>
-                        </div>
-                      )}
-                      {record.aceLesson.engage && (
-                        <div className="flex gap-1.5">
-                          <span className="shrink-0 text-[#A78BFA] font-semibold w-10">E {record.aceLesson.engage.minutes}′</span>
-                          <span className="text-gray-600 truncate">{record.aceLesson.engage.goal || record.aceLesson.engage.game?.name || ''}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {!hasDetail && !record.aceLesson && (
-                  <p className="text-xs text-textMuted">상세 입력 정보가 없습니다.</p>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-textMuted">아직 수업 기록이 없습니다</p>
         </div>
       )}
     </div>
