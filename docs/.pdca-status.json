@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-18T02:59:08.904Z",
+  "lastUpdated": "2026-02-18T03:56:23.304Z",
   "activeFeatures": [
     "recommend",
     "오늘체육뭐하지",
@@ -131,7 +131,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-16T08:42:29.659Z",
-        "lastUpdated": "2026-02-16T11:17:37.729Z"
+        "lastUpdated": "2026-02-18T03:56:23.304Z"
       },
       "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/services/firebase.js"
     },
@@ -352,7 +352,7 @@
   "session": {
     "startedAt": "2026-02-15T00:05:28.796Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-18T02:59:08.904Z"
+    "lastActivity": "2026-02-18T03:56:23.304Z"
   },
   "history": [
     {
@@ -2398,6 +2398,12 @@
     {
       "timestamp": "2026-02-18T02:59:08.904Z",
       "feature": "weather",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T03:56:23.304Z",
+      "feature": "firebase.js",
       "phase": "do",
       "action": "updated"
     }
