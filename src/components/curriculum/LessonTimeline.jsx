@@ -64,10 +64,28 @@ export default function LessonTimeline({
 
               {/* 카드 */}
               <GlassCard className="flex-1 p-4">
-                {/* ACE 배지 + 제목 */}
+                {/* ACE 배지 + 제목 + AI 버튼 */}
                 <div className="flex items-start gap-2 mb-2">
                   <AceBadge phase={lesson.acePhase} />
-                  <h4 className="text-sm font-semibold text-gray-900 leading-snug">{lesson.title}</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 leading-snug flex-1">{lesson.title}</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ctx = gatherLessonCardContext(lesson, unit, {
+                        getActivityById,
+                        getStandardByCode,
+                        units: units || [unit],
+                      })
+                      const label = `${unit.grade} ${unit.title} ${lesson.lesson}차시: ${lesson.title}`
+                      window.dispatchEvent(new CustomEvent('pe-ai-chat-open', {
+                        detail: { type: 'lesson-context', lessonContext: ctx, displayLabel: label },
+                      }))
+                    }}
+                    className="flex-shrink-0 flex items-center gap-1 text-xs font-semibold text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg px-2.5 py-1 transition-colors"
+                  >
+                    <img src="/ai-sparkle-sm.png" alt="" width="16" height="16" className="pointer-events-none" />
+                    AI 질문
+                  </button>
                 </div>
 
                 {/* 설명 */}
@@ -114,28 +132,6 @@ export default function LessonTimeline({
                     )
                   })}
                 </div>
-
-                {/* AI 질문 버튼 */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const ctx = gatherLessonCardContext(lesson, unit, {
-                      getActivityById,
-                      getStandardByCode,
-                      units: units || [unit],
-                    })
-                    const label = `${unit.grade} ${unit.title} ${lesson.lesson}차시: ${lesson.title}`
-                    window.dispatchEvent(new CustomEvent('pe-ai-chat-open', {
-                      detail: { type: 'lesson-context', lessonContext: ctx, displayLabel: label },
-                    }))
-                  }}
-                  className="mt-2 flex items-center gap-1 text-[11px] text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded-lg px-2 py-1 transition-colors"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 3v1m0 16v1m-8-9H3m18 0h-1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707" />
-                  </svg>
-                  AI에게 질문
-                </button>
 
                 {/* 대체 활동 */}
                 <div className="mt-2">

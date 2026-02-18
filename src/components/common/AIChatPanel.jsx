@@ -66,7 +66,7 @@ export default function AIChatPanel() {
       {/* 플로팅 버튼 */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="ai-chat-fab"
+        className={open ? 'ai-chat-fab ai-chat-fab--close' : 'ai-chat-fab ai-chat-fab--bot'}
         aria-label="AI 채팅"
         title={available ? 'AI 채팅' : '인터넷 연결이 필요합니다'}
         style={!available ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
@@ -76,9 +76,7 @@ export default function AIChatPanel() {
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 3v1m0 16v1m-8-9H3m18 0h-1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707" />
-          </svg>
+          <img src="/ai-sparkle.png" alt="AI" className="ai-chat-fab-img" />
         )}
       </button>
 

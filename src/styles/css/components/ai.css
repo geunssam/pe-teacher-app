@@ -27,7 +27,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 플로팅 AI 채팅 버튼 */
+/* 플로팅 AI 채팅 버튼 (공통) */
 .ai-chat-fab {
   position: fixed;
   bottom: 24px;
@@ -35,25 +35,50 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7C9EF5, #A78BFA);
-  color: white;
   border: none;
-  box-shadow: 0 4px 16px rgba(124, 158, 245, 0.4);
   cursor: pointer;
   z-index: 40;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.2s, box-shadow 0.2s;
+  padding: 0;
 }
 
 .ai-chat-fab:hover {
   transform: scale(1.08);
-  box-shadow: 0 6px 24px rgba(124, 158, 245, 0.5);
 }
 
 .ai-chat-fab:active {
   transform: scale(0.95);
+}
+
+/* 봇 이미지 상태 (닫힌 상태) */
+.ai-chat-fab--bot {
+  background: transparent;
+  box-shadow: none;
+}
+
+.ai-chat-fab--bot:hover {
+  box-shadow: 0 4px 20px rgba(124, 100, 245, 0.35);
+}
+
+.ai-chat-fab-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* X 닫기 상태 (열린 상태) */
+.ai-chat-fab--close {
+  background: linear-gradient(135deg, #7C9EF5, #A78BFA);
+  color: white;
+  box-shadow: 0 4px 16px rgba(124, 158, 245, 0.4);
+}
+
+.ai-chat-fab--close:hover {
+  box-shadow: 0 6px 24px rgba(124, 158, 245, 0.5);
 }
 
 /* 채팅 패널 */
@@ -92,8 +117,8 @@
   .ai-chat-fab {
     bottom: 16px;
     right: 16px;
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
   }
 }
 
