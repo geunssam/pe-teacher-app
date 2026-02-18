@@ -7,10 +7,10 @@ import { useClassManager } from '../hooks/useClassManager'
 import { useSettings } from '../hooks/useSettings'
 import { useSchedule } from '../hooks/useSchedule'
 import { useAuthContext } from '../contexts/AuthContext'
-import { searchPlace } from '../services/naverLocal'
 import { findStationsWithFallback } from '../utils/stationFinder'
 import { setDocument } from '../services/firestore'
 import { getUid } from '../hooks/useDataSource'
+import LocationMapPicker from '../components/settings/LocationMapPicker'
 import toast from 'react-hot-toast'
 
 const TOTAL_STEPS = 6
@@ -20,12 +20,6 @@ const SCHOOL_LEVELS = {
   elementary: { label: '초등학교', emoji: '🏫', grades: [1, 2, 3, 4, 5, 6] },
   middle: { label: '중학교', emoji: '🏢', grades: [1, 2, 3] },
   high: { label: '고등학교', emoji: '🎓', grades: [1, 2, 3] },
-}
-
-const SCHOOL_KEYWORDS = {
-  elementary: '초등학교',
-  middle: '중학교',
-  high: '고등학교',
 }
 
 // --- SVG Icons ---
@@ -42,15 +36,6 @@ function PlusIcon({ size = 16 }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  )
-}
-
-function SearchIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   )
 }
@@ -123,10 +108,10 @@ export default function SetupWizard() {
   const [schoolLevel, setSchoolLevel] = useState(null)
 
   // Step 2: 학교 위치
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState([])
-  const [searching, setSearching] = useState(false)
   const [selectedSchool, setSelectedSchool] = useState(null)
+  const [showMapPicker, setShowMapPicker] = useState(false)
+  const [stationCandidates, setStationCandidates] = useState([])
+  const [selectedStation, setSelectedStation] = useState(null)
 
   // Step 3: 담당 학년
   const [selectedGrades, setSelectedGrades] = useState([])
@@ -137,7 +122,7 @@ export default function SetupWizard() {
 
   // Step 5: 체육 시간표
   const [timetableCells, setTimetableCells] = useState({}) // { "mon-1": classId, ... }
-  const [selectingCell, setSelectingCell] = useState(null) // 현재 선택 중인 셀
+  const [selectedClassForAssign, setSelectedClassForAssign] = useState(null) // 현재 선택된 학급 ID
 
   // Step 6: 선생님 별명
   const [nickname, setNickname] = useState('')
@@ -161,57 +146,48 @@ export default function SetupWizard() {
   }
 
   // =============================================
-  // Step 2: 학교 위치 검색
+  // Step 2: 학교 위치 (LocationMapPicker 모달 사용)
   // =============================================
-  const handleSchoolSearch = useCallback(async () => {
-    const q = searchQuery.trim()
-    if (!q) return
+  const handleMapSelect = useCallback(async (lat, lon, placeInfo) => {
+    setShowMapPicker(false)
 
-    setSearching(true)
+    const name = placeInfo?.name || '선택한 위치'
+    const address = placeInfo?.address || placeInfo?.jibunAddress || ''
+
+    setSelectedSchool({ name, address, lat, lon })
+
+    // 측정소 후보 3개 가져오기
     try {
-      // schoolLevel 키워드로 보강 (예: "동서" → "동서초등학교")
-      const keyword = SCHOOL_KEYWORDS[schoolLevel] || ''
-      const hasSchoolKeyword = q.includes('학교') || q.includes('초등') || q.includes('중학') || q.includes('고등')
-      const searchQ = hasSchoolKeyword ? q : `${q}${keyword}`
-
-      const results = await searchPlace(searchQ, { enableFallback: true })
-      setSearchResults(results.slice(0, 5))
-    } catch (err) {
-      console.warn('School search failed:', err)
-      setSearchResults([])
-    } finally {
-      setSearching(false)
-    }
-  }, [searchQuery, schoolLevel])
-
-  const handleSelectSchool = useCallback(async (school) => {
-    setSelectedSchool(school)
-
-    // 측정소 자동 매칭
-    if (school.lat && school.lon) {
-      try {
-        const stations = await findStationsWithFallback(school.lat, school.lon, school.address || '')
-        const stationName = stations?.[0]?.stationName || '대전'
-
-        updateLocation({
-          name: school.name,
-          address: school.address || school.roadAddress || '',
-          lat: school.lat,
-          lon: school.lon,
-          stationName,
-        })
-      } catch (err) {
-        console.warn('Station matching failed:', err)
-        updateLocation({
-          name: school.name,
-          address: school.address || school.roadAddress || '',
-          lat: school.lat,
-          lon: school.lon,
-          stationName: '대전',
-        })
+      const stations = await findStationsWithFallback(lat, lon, address)
+      if (stations && stations.length > 0) {
+        setStationCandidates(stations.slice(0, 3))
+        setSelectedStation(stations[0].stationName)
+        updateLocation({ name, address, lat, lon, stationName: stations[0].stationName })
+      } else {
+        setStationCandidates([])
+        setSelectedStation('대전')
+        updateLocation({ name, address, lat, lon, stationName: '대전' })
       }
+    } catch (err) {
+      console.warn('Station matching failed:', err)
+      setStationCandidates([])
+      setSelectedStation('대전')
+      updateLocation({ name, address, lat, lon, stationName: '대전' })
     }
   }, [updateLocation])
+
+  const handleStationSelect = useCallback((stationName) => {
+    setSelectedStation(stationName)
+    if (selectedSchool) {
+      updateLocation({
+        name: selectedSchool.name,
+        address: selectedSchool.address,
+        lat: selectedSchool.lat,
+        lon: selectedSchool.lon,
+        stationName,
+      })
+    }
+  }, [selectedSchool, updateLocation])
 
   const handleStep2Next = () => goNext()
   const handleStep2Skip = () => goNext()
@@ -270,6 +246,10 @@ export default function SetupWizard() {
     try {
       const result = await initializeClasses(setup)
       setCreatedClasses(result.classes || [])
+      // 첫 학급 자동 선택
+      if (result.classes?.length) {
+        setSelectedClassForAssign(result.classes[0].id)
+      }
       goNext()
     } catch (err) {
       console.error('initializeClasses failed:', err)
@@ -283,35 +263,33 @@ export default function SetupWizard() {
   // Step 5: 체육 시간표
   // =============================================
   const handleCellTap = (cellKey) => {
-    if (selectingCell === cellKey) {
-      // 이미 선택 중이면 해제
-      setSelectingCell(null)
-    } else {
-      setSelectingCell(cellKey)
-    }
-  }
+    const currentClassId = timetableCells[cellKey]
 
-  const handleAssignClass = (cellKey, classItem) => {
-    if (classItem) {
-      setTimetableCells((prev) => ({
-        ...prev,
-        [cellKey]: classItem.id,
-      }))
-    } else {
-      // 해제
+    if (currentClassId) {
+      // 이미 배정된 셀 클릭 → 해제
       setTimetableCells((prev) => {
         const next = { ...prev }
         delete next[cellKey]
         return next
       })
+    } else if (selectedClassForAssign) {
+      // 빈 셀 클릭 → 현재 선택된 학급 배정
+      setTimetableCells((prev) => ({
+        ...prev,
+        [cellKey]: selectedClassForAssign,
+      }))
     }
-    setSelectingCell(null)
   }
 
   const getClassLabel = (classId) => {
     const cls = createdClasses.find((c) => c.id === classId)
     if (!cls) return ''
     return `${cls.grade}-${cls.classNum}`
+  }
+
+  const getClassColor = (classId) => {
+    const cls = createdClasses.find((c) => c.id === classId)
+    return cls?.color || null
   }
 
   const handleStep5Next = () => {
@@ -400,78 +378,71 @@ export default function SetupWizard() {
           </div>
         )}
 
-        {/* ===== Step 2: 학교 위치 검색 ===== */}
+        {/* ===== Step 2: 학교 위치 ===== */}
         {currentStep === 2 && (
           <div className="glass-card animate-fade-in">
-            <h2 className="text-card-title mb-sm">학교를 검색해주세요</h2>
+            <h2 className="text-card-title mb-sm">학교 위치를 설정해주세요</h2>
             <p className="text-caption text-muted mb-lg">
-              학교 이름으로 검색하면 날씨 정보와 대기질 측정소가 자동으로 설정됩니다
+              지도에서 학교를 검색하면 날씨와 대기질 측정소가 자동으로 설정됩니다
             </p>
 
-            {/* 검색 입력 */}
-            <div className="flex gap-sm mb-md">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSchoolSearch()}
-                  placeholder={`${SCHOOL_KEYWORDS[schoolLevel] || '학교'} 이름 입력`}
-                  className="w-full px-md py-sm pr-10 bg-surface border border-border rounded-xl
-                             text-body focus:outline-none focus:border-primary transition-colors"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
-                  <SearchIcon />
-                </div>
-              </div>
-              <button
-                onClick={handleSchoolSearch}
-                disabled={searching || !searchQuery.trim()}
-                className="btn btn-primary disabled:opacity-40"
-              >
-                {searching ? '검색중...' : '검색'}
-              </button>
-            </div>
-
-            {/* 검색 결과 */}
-            {searchResults.length > 0 && (
-              <div className="space-y-sm mb-md max-h-64 overflow-y-auto">
-                {searchResults.map((result, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSelectSchool(result)}
-                    className={`w-full text-left p-md rounded-xl border transition-all ${
-                      selectedSchool?.name === result.name && selectedSchool?.lat === result.lat
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-start gap-sm">
-                      <div className="mt-0.5 text-primary shrink-0">
-                        <LocationIcon />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-body-bold truncate">{result.name}</p>
-                        <p className="text-caption text-muted truncate">
-                          {result.roadAddress || result.address}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* 선택 완료 안내 */}
-            {selectedSchool && (
-              <div className="p-md bg-success/10 border border-success/30 rounded-xl mb-md">
-                <p className="text-body-bold text-success">
-                  {selectedSchool.name}
-                </p>
-                <p className="text-caption text-success/80">
-                  위치가 설정되었습니다
-                </p>
-              </div>
+            {selectedSchool ? (
+              <>
+                <div className="p-md bg-success/10 border border-success/30 rounded-xl mb-md">
+                  <div className="flex items-start gap-sm">
+                    <div className="mt-0.5 text-success shrink-0">
+                      <LocationIcon />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-body-bold text-success">{selectedSchool.name}</p>
+                      <p className="text-caption text-success/80">{selectedSchool.address}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowMapPicker(true)}
+                    className="mt-sm text-caption text-primary underline"
+                  >
+                    다시 선택하기
+                  </button>
+                </div>
+
+                {/* 측정소 선택 */}
+                {stationCandidates.length > 0 && (
+                  <div className="mb-md">
+                    <p className="text-caption text-muted mb-sm">대기질 측정소 선택</p>
+                    <div className="grid grid-cols-3 gap-sm">
+                      {stationCandidates.map((station) => (
+                        <button
+                          key={station.stationName}
+                          onClick={() => handleStationSelect(station.stationName)}
+                          className={`p-sm rounded-xl border transition-all text-center ${
+                            selectedStation === station.stationName
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="text-xs font-semibold truncate">{station.stationName}</div>
+                          <div className="text-[10px] text-muted truncate">~{station.distance?.toFixed(1)}km</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <button
+                onClick={() => setShowMapPicker(true)}
+                className="w-full p-lg rounded-xl border-2 border-dashed border-primary/40
+                           hover:border-primary hover:bg-primary/5 transition-all
+                           flex flex-col items-center gap-sm text-primary"
+              >
+                <span className="text-2xl">🗺️</span>
+                <span className="text-body-bold">지도에서 학교 검색하기</span>
+                <span className="text-caption text-muted">
+                  학교명을 검색하거나 지도를 클릭하여 위치를 선택하세요
+                </span>
+              </button>
             )}
 
             <NavButtons
@@ -480,6 +451,17 @@ export default function SetupWizard() {
               showSkip
               onSkip={handleStep2Skip}
             />
+
+            {/* LocationMapPicker 모달 */}
+            {showMapPicker && (
+              <LocationMapPicker
+                initialLat={selectedSchool?.lat ?? 36.3504}
+                initialLon={selectedSchool?.lon ?? 127.3845}
+                initialAddress={selectedSchool?.address || ''}
+                onSelect={handleMapSelect}
+                onCancel={() => setShowMapPicker(false)}
+              />
+            )}
           </div>
         )}
 
@@ -584,9 +566,35 @@ export default function SetupWizard() {
         {currentStep === 5 && (
           <div className="glass-card animate-fade-in">
             <h2 className="text-card-title mb-sm">체육 시간표를 설정해주세요</h2>
-            <p className="text-caption text-muted mb-lg">
-              체육 수업이 있는 셀을 탭하고 학급을 선택하세요
+            <p className="text-caption text-muted mb-md">
+              학급을 선택하고 셀을 클릭하세요 (다시 클릭하면 해제)
             </p>
+
+            {/* 학급 칩 리스트 */}
+            <div className="flex flex-wrap gap-2 mb-md">
+              {createdClasses.map((cls) => {
+                const isSelected = selectedClassForAssign === cls.id
+                const color = cls.color
+                return (
+                  <button
+                    key={cls.id}
+                    onClick={() => setSelectedClassForAssign(cls.id)}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-semibold transition-all border-2 ${
+                      isSelected
+                        ? 'ring-2 ring-offset-1 ring-primary/40 scale-105'
+                        : 'opacity-60 hover:opacity-90'
+                    }`}
+                    style={{
+                      backgroundColor: color?.bg || '#DBEAFE',
+                      color: color?.text || '#1E40AF',
+                      borderColor: isSelected ? (color?.text || '#1E40AF') : 'transparent',
+                    }}
+                  >
+                    {cls.grade}-{cls.classNum}
+                  </button>
+                )
+              })}
+            </div>
 
             {/* 시간표 그리드 */}
             <div className="overflow-x-auto mb-md">
@@ -608,50 +616,26 @@ export default function SetupWizard() {
                       {WEEKDAYS.map((day) => {
                         const cellKey = `${day}-${period}`
                         const assignedClassId = timetableCells[cellKey]
-                        const isSelecting = selectingCell === cellKey
                         const label = assignedClassId ? getClassLabel(assignedClassId) : ''
+                        const cellColor = assignedClassId ? getClassColor(assignedClassId) : null
 
                         return (
-                          <td key={cellKey} className="p-0.5 relative">
+                          <td key={cellKey} className="p-0.5">
                             <button
                               onClick={() => handleCellTap(cellKey)}
-                              className={`w-full py-2 px-1 rounded-lg text-xs font-medium transition-all ${
+                              className={`w-full py-2 px-1 rounded-lg text-xs font-medium transition-all border ${
                                 assignedClassId
-                                  ? 'bg-primary/15 text-primary border border-primary/30'
-                                  : isSelecting
-                                    ? 'bg-primary/5 border border-primary/40 ring-1 ring-primary/20'
-                                    : 'bg-surface border border-transparent hover:border-primary/20'
+                                  ? 'border-white/60'
+                                  : 'bg-surface border-transparent hover:border-primary/20'
                               }`}
+                              style={
+                                cellColor
+                                  ? { backgroundColor: cellColor.bg, color: cellColor.text }
+                                  : undefined
+                              }
                             >
                               {label || '\u00A0'}
                             </button>
-
-                            {/* 학급 선택 드롭다운 */}
-                            {isSelecting && (
-                              <div className="absolute top-full left-0 z-50 mt-1 w-28 bg-white
-                                              border border-border rounded-xl shadow-lg py-1 animate-fade-in">
-                                {/* 해제 옵션 */}
-                                {assignedClassId && (
-                                  <button
-                                    onClick={() => handleAssignClass(cellKey, null)}
-                                    className="w-full text-left px-3 py-1.5 text-xs text-danger hover:bg-danger/5"
-                                  >
-                                    해제
-                                  </button>
-                                )}
-                                {createdClasses.map((cls) => (
-                                  <button
-                                    key={cls.id}
-                                    onClick={() => handleAssignClass(cellKey, cls)}
-                                    className={`w-full text-left px-3 py-1.5 text-xs hover:bg-primary/5 ${
-                                      assignedClassId === cls.id ? 'text-primary font-bold' : ''
-                                    }`}
-                                  >
-                                    {cls.grade}-{cls.classNum}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
                           </td>
                         )
                       })}
@@ -714,13 +698,6 @@ export default function SetupWizard() {
           </div>
         )}
 
-        {/* 셀 선택 중일 때 배경 오버레이 (드롭다운 닫기) */}
-        {selectingCell && (
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setSelectingCell(null)}
-          />
-        )}
       </div>
     </div>
   )

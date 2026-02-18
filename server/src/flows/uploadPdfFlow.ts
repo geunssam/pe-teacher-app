@@ -17,6 +17,7 @@ const UploadPdfOutputSchema = z.object({
   chunksCreated: z.number(),
   embedded: z.number(),
   extractedLength: z.number(),
+  extractedText: z.string(),
 });
 
 export const uploadPdfFlow = ai.defineFlow(
@@ -45,6 +46,7 @@ export const uploadPdfFlow = ai.defineFlow(
         chunksCreated: 0,
         embedded: 0,
         extractedLength: 0,
+        extractedText: '',
       };
     }
 
@@ -60,6 +62,7 @@ export const uploadPdfFlow = ai.defineFlow(
         chunksCreated: 0,
         embedded: 0,
         extractedLength: text.length,
+        extractedText: text.slice(0, 500_000),
       };
     }
 
@@ -80,6 +83,7 @@ export const uploadPdfFlow = ai.defineFlow(
       chunksCreated: chunks.length,
       embedded: result.embedded,
       extractedLength: text.length,
+      extractedText: text.slice(0, 500_000),
     };
   },
 );

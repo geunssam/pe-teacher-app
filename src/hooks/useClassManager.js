@@ -7,6 +7,24 @@ import { getUid } from './useDataSource'
 import { setDocument, getDocument, getCollection, commitBatchChunked } from '../services/firestore'
 import { generateClassId, generateRecordId, generateStudentId } from '../utils/generateId'
 import { syncRecords as genkitSyncRecords } from '../services/genkit'
+import toast from 'react-hot-toast'
+
+// Firestore 비호환 데이터 정제 (undefined → null, 순환 참조 제거)
+function sanitizeForFirestore(obj) {
+  return JSON.parse(JSON.stringify(obj, (_key, value) =>
+    value === undefined ? null : value
+  ))
+}
+
+// aceLesson 등 큰 객체 크기 제한 (직렬화 후 10KB 초과 시 주요 필드만)
+function trimLargeFields(record) {
+  if (!record.aceLesson) return record
+  const serialized = JSON.stringify(record.aceLesson)
+  if (serialized.length <= 10_000) return record
+  // 주요 필드만 유지
+  const { title, domain, sport, grade, activities, structure } = record.aceLesson
+  return { ...record, aceLesson: { title, domain, sport, grade, activities, structure } }
+}
 
 /**
  * 학급 관리 Hook
@@ -171,9 +189,14 @@ export function useClassManager() {
     const uid = getUid()
     if (!uid || !classId) return
 
-    // Store records as a single document for simplicity and cost
-    setDocument(`users/${uid}/classes/${classId}`, { records: classRecords }, true).catch((err) => {
+    // 최근 50개만 Firestore에 저장 (localStorage는 전체 유지)
+    const trimmed = Array.isArray(classRecords) ? classRecords.slice(0, 50) : classRecords
+    // 큰 필드 축소 + Firestore 비호환 데이터 정제
+    const sanitized = sanitizeForFirestore(trimmed.map(trimLargeFields))
+
+    setDocument(`users/${uid}/classes/${classId}`, { records: sanitized }, true).catch((err) => {
       console.error('Failed to sync records:', err)
+      toast.error('수업 기록 클라우드 동기화 실패')
     })
   }, [])
 
@@ -331,7 +354,7 @@ export function useClassManager() {
       return toLocalDateString(record.date)
     })()
 
-    const nextRecord = {
+    const nextRecord = sanitizeForFirestore({
       id: record?.id || generateRecordId(),
       date: nextDate,
       recordedAt: recordedAt || nextDate,
@@ -343,7 +366,7 @@ export function useClassManager() {
       ...record,
       sequence: Number.isFinite(nextSequence) ? nextSequence : getNextLessonSequence(classId, normalizedDomain),
       domain: normalizedDomain,
-    }
+    })
 
     setRecords((prev) => {
       const next = {

@@ -1,13 +1,25 @@
 // 상단 헤더 — 앱 제목 + 현재 탭 표시 | 탭아이콘→constants/navigation.jsx, 스타일→css/components/navbar.css
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { NAV_ITEMS, SettingsIcon, LogoutIcon } from '../../constants/navigation'
+import { useAuthContext } from '../../contexts/AuthContext'
+import { confirm } from '../common/ConfirmDialog'
+import toast from 'react-hot-toast'
 
 export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { logout } = useAuthContext()
 
   const handleSettings = () => {
     navigate('/settings')
+  }
+
+  const handleLogout = async () => {
+    const confirmed = await confirm('로그아웃하시겠습니까?', '로그아웃', '취소')
+    if (confirmed) {
+      await logout()
+      toast.success('로그아웃되었습니다')
+    }
   }
 
   return (
@@ -62,7 +74,7 @@ export default function Header() {
             <span className="hidden-mobile">설정</span>
           </button>
 
-          <button className="header-action-btn header-logout-btn" title="로그아웃">
+          <button onClick={handleLogout} className="header-action-btn header-logout-btn" title="로그아웃">
             <LogoutIcon />
             <span className="hidden-mobile">로그아웃</span>
           </button>

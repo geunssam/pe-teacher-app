@@ -20,6 +20,7 @@ export default function KnowledgeManager() {
   const [showTextModal, setShowTextModal] = useState(false)
   const [textTitle, setTextTitle] = useState('')
   const [textContent, setTextContent] = useState('')
+  const [detailDoc, setDetailDoc] = useState(null)
   const fileInputRef = useRef(null)
 
   if (!isAuthenticated) {
@@ -149,33 +150,95 @@ export default function KnowledgeManager() {
             {documents.map((doc) => (
               <div
                 key={doc.docId}
-                className="flex items-center justify-between p-3 bg-white/40 rounded-xl border border-white/60"
+                className="p-3 bg-white/40 rounded-xl border border-white/60 cursor-pointer hover:bg-white/60 transition-all"
+                onClick={() => setDetailDoc(doc)}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm">
-                      {doc.sourceType === 'pdf' ? '\uD83D\uDCC4' : '\u270F\uFE0F'}
-                    </span>
-                    <span className="text-body font-medium text-text truncate">
-                      {doc.title}
-                    </span>
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">
+                        {doc.sourceType === 'pdf' ? '\uD83D\uDCC4' : '\u270F\uFE0F'}
+                      </span>
+                      <span className="text-body font-medium text-text truncate">
+                        {doc.title}
+                      </span>
+                    </div>
+                    <div className="text-caption text-textMuted mt-0.5">
+                      {formatDate(doc.createdAt)}
+                      {doc.chunksCreated ? ` · ${doc.chunksCreated} 청크` : ''}
+                    </div>
                   </div>
-                  <div className="text-caption text-textMuted mt-0.5">
-                    {formatDate(doc.createdAt)}
-                    {doc.chunksCreated ? ` · ${doc.chunksCreated} 청크` : ''}
-                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(doc) }}
+                    className="shrink-0 ml-2 py-1.5 px-3 text-xs text-danger bg-danger/10 rounded-lg font-medium hover:bg-danger/20 transition-all"
+                  >
+                    삭제
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleDelete(doc)}
-                  className="shrink-0 ml-2 py-1.5 px-3 text-xs text-danger bg-danger/10 rounded-lg font-medium hover:bg-danger/20 transition-all"
-                >
-                  삭제
-                </button>
+                {doc.summary && (
+                  <p className="text-caption text-textMuted mt-1.5 line-clamp-2">
+                    {doc.summary}
+                  </p>
+                )}
               </div>
             ))}
           </div>
         )}
       </GlassCard>
+
+      {/* Document detail modal */}
+      {detailDoc && (
+        <Modal onClose={() => setDetailDoc(null)} maxWidth="max-w-lg">
+          <div className="flex items-start justify-between mb-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">
+                  {detailDoc.sourceType === 'pdf' ? '\uD83D\uDCC4' : '\u270F\uFE0F'}
+                </span>
+                <h3 className="text-lg font-bold truncate">{detailDoc.title}</h3>
+              </div>
+              <p className="text-caption text-textMuted mt-0.5">
+                {formatDate(detailDoc.createdAt)}
+                {detailDoc.sourceType === 'pdf' ? ' · PDF' : ' · 텍스트'}
+                {detailDoc.chunksCreated ? ` · ${detailDoc.chunksCreated} 청크` : ''}
+              </p>
+            </div>
+            <button
+              onClick={() => setDetailDoc(null)}
+              className="shrink-0 ml-2 p-1.5 text-textMuted hover:text-text rounded-lg hover:bg-gray-100 transition-all"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+
+          {/* AI Summary */}
+          {detailDoc.summary && (
+            <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl mb-3">
+              <p className="text-caption font-semibold text-primary mb-1">AI 요약</p>
+              <p className="text-body text-text">{detailDoc.summary}</p>
+            </div>
+          )}
+
+          {/* Full content */}
+          {detailDoc.content ? (
+            <div>
+              <p className="text-caption font-semibold text-text mb-1">원본 전문</p>
+              <div className="max-h-[50vh] overflow-y-auto p-3 bg-gray-50 rounded-xl border border-gray-200">
+                <pre className="text-body text-text whitespace-pre-wrap break-words font-sans leading-relaxed">
+                  {detailDoc.content}
+                </pre>
+              </div>
+            </div>
+          ) : (
+            <p className="text-caption text-textMuted text-center py-4">
+              원본 텍스트가 저장되지 않은 자료입니다.
+            </p>
+          )}
+        </Modal>
+      )}
 
       {/* Text input modal */}
       {showTextModal && (

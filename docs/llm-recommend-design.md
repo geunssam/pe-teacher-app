@@ -26,7 +26,7 @@
 
 | 항목 | v1 (이전) | v2 (현재) |
 |------|----------|----------|
-| LLM | Ollama + Gemma 12B (로컬) | **Gemini 2.0 Flash API (무료)** |
+| LLM | Ollama + Gemma 12B (로컬) | **Gemini 2.5 Flash API (무료)** |
 | RAG 프레임워크 | 직접 구현 (FastAPI) | **Genkit** |
 | 벡터 저장소 | ChromaDB (Python) | **dev-local-vectorstore** (Genkit 플러그인) |
 | 임베딩 | nomic-embed-text (Ollama) | **gemini-embedding-001** (API) |
@@ -73,7 +73,7 @@
 │    │     ▼              ▼               ▼          │    │
 │    │  ┌──────────┐  ┌──────────────────────────┐   │    │
 │    │  │ Gemini   │  │ dev-local-vectorstore     │   │    │
-│    │  │ 2.0 Flash│  │ (벡터 검색 + 임베딩)       │   │    │
+│    │  │ 2.5 Flash│  │ (벡터 검색 + 임베딩)       │   │    │
 │    │  │ (생성)   │  │ embedder: gemini-embedding │   │    │
 │    │  └──────────┘  └──────────────────────────┘   │    │
 │    │           Google AI API (무료 티어)              │    │
@@ -119,8 +119,8 @@
 
 | 용도 | 모델 | Genkit 모델 ID |
 |------|------|---------------|
-| **텍스트 생성** | Gemini 2.0 Flash | `googleAI/gemini-2.0-flash` |
-| **텍스트 임베딩** | Gemini Embedding 001 | `googleAI/gemini-embedding-001` |
+| **텍스트 생성** | Gemini 2.5 Flash | `googleai/gemini-2.5-flash` |
+| **텍스트 임베딩** | Gemini Embedding 001 | `googleai/gemini-embedding-001` |
 
 ### 2.3 사용량 계산
 
@@ -159,9 +159,11 @@ server/                            # Genkit 서버 (프로젝트 루트의 serve
 │   ├── genkit.ts                  # Genkit 인스턴스 설정 (플러그인, 모델)
 │   │
 │   ├── flows/
-│   │   ├── recommendFlow.ts       # 하이브리드 추천 Flow
+│   │   ├── recommendFlow.ts       # 추천 Flow (RAG 검색 + Gemini 생성)
 │   │   ├── chatFlow.ts            # 자연어 대화 Flow
-│   │   └── syncRecordsFlow.ts     # 수업 기록 임베딩 동기화 Flow
+│   │   ├── syncRecordsFlow.ts     # 수업 기록 임베딩 동기화 Flow
+│   │   ├── ingestDocumentFlow.ts  # 텍스트 문서 업로드 → RAG 인덱싱
+│   │   └── uploadPdfFlow.ts       # PDF 업로드 → 청킹 → RAG 인덱싱
 │   │
 │   ├── rag/
 │   │   ├── indexer.ts             # 활동/교육과정 데이터 → 벡터 인덱싱
@@ -175,7 +177,7 @@ server/                            # Genkit 서버 (프로젝트 루트의 serve
 │   │
 │   └── utils/
 │       ├── intentParser.ts        # 규칙 기반 의도 파싱 (키워드 매칭)
-│       └── scoreMerger.ts         # 규칙 + AI 점수 병합
+│       └── scoreMerger.ts         # [미사용] 이전 모듈 시스템용 점수 병합
 │
 ├── data/
 │   └── vectorstore/               # dev-local-vectorstore 영속 저장
@@ -211,6 +213,10 @@ export const ai = genkit({
       },
       {
         indexName: 'pe_records',
+        embedder: googleAI.embedder('gemini-embedding-001'),
+      },
+      {
+        indexName: 'pe_knowledge',
         embedder: googleAI.embedder('gemini-embedding-001'),
       },
     ]),
@@ -421,20 +427,16 @@ Genkit 서버 상태 확인 (GET /api/health)
     └─ 응답 지연 (> 5초) → 빠른 경로 결과 먼저 표시 + AI 결과 나중에 병합
 ```
 
-### 5.3 점수 병합
+### 5.3 점수 체계 (현행)
 
-```typescript
-// 최종 점수 = 규칙 기반(70%) + AI 신뢰도(20%) + 개인화(10%)
-function mergeScores(ruleScore: number, aiConfidence: number, personalBonus: number) {
-  return {
-    total: ruleScore * 0.7 + aiConfidence * 100 * 0.2 + personalBonus * 0.1,
-    breakdown: {
-      rule: ruleScore,            // 기존 scoreCandidate.js 점수 (0~100)
-      ai: aiConfidence * 100,     // Gemini 반환 confidence (0~1 → 0~100)
-      personal: personalBonus,    // 과거 수업 기록 기반 (+10 좋아함, -5 최근 사용)
-    },
-  };
-}
+> **참고**: 이전 설계에서는 `scoreMerger.ts`로 규칙 기반(70%) + AI 신뢰도(20%) + 개인화(10%) 하이브리드 점수를 계획했으나, 프로젝트가 모듈 기반에서 **교육과정 기반 + Genkit RAG**로 전환되면서 규칙 기반 점수 엔진(`scoreCandidate.js`)이 구현되지 않았습니다. `scoreMerger.ts` 파일은 존재하지만 **미사용(dead code)** 상태입니다.
+
+현재 점수 체계:
+- **confidence** (0.0~1.0): Gemini가 RAG 검색 결과 + 교사 요청 컨텍스트를 종합하여 반환하는 적합도 점수
+- UI에서 confidence를 4단계로 표시: 매우 적합(≥0.8), 적합(≥0.6), 보통(≥0.4), 참고(<0.4)
+
+```
+사용자 요청 → RAG 검색(활동+기록+지식) → Gemini 생성 → confidence 포함 JSON 반환
 ```
 
 ---
@@ -453,7 +455,7 @@ const RecommendInput = z.object({
   query: z.string().describe('자연어 질문 또는 필터 요약'),
   filters: z.object({
     grade: z.string().optional(),
-    space: z.array(z.string()).optional(),
+    space: z.string().optional(),
     sport: z.string().optional(),
     weather: z.string().optional(),
     studentCount: z.number().optional(),
@@ -488,7 +490,7 @@ export const recommendFlow = ai.defineFlow(
 
     // 2. Gemini로 추천 생성
     const { output } = await ai.generate({
-      model: googleAI.model('gemini-2.0-flash'),
+      model: 'googleai/gemini-2.5-flash',
       prompt: `
 ## 교사 상황
 - 질문: ${input.query}
@@ -554,7 +556,7 @@ export const chatFlow = ai.defineFlow(
     const context = relatedDocs.map(doc => doc.text).join('\n---\n');
 
     const response = await ai.generate({
-      model: googleAI.model('gemini-2.0-flash'),
+      model: 'googleai/gemini-2.5-flash',
       system: `${SYSTEM_PROMPT}\n\n참고 활동 정보:\n${context}`,
       messages: [
         ...(history || []).map(h => ({
@@ -661,40 +663,47 @@ export async function syncRecords(records) {
 }
 ```
 
-### 7.2 useRecommend 훅 확장 (개념)
+### 7.2 useRecommend 훅 (구현 완료)
 
 ```javascript
-// src/hooks/useRecommend.js에 추가할 AI 추천 로직
+// src/hooks/useRecommend.js — AI 수업 추천 오케스트레이터
 
-const [aiRecommendations, setAiRecommendations] = useState(null);
-const [isAiLoading, setIsAiLoading] = useState(false);
-const [isGenkitAvailable, setIsGenkitAvailable] = useState(false);
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { checkGenkitHealth, requestRecommendation } from '../services/genkit'
 
-// 서버 상태 확인 (마운트 시)
-useEffect(() => {
-  checkGenkitHealth().then(setIsGenkitAvailable);
-}, []);
+export function useRecommend() {
+  const [aiRecommendations, setAiRecommendations] = useState(null)
+  const [isAiLoading, setIsAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(null)
+  const [isGenkitAvailable, setIsGenkitAvailable] = useState(false)
 
-// AI 추천 요청
-const requestAiRecommend = async (query) => {
-  if (!isGenkitAvailable) return;
+  // Health check on mount
+  useEffect(() => {
+    checkGenkitHealth().then(setIsGenkitAvailable)
+  }, [])
 
-  setIsAiLoading(true);
-  try {
-    const result = await requestRecommendation({
-      query,
-      filters: currentFilters,
-      recentActivities: getRecentActivityIds(),
-    });
-    setAiRecommendations(result);
-  } catch (err) {
-    console.error('AI 추천 실패:', err);
-    // fallback: 규칙 기반 결과 유지
-  } finally {
-    setIsAiLoading(false);
-  }
-};
+  // AI recommendation request
+  const requestAiRecommend = useCallback(async (query, filters, recentActivities) => {
+    if (!isGenkitAvailable) { setAiError('서버 미연결'); return null }
+    setIsAiLoading(true)
+    try {
+      const result = await requestRecommendation({ query, filters, recentActivities })
+      setAiRecommendations(result)
+      return result
+    } catch (err) {
+      setAiError(err.message)
+      return null // fallback: rule-based results remain
+    } finally {
+      setIsAiLoading(false)
+    }
+  }, [isGenkitAvailable])
+
+  return { aiRecommendations, isAiLoading, aiError, isGenkitAvailable,
+           requestAiRecommend, clearAiRecommendations, recheckHealth }
+}
 ```
+
+**UI 컴포넌트**: `src/components/common/AiRecommendCard.jsx` — AI 추천 결과 전용 카드
 
 ### 7.3 Vite 프록시 설정
 
@@ -781,7 +790,7 @@ export default defineConfig({
 |------|------|--------|
 | C-1 | `syncRecordsFlow` 구현 | 수업 기록 임베딩 API |
 | C-2 | 프론트엔드 수업 기록 저장 시 자동 sync | `useClassManager` 확장 |
-| C-3 | 개인화 점수 로직 | `scoreMerger.ts` |
+| C-3 | 개인화 점수 로직 | Gemini confidence + 과거 기록 컨텍스트 |
 | C-4 | 프롬프트에 과거 기록 컨텍스트 추가 | 추천 품질 향상 |
 
 **검증**: 기록 10개 후 "지난번에 아이들이 좋아했던 거 비슷한 것" → 과거 기록 참조 응답

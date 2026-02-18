@@ -131,6 +131,12 @@ function expandSchoolSuffix(compact) {
   return null
 }
 
+// 학교 검색 시 주요 지역명 접두사 (geocoder로 전국 검색용)
+const MAJOR_REGIONS = [
+  '서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종',
+  '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주',
+]
+
 function buildGeocodeQueries(query = '', options = {}) {
   const { hintLat, hintLon, hintAddress = '' } = options
   const trimmed = String(query || '').trim()
@@ -166,7 +172,15 @@ function buildGeocodeQueries(query = '', options = {}) {
     })
   })
 
-  return variants.slice(0, 12)
+  // 학교 검색이면 주요 지역명 접두사 추가 (전국 검색)
+  if (isSchoolLikeQuery(compact)) {
+    const schoolName = expanded || compact
+    MAJOR_REGIONS.forEach((region) => {
+      pushVariant(`${region} ${schoolName}`)
+    })
+  }
+
+  return variants.slice(0, 24)
 }
 
 function isBroadAreaResult(item) {
@@ -382,7 +396,7 @@ async function geocodeByMapService(query, options = {}) {
       merged.push(item)
     })
 
-    if (merged.length >= 10) {
+    if (merged.length >= 20) {
       break
     }
   }
@@ -394,16 +408,16 @@ async function geocodeByMapService(query, options = {}) {
   const ranked = rankSearchResults(merged, query)
   const strictMode = excludeBroad || isSchoolLikeQuery(query)
   if (!strictMode) {
-    return ranked.slice(0, 10)
+    return ranked.slice(0, 20)
   }
 
   const filtered = ranked.filter((item) => !isBroadAreaResult(item))
   if (filtered.length > 0) {
-    return filtered.slice(0, 10)
+    return filtered.slice(0, 20)
   }
 
   // strict 모드에서도 결과가 없으면 전체 결과 반환
-  return ranked.slice(0, 10)
+  return ranked.slice(0, 20)
 }
 
 function buildFallbackResults(query) {
@@ -540,34 +554,84 @@ export async function searchPlace(query, options = {}) {
     return []
   }
 
-  // 1단계: 네이버 지역검색 API (프록시 경유)
-  try {
-    const localResults = await requestNaverLocalSearch(trimmed, 10, 'random')
-    if (localResults.length > 0) {
-      const ranked = rankSearchResults(localResults, trimmed)
-      const filtered = excludeBroad
-        ? ranked.filter((item) => !isBroadAreaResult(item))
-        : ranked
-      if (filtered.length > 0) {
-        return filtered.slice(0, 10)
-      }
-      if (ranked.length > 0) {
-        return ranked.slice(0, 10)
-      }
-    }
-  } catch (error) {
-    console.warn('Local search via proxy failed, trying geocoder:', error.message)
+  const hasGpsHint = Number.isFinite(hintLat) && Number.isFinite(hintLon)
+
+  // 학교 약어 확장 ("대덕초" → "대덕초등학교") — 약어/전체이름 모두 API 호출
+  const compact = trimmed.replace(/\s+/g, '')
+  const expanded = expandSchoolSuffix(compact)
+  const schoolName = expanded || compact
+  const searchQueries = [trimmed]
+  if (expanded && expanded !== trimmed) {
+    searchQueries.push(expanded)
   }
 
-  // 2단계: 네이버 지도 geocoder (주소 기반)
-  const mapResults = await geocodeByMapService(trimmed, {
-    excludeBroad,
-    hintLat,
-    hintLon,
-    hintAddress,
-  })
-  if (mapResults.length > 0) {
-    return mapResults
+  // GPS 힌트가 있으면 근처 지역명으로 추가 검색 (당진 신촌초 등 누락 방지)
+  if (hasGpsHint && isSchoolLikeQuery(compact)) {
+    const nearCity = findNearestCityName(hintLat, hintLon)
+    // 가장 가까운 도시 + 인접 지역으로 추가 쿼리
+    const nearbyQueries = new Set()
+    nearbyQueries.add(`${nearCity} ${schoolName}`)
+    // 인접 도시도 추가 (반경 ~100km 이내)
+    for (const [city, coords] of Object.entries(CITY_COORDS)) {
+      const d = (coords.lat - hintLat) ** 2 + (coords.lon - hintLon) ** 2
+      if (d < 1.5 && city !== nearCity) { // ~약 120km 이내
+        nearbyQueries.add(`${city} ${schoolName}`)
+      }
+    }
+    for (const q of nearbyQueries) {
+      if (!searchQueries.includes(q)) searchQueries.push(q)
+    }
+  }
+
+  // 1단계 + 2단계 병렬 실행 (네이버 지역검색 API max 5개이므로 다중 쿼리 + geocoder 합침)
+  const localSearchPromises = searchQueries.map((q) =>
+    requestNaverLocalSearch(q, 5, 'random').catch(() => [])
+  )
+  const [mapResults, ...localResultArrays] = await Promise.all([
+    geocodeByMapService(trimmed, { excludeBroad, hintLat, hintLon, hintAddress }).catch(() => []),
+    ...localSearchPromises,
+  ])
+  const localResults = localResultArrays.flat()
+
+  // 학교 검색이면 geocoder 결과 중 학교가 아닌 항목 제거
+  const isSchoolSearch = isSchoolLikeQuery(compact)
+  const cleanedMapResults = isSchoolSearch
+    ? mapResults.filter((item) => {
+        const text = `${item.name} ${item.address} ${item.roadAddress} ${item.category}`
+        return SCHOOL_ENTITY_PATTERN.test(text)
+      })
+    : mapResults
+
+  // 결과 합치기 + 중복 제거 (좌표 기준)
+  const dedupe = new Set()
+  const merged = []
+
+  // 지역검색(실제 장소) 우선, geocoder(주소 매칭) 보조
+  for (const item of [...localResults, ...cleanedMapResults]) {
+    if (!Number.isFinite(item.lat) || !Number.isFinite(item.lon)) continue
+    const key = `${item.lat.toFixed(4)}:${item.lon.toFixed(4)}`
+    if (dedupe.has(key)) continue
+    dedupe.add(key)
+    merged.push(item)
+  }
+
+  if (merged.length > 0) {
+    // GPS 힌트가 있으면 거리순 정렬 (가까운 순)
+    if (hasGpsHint) {
+      merged.sort((a, b) => {
+        const distA = (a.lat - hintLat) ** 2 + (a.lon - hintLon) ** 2
+        const distB = (b.lat - hintLat) ** 2 + (b.lon - hintLon) ** 2
+        return distA - distB
+      })
+    }
+
+    const filtered = excludeBroad
+      ? merged.filter((item) => !isBroadAreaResult(item))
+      : merged
+    if (filtered.length > 0) {
+      return filtered.slice(0, 15)
+    }
+    return merged.slice(0, 15)
   }
 
   // 3단계: 도시 좌표 기반 fallback

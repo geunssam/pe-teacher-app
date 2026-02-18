@@ -225,7 +225,7 @@ export default function LocationMapPicker({
         })
       }
 
-      const sliced = results.slice(0, 10)
+      const sliced = results.slice(0, 15)
       setPlaceResults(sliced)
 
       if (!sliced.length) {
@@ -255,23 +255,23 @@ export default function LocationMapPicker({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
-      <div className="w-full max-w-2xl bg-bg rounded-3xl overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-4xl h-[85vh] bg-bg rounded-3xl overflow-hidden shadow-2xl flex flex-col">
         {/* 헤더 */}
-        <div className="p-lg bg-gradient-to-r from-primary/90 to-primary/70 text-white">
-          <h2 className="text-xl font-bold mb-xs">🗺️ 지도에서 위치 선택</h2>
-          <p className="text-sm opacity-90">
-            지도를 클릭하거나 마커를 드래그해서 위치를 선택하세요
+        <div className="p-4 bg-gradient-to-r from-primary/90 to-primary/70 text-white shrink-0">
+          <h2 className="text-lg font-bold">🗺️ 지도에서 위치 선택</h2>
+          <p className="text-sm opacity-90 mt-0.5">
+            학교를 검색하거나 지도를 클릭하세요
           </p>
         </div>
 
         {/* 지도 영역 */}
-        <div className="relative">
-          <div ref={mapRef} className="w-full h-[60vh] min-h-[400px]" />
+        <div className="relative flex-1 min-h-0">
+          <div ref={mapRef} className="w-full h-full" />
 
-          <div className="absolute top-4 right-4 z-10 w-[320px] max-w-[calc(100%-2rem)]">
-            <div className="bg-white/95 backdrop-blur-sm border border-white/80 rounded-xl shadow-md p-sm">
-              <div className="flex gap-2">
+          <div className="absolute top-3 right-3 z-10 w-[280px] max-w-[calc(100%-1.5rem)]">
+            <div className="bg-white/95 backdrop-blur-sm border border-white/80 rounded-xl shadow-md p-2">
+              <div className="flex gap-1.5">
                 <input
                   value={placeQuery}
                   onChange={(e) => setPlaceQuery(e.target.value)}
@@ -281,28 +281,28 @@ export default function LocationMapPicker({
                     }
                   }}
                   placeholder="학교명 또는 장소 검색"
-                  className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-white/80 bg-white/80 text-sm"
+                  className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-white/80 bg-white/80 text-sm"
                 />
                 <button
                   onClick={handleSearchPlace}
                   disabled={isSearchingPlace}
-                  className="px-3 py-2 rounded-lg text-sm font-semibold text-white"
+                  className="px-2.5 py-1.5 rounded-lg text-sm font-semibold text-white shrink-0"
                   style={{ backgroundColor: '#7C9EF5' }}
                 >
-                  {isSearchingPlace ? '검색중' : '검색'}
+                  {isSearchingPlace ? '...' : '검색'}
                 </button>
               </div>
 
               {placeResults.length > 0 && (
-                <div className="mt-2 max-h-44 overflow-auto rounded-lg border border-white/80 bg-white/90">
+                <div className="mt-1.5 max-h-28 overflow-auto rounded-lg border border-white/80 bg-white/90">
                   {placeResults.map((place, idx) => (
                     <button
                       key={`${place.name}-${idx}`}
                       onClick={() => handleSelectPlace(place)}
-                      className="w-full text-left px-3 py-2 border-b last:border-b-0 border-white/60 hover:bg-primary/10 transition-all"
+                      className="w-full text-left px-2.5 py-1.5 border-b last:border-b-0 border-white/60 hover:bg-primary/10 transition-all"
                     >
-                      <div className="text-sm font-semibold text-text">{place.name}</div>
-                      <div className="text-xs text-textMuted truncate">
+                      <div className="text-xs font-semibold text-text truncate">{place.name}</div>
+                      <div className="text-[11px] text-textMuted truncate">
                         {place.roadAddress || place.address}
                       </div>
                     </button>
@@ -341,32 +341,21 @@ export default function LocationMapPicker({
         </div>
 
         {/* 버튼 영역 */}
-        <div className="p-lg bg-white/60 flex gap-md">
+        <div className="p-md bg-white/60 flex gap-md shrink-0">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 px-4 bg-white/80 rounded-xl font-semibold hover:bg-white transition-all border border-white/80"
+            className="flex-1 py-2.5 px-4 bg-white/80 rounded-xl font-semibold hover:bg-white transition-all border border-white/80 text-sm"
           >
             취소
           </button>
           <button
             onClick={handleConfirm}
             disabled={Boolean(mapInitError)}
-            className="flex-1 py-3 px-4 rounded-xl font-semibold transition-all text-white"
+            className="flex-1 py-2.5 px-4 rounded-xl font-semibold transition-all text-white text-sm"
             style={{ backgroundColor: '#7C9EF5' }}
           >
-            ✅ 이 위치로 설정
+            이 위치로 설정
           </button>
-        </div>
-
-        {/* 안내 메시지 */}
-        <div className="px-lg pb-lg">
-          <div className="p-md bg-primary/10 rounded-xl border border-primary/30">
-            <div className="text-caption text-textMuted">
-              💡 지도를 클릭하거나 마커를 드래그하여 정확한 위치를 선택하세요
-              <br />
-              💡 확인 버튼을 누르면 자동으로 가장 가까운 대기질 측정소를 찾습니다
-            </div>
-          </div>
         </div>
       </div>
     </div>

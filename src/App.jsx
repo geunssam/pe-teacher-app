@@ -109,9 +109,13 @@ function AppContent() {
   const shouldShowHeader = location.pathname !== '/setup' && location.pathname !== '/login'
 
   // 신규 사용자 + localStorage 데이터 있으면 마이그레이션 프롬프트 표시
+  // (이미 마이그레이션 완료/건너뛴 경우 재표시하지 않음)
   useEffect(() => {
     if (user && isNewUser && !migrationChecked && hasLocalPEData()) {
-      setShowMigration(true)
+      const migrationFlag = localStorage.getItem('pe_migrated_to_firestore')
+      if (!migrationFlag) {
+        setShowMigration(true)
+      }
       setMigrationChecked(true)
     }
   }, [user, isNewUser, migrationChecked])

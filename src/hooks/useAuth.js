@@ -4,6 +4,25 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../services/firebase'
 import { signInWithGoogle, signOutUser, onUserLogin, deleteUserAccount } from '../services/auth'
 
+// 로그아웃 시 개인정보만 삭제 (학급설정은 유지하여 재로그인 시 위저드 방지)
+function clearLocalPEData() {
+  const keysToRemove = [
+    // pe_class_setup — 유지 (학교급/학년 설정, 개인정보 아님)
+    // pe_classes — 유지 (학급 목록, Firestore 재로딩 실패 시 fallback)
+    'pe_rosters',           // 학생 명단 (개인정보)
+    'pe_class_records',     // 수업 기록
+    'pe_timetable_base',
+    'pe_timetable_weeks',
+    'pe-teacher-settings',
+    'pe_edited_ace_lessons',
+    'pe_migrated_to_firestore',
+    'curriculum_my_activities_v1',
+    'curriculum_custom_activities_v1',
+    'curriculum_custom_alternative_ids_v1',
+  ]
+  keysToRemove.forEach((key) => localStorage.removeItem(key))
+}
+
 /**
  * Firebase Auth 상태 관리 Hook
  */
@@ -56,6 +75,7 @@ export function useAuth() {
   const logout = useCallback(async () => {
     try {
       await signOutUser()
+      clearLocalPEData()
     } catch (err) {
       setError(err.message)
     }
@@ -64,6 +84,7 @@ export function useAuth() {
   const deleteAccount = useCallback(async () => {
     try {
       await deleteUserAccount()
+      clearLocalPEData()
     } catch (err) {
       setError(err.message)
       throw err

@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-17T00:51:45.856Z",
+  "timestamp": "2026-02-17T23:43:41.014Z",
   "reason": "compaction",
   "status": {
     "version": "2.0",
-    "lastUpdated": "2026-02-17T00:49:28.055Z",
+    "lastUpdated": "2026-02-17T23:32:48.872Z",
     "activeFeatures": [
       "recommend",
       "오늘체육뭐하지",
@@ -23,7 +23,8 @@
       "aiPrompts.js",
       "home",
       "constants",
-      "library"
+      "library",
+      "settings"
     ],
     "primaryFeature": "recommend",
     "features": {
@@ -49,9 +50,9 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-15T00:15:19.228Z",
-          "lastUpdated": "2026-02-17T00:49:28.055Z"
+          "lastUpdated": "2026-02-17T23:32:48.872Z"
         },
-        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/pages/CurriculumPage.jsx"
+        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/pages/SetupWizard.jsx"
       },
       "curriculum": {
         "phase": "do",
@@ -62,9 +63,9 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-16T00:20:05.166Z",
-          "lastUpdated": "2026-02-16T14:04:09.009Z"
+          "lastUpdated": "2026-02-17T13:42:55.960Z"
         },
-        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/components/curriculum/ActivityCard.jsx"
+        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/components/curriculum/LessonTimeline.jsx"
       },
       "classes": {
         "phase": "do",
@@ -114,7 +115,7 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-16T08:39:58.943Z",
-          "lastUpdated": "2026-02-16T08:39:58.943Z"
+          "lastUpdated": "2026-02-17T13:43:09.597Z"
         },
         "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/services/genkit.js"
       },
@@ -140,9 +141,9 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-16T08:42:53.680Z",
-          "lastUpdated": "2026-02-16T09:32:45.359Z"
+          "lastUpdated": "2026-02-17T13:00:21.748Z"
         },
-        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/server/src/genkit.ts"
+        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/server/src/index.ts"
       },
       "auth.js": {
         "phase": "do",
@@ -153,7 +154,7 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-16T08:42:56.420Z",
-          "lastUpdated": "2026-02-16T11:00:18.656Z"
+          "lastUpdated": "2026-02-17T23:30:35.081Z"
         },
         "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/services/auth.js"
       },
@@ -179,7 +180,7 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-16T08:43:23.864Z",
-          "lastUpdated": "2026-02-16T08:43:45.862Z"
+          "lastUpdated": "2026-02-17T12:59:31.148Z"
         },
         "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/server/src/rag/retriever.ts"
       },
@@ -192,9 +193,9 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-16T08:44:43.287Z",
-          "lastUpdated": "2026-02-16T08:45:11.765Z"
+          "lastUpdated": "2026-02-17T13:43:36.104Z"
         },
-        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/server/src/flows/syncRecordsFlow.ts"
+        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/server/src/flows/chatFlow.ts"
       },
       "firestore.js": {
         "phase": "do",
@@ -231,7 +232,7 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-16T10:31:01.261Z",
-          "lastUpdated": "2026-02-16T12:51:21.959Z"
+          "lastUpdated": "2026-02-17T13:41:14.939Z"
         },
         "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/services/aiPrompts.js"
       },
@@ -273,6 +274,19 @@
           "lastUpdated": "2026-02-16T12:49:51.033Z"
         },
         "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/components/library/ModuleAddForm.jsx"
+      },
+      "settings": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-02-17T13:05:10.839Z",
+          "lastUpdated": "2026-02-17T13:05:10.839Z"
+        },
+        "lastFile": "/Users/iwongeun/Desktop/오늘체육뭐하지/src/components/settings/KnowledgeManager.jsx"
       }
     },
     "pipeline": {
@@ -283,7 +297,7 @@
     "session": {
       "startedAt": "2026-02-15T00:05:28.796Z",
       "onboardingCompleted": false,
-      "lastActivity": "2026-02-17T00:49:28.055Z"
+      "lastActivity": "2026-02-17T23:32:48.872Z"
     },
     "history": [
       {
@@ -1290,6 +1304,372 @@
       },
       {
         "timestamp": "2026-02-17T00:49:28.055Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T11:36:39.954Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:58:52.702Z",
+        "feature": "server",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:58:57.292Z",
+        "feature": "rag",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:04.346Z",
+        "feature": "server",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:10.398Z",
+        "feature": "rag",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:12.818Z",
+        "feature": "rag",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:22.274Z",
+        "feature": "rag",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:27.860Z",
+        "feature": "rag",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:31.148Z",
+        "feature": "rag",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:39.040Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:44.874Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:51.833Z",
+        "feature": "server",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T12:59:55.016Z",
+        "feature": "server",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:00:01.460Z",
+        "feature": "server",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:00:21.748Z",
+        "feature": "server",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:02:22.113Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:02:56.672Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:03:13.110Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:03:17.241Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:03:23.292Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:03:29.118Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:03:31.274Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:03:36.695Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:04:25.244Z",
+        "feature": "genkit.js",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:04:41.526Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:05:10.839Z",
+        "feature": "settings",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:05:18.133Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:05:19.526Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:12:44.480Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:12:46.831Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:12:57.676Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:13:18.123Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:40:21.243Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:40:34.026Z",
+        "feature": "curriculum",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:40:50.043Z",
+        "feature": "aiPrompts.js",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:41:14.939Z",
+        "feature": "aiPrompts.js",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:41:20.408Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:41:32.289Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:41:37.248Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:41:42.585Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:41:56.439Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:42:16.617Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:42:21.876Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:42:26.962Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:42:35.300Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:42:45.111Z",
+        "feature": "curriculum",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:42:55.960Z",
+        "feature": "curriculum",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:43:02.599Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:43:09.597Z",
+        "feature": "genkit.js",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:43:15.706Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:43:25.638Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T13:43:36.104Z",
+        "feature": "flows",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:29:13.007Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:29:30.409Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:29:49.611Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:29:56.065Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:30:09.372Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:30:29.846Z",
+        "feature": "auth.js",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:30:35.081Z",
+        "feature": "auth.js",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:31:04.567Z",
+        "feature": "오늘체육뭐하지",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-17T23:32:48.872Z",
         "feature": "오늘체육뭐하지",
         "phase": "do",
         "action": "updated"
