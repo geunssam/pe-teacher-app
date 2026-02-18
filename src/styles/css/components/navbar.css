@@ -147,57 +147,161 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--spacing-xs);
+  position: relative;
 }
 
-/* 현재 학급 표시 */
-.current-class {
+/* 프로필 트리거 버튼 */
+.profile-trigger {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text);
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: var(--radius-lg);
-  white-space: nowrap;
-}
-
-.current-class svg {
-  flex-shrink: 0;
-  color: var(--color-tab-classes);
-}
-
-/* 액션 버튼 (학급, 설정, 로그아웃) */
-.header-action-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-lg);
+  gap: var(--spacing-sm);
+  padding: 4px 10px 4px 4px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 100px;
   cursor: pointer;
   transition: all var(--transition-base);
-  text-decoration: none;
   white-space: nowrap;
 }
 
-.header-action-btn svg {
+.profile-trigger:hover {
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
   flex-shrink: 0;
 }
 
-.header-action-btn:hover {
-  color: var(--color-text);
-  background: rgba(255, 255, 255, 0.4);
+.profile-avatar-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
-.header-action-btn:active {
-  transform: scale(0.95);
+.profile-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* 프로필 드롭다운 */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: var(--z-dropdown);
+  animation: dropdown-in 0.15s ease;
+  overflow: hidden;
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.profile-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.profile-dropdown-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-dropdown-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-dropdown-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-dropdown-email {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-dropdown-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 0 var(--spacing-sm);
+}
+
+.profile-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  text-align: left;
+}
+
+.profile-dropdown-item svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.profile-dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.profile-dropdown-logout {
+  color: var(--color-danger);
+}
+
+.profile-dropdown-logout svg {
+  color: var(--color-danger);
 }
 
 /* 모바일 최적화 */
@@ -230,26 +334,19 @@
     display: none;
   }
 
-  .current-class {
+  /* 모바일에서 프로필 이름 숨김 */
+  .profile-name {
     display: none;
   }
 
-  .header-action-btn {
-    padding: var(--spacing-sm);
+  .profile-trigger {
+    padding: 3px;
   }
 
-  /* 모바일에서 설정 버튼 우선 노출 */
-  .header-logout-btn {
-    display: none;
-  }
-
-  .header-action-btn svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .hidden-mobile {
-    display: none;
+  .profile-dropdown {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.95);
   }
 
   /* 모바일에서 backdrop-filter 비활성화 */
@@ -263,10 +360,6 @@
 /* 태블릿 */
 @media (min-width: 768px) and (max-width: 1023px) {
   .nav-item {
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-
-  .header-action-btn {
     padding: var(--spacing-sm) var(--spacing-md);
   }
 }

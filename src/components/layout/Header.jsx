@@ -1,4 +1,5 @@
-// 상단 헤더 — 앱 제목 + 현재 탭 표시 | 탭아이콘→constants/navigation.jsx, 스타일→css/components/navbar.css
+// 상단 헤더 — 앱 제목 + 네비게이션 + 프로필 드롭다운 | 탭아이콘→constants/navigation.jsx, 스타일→css/components/navbar.css
+import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { NAV_ITEMS, SettingsIcon, LogoutIcon } from '../../constants/navigation'
 import { useAuthContext } from '../../contexts/AuthContext'
@@ -8,19 +9,39 @@ import toast from 'react-hot-toast'
 export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { logout } = useAuthContext()
+  const { user, logout } = useAuthContext()
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef(null)
+
+  // 바깥 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false)
+      }
+    }
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showDropdown])
 
   const handleSettings = () => {
+    setShowDropdown(false)
     navigate('/settings')
   }
 
   const handleLogout = async () => {
+    setShowDropdown(false)
     const confirmed = await confirm('로그아웃하시겠습니까?', '로그아웃', '취소')
     if (confirmed) {
       await logout()
       toast.success('로그아웃되었습니다')
     }
   }
+
+  const displayName = user?.displayName || '선생님'
+  const photoURL = user?.photoURL
 
   return (
     <header className="app-header">
@@ -33,7 +54,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* 중앙: 메인 네비게이션 (PEhub 핵심 4개 탭) */}
+        {/* 중앙: 메인 네비게이션 */}
         <nav className="main-nav">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
@@ -53,21 +74,59 @@ export default function Header() {
           })}
         </nav>
 
-        {/* 우측: 설정 + 로그아웃 */}
-        <div className="header-right">
+        {/* 우측: 프로필 */}
+        <div className="header-right" ref={dropdownRef}>
           <button
-            onClick={handleSettings}
-            className="header-action-btn header-settings-btn"
-            title="설정"
+            onClick={() => setShowDropdown((v) => !v)}
+            className="profile-trigger"
           >
-            <SettingsIcon />
-            <span className="hidden-mobile">설정</span>
+            {photoURL ? (
+              <img
+                src={photoURL}
+                alt=""
+                className="profile-avatar"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="profile-avatar-fallback">
+                {displayName.charAt(0)}
+              </div>
+            )}
+            <span className="profile-name">{displayName}</span>
           </button>
 
-          <button onClick={handleLogout} className="header-action-btn header-logout-btn" title="로그아웃">
-            <LogoutIcon />
-            <span className="hidden-mobile">로그아웃</span>
-          </button>
+          {/* 드롭다운 메뉴 */}
+          {showDropdown && (
+            <div className="profile-dropdown">
+              <div className="profile-dropdown-header">
+                {photoURL && (
+                  <img
+                    src={photoURL}
+                    alt=""
+                    className="profile-dropdown-avatar"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
+                <div className="profile-dropdown-info">
+                  <span className="profile-dropdown-name">{displayName}</span>
+                  {user?.email && (
+                    <span className="profile-dropdown-email">{user.email}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="profile-dropdown-divider" />
+
+              <button onClick={handleSettings} className="profile-dropdown-item">
+                <SettingsIcon />
+                <span>설정</span>
+              </button>
+              <button onClick={handleLogout} className="profile-dropdown-item profile-dropdown-logout">
+                <LogoutIcon />
+                <span>로그아웃</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
