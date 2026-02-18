@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { NAV_ITEMS, SettingsIcon, LogoutIcon } from '../../constants/navigation'
 import { useAuthContext } from '../../contexts/AuthContext'
+import { useSettings } from '../../hooks/useSettings'
 import { confirm } from '../common/ConfirmDialog'
 import toast from 'react-hot-toast'
 
@@ -10,6 +11,7 @@ export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuthContext()
+  const { nickname } = useSettings()
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -40,7 +42,7 @@ export default function Header() {
     }
   }
 
-  const displayName = user?.displayName || '선생님'
+  const displayName = nickname || user?.displayName || '선생님'
   const photoURL = user?.photoURL
 
   return (

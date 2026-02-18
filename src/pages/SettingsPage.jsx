@@ -1,8 +1,9 @@
 // ⚙️ 설정 — 프로필, 학교 위치, 측정소 선택, 앱 환경설정, 로그아웃/계정삭제 | 지도→components/settings/LocationMapPicker.jsx, 위치로직→hooks/useLocationPicker.js, 저장→hooks/useSettings.js
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLocationPicker } from '../hooks/useLocationPicker'
 import { useClassManager } from '../hooks/useClassManager'
+import { useSettings } from '../hooks/useSettings'
 import { useAuthContext } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
@@ -38,6 +39,9 @@ export default function SettingsPage() {
     openMapPicker,
     closeMapPicker,
   } = useLocationPicker()
+  const { nickname, updateNickname } = useSettings()
+  const [editingNickname, setEditingNickname] = useState(false)
+  const [nicknameInput, setNicknameInput] = useState('')
   const { resetClassSetup } = useClassManager()
 
   const handleStationSelect = (station) => {
@@ -114,7 +118,7 @@ export default function SettingsPage() {
         {user && (
           <GlassCard>
             <h2 className="text-card-title mb-md">내 프로필</h2>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-4">
               {user.photoURL && (
                 <img
                   src={user.photoURL}
@@ -125,12 +129,64 @@ export default function SettingsPage() {
               )}
               <div>
                 <div className="text-body font-semibold text-text">
-                  {user.displayName || '사용자'}
+                  {nickname || user.displayName || '사용자'}
                 </div>
                 <div className="text-caption text-textMuted">
                   {user.email}
                 </div>
               </div>
+            </div>
+
+            {/* 닉네임 편집 */}
+            <div className="pt-3 border-t border-gray-100">
+              <label className="text-xs font-semibold text-gray-500 mb-2 block">표시 이름</label>
+              {editingNickname ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={nicknameInput}
+                    onChange={(e) => setNicknameInput(e.target.value)}
+                    placeholder={user.displayName || '닉네임 입력'}
+                    maxLength={20}
+                    autoFocus
+                    className="flex-1 py-2 px-3 rounded-lg border border-gray-200 bg-white/60 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                  />
+                  <button
+                    onClick={() => {
+                      const trimmed = nicknameInput.trim()
+                      updateNickname(trimmed)
+                      setEditingNickname(false)
+                      toast.success(trimmed ? `표시 이름: ${trimmed}` : '기본 이름으로 복원했습니다')
+                    }}
+                    className="py-2 px-3 rounded-lg text-sm font-semibold text-white shrink-0"
+                    style={{ backgroundColor: '#7C9EF5' }}
+                  >
+                    저장
+                  </button>
+                  <button
+                    onClick={() => setEditingNickname(false)}
+                    className="py-2 px-3 rounded-lg text-sm font-semibold text-gray-500 bg-gray-100 shrink-0"
+                  >
+                    취소
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">
+                    {nickname || user.displayName || '사용자'}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setNicknameInput(nickname || '')
+                      setEditingNickname(true)
+                    }}
+                    className="py-1.5 px-3 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-all"
+                  >
+                    변경
+                  </button>
+                </div>
+              )}
+              <p className="text-[10px] text-gray-400 mt-1.5">비우면 Google 계정 이름이 사용됩니다</p>
             </div>
           </GlassCard>
         )}

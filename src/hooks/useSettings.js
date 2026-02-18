@@ -7,6 +7,7 @@ import { setDocument, getDocument } from '../services/firestore'
 const SETTINGS_KEY = 'pe-teacher-settings'
 
 const DEFAULT_SETTINGS = {
+  nickname: '',
   location: {
     name: '학교 이름',
     address: null,
@@ -78,6 +79,18 @@ export function useSettings() {
   }, [setSettings, syncToFirestore])
 
   /**
+   * 닉네임 업데이트
+   * @param {string} nickname
+   */
+  const updateNickname = useCallback((nickname) => {
+    setSettings((prev) => {
+      const next = { ...prev, nickname, lastUpdated: new Date().toISOString() }
+      syncToFirestore(next)
+      return next
+    })
+  }, [setSettings, syncToFirestore])
+
+  /**
    * 설정 초기화
    */
   const resetSettings = useCallback(() => {
@@ -95,7 +108,9 @@ export function useSettings() {
 
   return {
     settings,
+    nickname: settings.nickname || '',
     location: settings.location,
+    updateNickname,
     updateLocation,
     resetSettings,
     hasLocationSet,
