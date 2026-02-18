@@ -1,5 +1,5 @@
 // 앱 루트 — React Router 설정, Auth 통합, 탭 레이아웃, ProtectedRoute(인증+학급설정 필수) | 탭메뉴→constants/navigation.jsx, 레이아웃→components/layout/
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { useClassManager } from './hooks/useClassManager'
@@ -33,35 +33,29 @@ const SetupWizard = lazy(() => import('./pages/SetupWizard'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 
-// 인증 보호 라우트 (로그인 필수)
+// 인증 보호 라우트 (로그인 필수) — /setup 전용
 function AuthRoute({ children }) {
   const { user, loading } = useAuthContext()
-
-  if (loading) {
-    return <LoadingSpinner />
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
-
+  if (loading) return <LoadingSpinner />
+  if (!user) return <Navigate to="/login" replace />
   return children
 }
 
-// 보호된 라우트 (학급 설정 필요 — Firestore 로딩 완료 대기)
-function ProtectedRoute({ children }) {
+// 보호된 레이아웃 라우트 (인증 + 학급 설정 + 에러 바운더리 통합)
+function ProtectedLayout() {
+  const { user, loading } = useAuthContext()
   const { isSetupComplete, dataReady } = useClassManager()
 
-  // Firestore 데이터 로딩 완료 전에는 스피너 표시 (위저드 오리다이렉트 방지)
-  if (!dataReady) {
-    return <LoadingSpinner />
-  }
+  if (loading) return <LoadingSpinner />
+  if (!user) return <Navigate to="/login" replace />
+  if (!dataReady) return <LoadingSpinner />
+  if (!isSetupComplete()) return <Navigate to="/setup" replace />
 
-  if (!isSetupComplete()) {
-    return <Navigate to="/setup" replace />
-  }
-
-  return children
+  return (
+    <ErrorBoundary>
+      <Outlet />
+    </ErrorBoundary>
+  )
 }
 
 function App() {
@@ -140,92 +134,16 @@ function AppContent() {
               </AuthRoute>
             } />
 
-            {/* 보호된 라우트들 */}
-            <Route
-              path="/"
-              element={
-                <AuthRoute>
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <HomePage />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                </AuthRoute>
-              }
-            />
-            <Route
-              path="/weather"
-              element={
-                <AuthRoute>
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <WeatherPage />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                </AuthRoute>
-              }
-            />
-            <Route
-              path="/schedule"
-              element={
-                <AuthRoute>
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <SchedulePage />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                </AuthRoute>
-              }
-            />
-            <Route
-              path="/curriculum"
-              element={
-                <AuthRoute>
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <CurriculumPage />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                </AuthRoute>
-              }
-            />
-
-            <Route
-              path="/classes"
-              element={
-                <AuthRoute>
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <ClassesPage />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                </AuthRoute>
-              }
-            />
-            <Route
-              path="/library"
-              element={
-                <AuthRoute>
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <LibraryPage />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                </AuthRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <AuthRoute>
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <SettingsPage />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                </AuthRoute>
-              }
-            />
+            {/* 보호된 라우트들 (인증 + 학급 설정 + 에러 바운더리 통합) */}
+            <Route element={<ProtectedLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/weather" element={<WeatherPage />} />
+              <Route path="/schedule" element={<SchedulePage />} />
+              <Route path="/curriculum" element={<CurriculumPage />} />
+              <Route path="/classes" element={<ClassesPage />} />
+              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
           </Routes>
         </Suspense>
       </main>
