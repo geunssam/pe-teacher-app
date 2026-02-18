@@ -64,17 +64,17 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="page-container max-w-2xl mx-auto px-4 py-6">
+    <div className="page-container">
       {/* Header */}
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-gray-900">자료실</h1>
-        <p className="text-xs text-gray-400 mt-1">
+      <div className="mb-lg">
+        <h1 className="text-page-title">자료실</h1>
+        <p className="text-caption text-muted mt-1">
           수업 설계에 사용되는 종목, 기술, 활동, 변형 자료를 관리합니다
         </p>
       </div>
 
       {/* Sub-tab chips */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 no-scrollbar">
+      <div className="flex items-center gap-2 mb-lg overflow-x-auto pb-1 no-scrollbar">
         {SUB_TABS.map(({ key, label, emoji }) => (
           <button
             key={key}

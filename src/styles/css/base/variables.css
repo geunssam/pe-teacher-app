@@ -1,6 +1,10 @@
 /* classpet 기반 CSS 커스텀 속성 */
 
 :root {
+  /* 폰트 */
+  --font-family: 'Paperlogy', 'Apple SD Gothic Neo', sans-serif;
+  --font-display: 'GmarketSans', 'Paperlogy', sans-serif;
+
   /* 배경 계열 */
   --color-bg: #ffffff;
   --color-surface: rgba(255, 255, 255, 0.55);

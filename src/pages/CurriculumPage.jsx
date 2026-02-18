@@ -191,17 +191,17 @@ export default function CurriculumPage() {
   }
 
   return (
-    <div className="page-container max-w-2xl mx-auto px-4 py-6">
+    <div className="page-container">
       {/* 페이지 제목 + 필터 칩 바 (Step 1에서만 표시) */}
       {step === 1 && (
         <>
-          <div className="mb-4">
-            <h1 className="text-xl font-bold text-gray-900">{pageTitle}</h1>
-            <p className="text-xs text-gray-400 mt-1">{pageDesc}</p>
+          <div className="mb-lg">
+            <h1 className="text-page-title">{pageTitle}</h1>
+            <p className="text-caption text-muted mt-1">{pageDesc}</p>
           </div>
 
           {/* 필터 칩 바 */}
-          <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1 no-scrollbar">
+          <div className="flex items-center gap-2 mb-lg overflow-x-auto pb-1 no-scrollbar">
             {VIEW_CHIPS.map(({ key, label }) => (
               <button
                 key={key}

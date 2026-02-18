@@ -90,10 +90,10 @@ export default function WeatherPage() {
   }
 
   return (
-    <div className="container mx-auto px-md py-lg max-w-2xl">
+    <div className="page-container">
       {/* 헤더: 타이틀 + 학교정보 + 새로고침 */}
       <div className="flex items-center justify-between mb-lg">
-        <h1 className="text-page-title shrink-0">🌤️ 날씨</h1>
+        <h1 className="text-page-title shrink-0">날씨</h1>
         <div className="flex items-center gap-2">
           {location.address ? (
             <span className="text-caption text-textMuted truncate max-w-[240px]">

@@ -23,14 +23,14 @@ export default function UnitCard({ unit, onClick }) {
         <span className={`inline-flex items-center rounded-full text-[11px] font-semibold px-2.5 py-0.5 ${domainColor.bg} ${domainColor.text}`}>
           {domain}
         </span>
-        <span className="text-xs text-gray-400">{grade}</span>
+        <span className="text-xs font-bold text-gray-900">{grade}</span>
       </div>
 
       {/* 제목 */}
       <h3 className="text-base font-bold text-gray-900 mb-3 leading-snug">{title}</h3>
 
       {/* ACE 배분 */}
-      <div className="flex items-center gap-3 mb-3 text-xs text-gray-500">
+      <div className="flex items-center gap-3 mb-3 text-xs text-gray-500 whitespace-nowrap">
         <span>총 {totalLessons}차시</span>
         <span className="text-gray-300">|</span>
         <div className="flex items-center gap-1.5">

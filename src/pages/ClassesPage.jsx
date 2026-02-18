@@ -40,7 +40,7 @@ export default function ClassesPage() {
   return (
     <div className="page-container">
       <div className="flex items-center justify-between mb-lg">
-        <h1 className="text-page-title">📋 학급 관리</h1>
+        <h1 className="text-page-title">학급 관리</h1>
       </div>
 
       {Object.keys(classesByGrade).length > 0 ? (

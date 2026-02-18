@@ -12,7 +12,7 @@ export default function AceBadge({ phase, size = 'sm' }) {
   const sizeClass = size === 'sm' ? 'text-[11px] px-2 py-0.5' : 'text-xs px-2.5 py-1'
 
   return (
-    <span className={`inline-flex items-center rounded-full font-semibold ${config.bg} ${config.text} ${sizeClass}`}>
+    <span className={`inline-flex items-center rounded-full font-semibold whitespace-nowrap ${config.bg} ${config.text} ${sizeClass}`}>
       {config.label}
     </span>
   )

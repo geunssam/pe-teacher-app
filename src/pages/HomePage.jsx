@@ -13,7 +13,7 @@ export default function HomePage() {
 
   return (
     <div className="page-container">
-      <h1 className="text-page-title mb-lg">🏠 오늘</h1>
+      <h1 className="text-page-title mb-lg">오늘</h1>
 
       <div className="space-y-lg">
         {/* AI 오늘의 제안 */}
