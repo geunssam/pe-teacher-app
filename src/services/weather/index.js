@@ -2,4 +2,4 @@
 // 기존 import { fetchWeatherData } from '../services/weatherApi' 코드가 동작하도록
 export { fetchWeatherData, fetchHourlyForecast } from './weatherFetch'
 export { fetchAirQualityData } from './airQualityFetch'
-export { findNearbyStations, findNearestStation } from './stationSearch'
+export { findNearbyStations } from './stationSearch'

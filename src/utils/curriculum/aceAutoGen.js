@@ -28,7 +28,7 @@ const TEMPLATES = {
  * 활동 특성에 따라 최적 템플릿 코드를 선택한다.
  * 판별 순서: D(이론) → C(게임적용) → A(기초탐색) → B(도전미션, 기본값)
  */
-export function selectTemplate(activity) {
+function selectTemplate(activity) {
   if (!activity) return 'B'
 
   const tags = activity.tags || []
@@ -74,16 +74,6 @@ export function generateAceLesson(activity, templateCode) {
     _templateCode: code,
     _templateLabel: tmpl.label,
   }
-}
-
-/**
- * 활동에 aceLesson이 없으면 자동 생성하여 병합한 새 객체를 반환한다.
- * (원본 activity를 변경하지 않음)
- */
-export function ensureAceLesson(activity) {
-  if (!activity) return activity
-  if (activity.aceLesson) return activity
-  return { ...activity, aceLesson: generateAceLesson(activity) }
 }
 
 // --- 단계별 빌더 ---

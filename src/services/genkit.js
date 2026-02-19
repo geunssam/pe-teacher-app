@@ -23,19 +23,6 @@ export async function checkGenkitHealth() {
   }
 }
 
-/** AI 수업 추천 요청 */
-export async function requestRecommendation({ query, filters, recentActivities }) {
-  if (!GENKIT_BASE_URL) throw new Error('Genkit 서버가 설정되지 않았습니다 (VITE_GENKIT_URL)');
-  const res = await fetch(`${GENKIT_BASE_URL}/recommendFlow`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data: { query, filters, recentActivities } }),
-  });
-  if (!res.ok) throw new Error(`Genkit error: ${res.status}`);
-  const json = await res.json();
-  return json.result;
-}
-
 /** 채팅 메시지 전송 */
 export async function sendChatMessage({ message, history, lessonContext }) {
   if (!GENKIT_BASE_URL) throw new Error('Genkit 서버가 설정되지 않았습니다 (VITE_GENKIT_URL)');

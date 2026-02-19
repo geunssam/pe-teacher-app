@@ -22,7 +22,7 @@ export default function RecommendPage() {
   useEffect(() => {
     if (!location?.lat || !location?.lon) return
 
-    fetchWeatherData(location.lat, location.lon)
+    fetchWeatherData(location)
       .then((data) => setWeather(data))
       .catch(() => {})
 

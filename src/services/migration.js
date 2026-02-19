@@ -4,7 +4,7 @@
  * 기존 localStorage 데이터를 Firestore로 일괄 이전.
  * writeBatch 500건 단위 청킹, 진행률 콜백 지원.
  */
-import { doc, setDoc, writeBatch, serverTimestamp, collection } from 'firebase/firestore';
+import { doc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 // ── 마이그레이션 대상 localStorage 키 ──────────────────────
@@ -48,19 +48,6 @@ function chunkArray(arr, size) {
 }
 
 // ── 공개 API ──────────────────────────────────────────────
-
-/** localStorage에 마이그레이션 대상 데이터가 있는지 확인 */
-export function hasLocalData() {
-  return LOCAL_KEYS.some((key) => {
-    const val = localStorage.getItem(key);
-    return val && val !== '{}' && val !== '[]' && val !== 'null';
-  });
-}
-
-/** 이미 마이그레이션 완료했는지 확인 */
-export function isMigrated() {
-  return localStorage.getItem(MIGRATION_FLAG) !== null;
-}
 
 /** 마이그레이션 대상 요약 (UI 표시용) */
 export function getMigrationSummary() {

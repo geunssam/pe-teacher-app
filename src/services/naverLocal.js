@@ -641,7 +641,7 @@ export async function searchPlace(query, options = {}) {
 /**
  * 지도 중심 기준 학교급 검색
  */
-export async function searchSchoolsByType({
+async function searchSchoolsByType({
   lat,
   lon,
   schoolLevel = 'elementary',

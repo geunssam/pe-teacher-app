@@ -87,38 +87,6 @@ export function useLocalStorage(key, initialValue) {
 }
 
 /**
- * localStorage에서 직접 값 읽기 (Hook이 아닌 유틸리티)
- */
-export function getLocalStorageItem(key, defaultValue = null) {
-  if (typeof window === 'undefined') {
-    return defaultValue
-  }
-
-  try {
-    const item = window.localStorage.getItem(key)
-    return item ? JSON.parse(item) : defaultValue
-  } catch (error) {
-    console.error(`Error reading localStorage key "${key}":`, error)
-    return defaultValue
-  }
-}
-
-/**
- * localStorage에 직접 값 쓰기 (Hook이 아닌 유틸리티)
- */
-export function setLocalStorageItem(key, value) {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value))
-  } catch (error) {
-    console.error(`Error writing localStorage key "${key}":`, error)
-  }
-}
-
-/**
  * localStorage에서 값 삭제 (Hook이 아닌 유틸리티)
  */
 export function removeLocalStorageItem(key) {

@@ -6,7 +6,7 @@ export const getLessonRecommendationMode = (judgment) => {
 
   if (status === 'optimal') return 'optimal'
   if (status === 'caution') return 'caution'
-  if (status === 'not-recommended') return 'indoors'
+  if (status === 'bad') return 'indoors'
 
   return 'indoors'
 }

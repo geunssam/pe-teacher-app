@@ -1,5 +1,5 @@
 // 오늘의 AI 한줄 제안 — 날씨+시간표+최근기록 종합 제안 카드 | 훅→hooks/useAI.js, 프롬프트→services/aiPrompts.js
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAI } from '../../hooks/useAI'
 import { buildDailySuggestionPrompt } from '../../services/aiPrompts'
 import { isAIAvailable } from '../../services/ai'

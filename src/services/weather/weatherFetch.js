@@ -360,7 +360,7 @@ function makeFallbackCacheKey(query) {
   return params.toString()
 }
 
-export function getWeatherFallbackData(query) {
+function getWeatherFallbackData(query) {
   const fallbackKey = makeFallbackCacheKey(query)
   const fallback = WEATHER_STALE_CACHE.get(fallbackKey)
 

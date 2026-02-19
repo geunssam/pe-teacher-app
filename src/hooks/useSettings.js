@@ -1,5 +1,5 @@
 // 행정실장 훅 — 위치, 측정소, 앱 환경설정 (Firestore + localStorage fallback) | 사용처→SettingsPage/WeatherPage/HomePage
-import { useCallback, useMemo, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useLocalStorage, removeLocalStorageItem } from './useLocalStorage'
 import { getUid } from './useDataSource'
 import { setDocument, getDocument } from '../services/firestore'
@@ -138,7 +138,5 @@ export function useSettings() {
     updateNickname,
     updateLocation,
     updateRecommendSettings,
-    resetSettings,
-    hasLocationSet,
   }
 }

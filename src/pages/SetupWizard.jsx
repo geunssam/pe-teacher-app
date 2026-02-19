@@ -1,6 +1,6 @@
 // 초기 설정 마법사 — 6단계: 학교급 → 학교위치 → 학년 → 학급설정 → 시간표 → 별명
 // 학급데이터→hooks/useClassManager.js, 위치→hooks/useSettings.js, 시간표→hooks/useSchedule.js
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { serverTimestamp } from 'firebase/firestore'
 import { useClassManager } from '../hooks/useClassManager'

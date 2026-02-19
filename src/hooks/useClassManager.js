@@ -262,7 +262,7 @@ export function useClassManager() {
     initializeClasses, isSetupComplete, resetClassSetup,
 
     // 조회 + 수정
-    getClass, updateClass, getClassesByGrade,
+    getClass, getClassesByGrade,
 
     // 색상 관리
     getClassColor, setClassColor,

@@ -168,12 +168,9 @@ export function useModuleLibrary() {
 
   return {
     getMergedList,
-    getItemById,
-    getBaseItem,
     updateItem,
     addItem,
     deleteItem,
-    restoreItem,
     restoreToBase,
     isEdited,
     stats,

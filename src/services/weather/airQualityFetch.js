@@ -54,7 +54,7 @@ function getAirQualityFallback(stationName) {
   return fallback
 }
 
-export function getAirQualityFallbackData(stationName) {
+function getAirQualityFallbackData(stationName) {
   return getAirQualityFallback(stationName)?.data || null
 }
 

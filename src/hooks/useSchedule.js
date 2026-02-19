@@ -265,11 +265,9 @@ export function useSchedule() {
     WEEKDAY_LABELS,
     MAX_PERIODS,
     getTimetableForWeek,
-    getCell,
     updateBaseCell,
     deleteBaseCell,
     setWeekOverride,
-    swapCells,
     clearSchedule,
     isEmpty,
   }

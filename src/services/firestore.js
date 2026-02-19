@@ -79,17 +79,6 @@ export function subscribeDocument(path, callback) {
 }
 
 /**
- * Subscribe to a collection with onSnapshot
- * @returns {function} unsubscribe
- */
-export function subscribeCollection(path, callback) {
-  const ref = collection(db, ...path.split('/'))
-  return onSnapshot(ref, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-  })
-}
-
-/**
  * Debounced write utility — delays writes to avoid excessive Firestore calls
  * Returns a function that, when called with (path, data), will debounce the write.
  */

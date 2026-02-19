@@ -209,7 +209,6 @@ export function useCurriculum() {
 
   return {
     units,
-    aceModel,
     activitiesByGrade,
     myActivityList,
     getActivityById,
