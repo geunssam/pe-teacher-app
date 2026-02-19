@@ -34,3 +34,52 @@ export const LESSON_FORM_DEFAULT = {
   sequence: '',
   performance: '',
 }
+
+// 특별행사 태그 목록 — 시간표 메모에 [행사:xxx] 형식으로 삽입
+export const SPECIAL_EVENTS = [
+  { key: 'earthquake-drill',  label: '지진대피훈련',  icon: '🔔' },
+  { key: 'fire-drill',        label: '화재대피훈련',  icon: '🔥' },
+  { key: 'sports-day',        label: '운동회',        icon: '🏅' },
+  { key: 'field-trip',        label: '현장학습',      icon: '🚌' },
+  { key: 'exam',              label: '시험',          icon: '📝' },
+  { key: 'open-class',        label: '공개수업',      icon: '👀' },
+  { key: 'pe-tournament',     label: '체육대회',      icon: '🏆' },
+  { key: 'morning-broadcast', label: '방송조회',      icon: '📢' },
+]
+
+// 태그 형식: [행사:지진대피훈련] 추가 메모...
+const EVENT_TAG_REGEX = /^\[행사:([^\]]+)\]\s*/
+
+/**
+ * 메모에서 행사 태그를 파싱
+ * @param {string} memo
+ * @returns {{ eventLabel: string|null, cleanMemo: string }}
+ */
+export function parseEventTag(memo) {
+  if (!memo) return { eventLabel: null, cleanMemo: '' }
+  const match = memo.match(EVENT_TAG_REGEX)
+  if (!match) return { eventLabel: null, cleanMemo: memo }
+  return { eventLabel: match[1], cleanMemo: memo.replace(EVENT_TAG_REGEX, '') }
+}
+
+/**
+ * 메모 앞에 행사 태그 삽입
+ * @param {string} memo - 기존 메모 (태그 있으면 제거 후 삽입)
+ * @param {string} label - 행사 라벨 (예: '지진대피훈련')
+ * @returns {string}
+ */
+export function prependEventTag(memo, label) {
+  const { cleanMemo } = parseEventTag(memo)
+  const trimmed = cleanMemo.trim()
+  return trimmed ? `[행사:${label}] ${trimmed}` : `[행사:${label}]`
+}
+
+/**
+ * 메모에서 행사 태그 제거
+ * @param {string} memo
+ * @returns {string}
+ */
+export function removeEventTag(memo) {
+  if (!memo) return ''
+  return memo.replace(EVENT_TAG_REGEX, '').trim()
+}

@@ -93,9 +93,10 @@ export function useAI() {
 
 /**
  * AI 채팅 훅
+ * @param {{ getScheduleContext?: () => Array, getClassSummaries?: () => Array }} options
  * @returns {{ messages, loading, error, sendMessage, clearChat }}
  */
-export function useAIChat() {
+export function useAIChat({ getScheduleContext, getClassSummaries } = {}) {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -104,6 +105,17 @@ export function useAIChat() {
   const lastCallRef = useRef(0)
   const genkitAvailableRef = useRef(false)
   const lessonContextRef = useRef(null)
+  const getScheduleContextRef = useRef(getScheduleContext)
+  const getClassSummariesRef = useRef(getClassSummaries)
+
+  // Keep refs up-to-date
+  useEffect(() => {
+    getScheduleContextRef.current = getScheduleContext
+  }, [getScheduleContext])
+
+  useEffect(() => {
+    getClassSummariesRef.current = getClassSummaries
+  }, [getClassSummaries])
 
   // Check Genkit availability on mount
   useEffect(() => {
@@ -130,14 +142,21 @@ export function useAIChat() {
   }, [])
 
   const ensureChat = useCallback(() => {
-    if (!chatRef.current) {
-      const systemPrompt = lessonContextRef.current
-        ? buildLessonChatSystemPrompt(lessonContextRef.current)
-        : buildChatSystemPrompt()
-      chatRef.current = createChatSession(systemPrompt)
-    }
+    // 매번 최신 시간표 + 학급 컨텍스트로 세션 재생성
+    const scheduleContext = getScheduleContextRef.current?.() || null
+    const classSummaries = getClassSummariesRef.current?.() || null
+    const systemPrompt = lessonContextRef.current
+      ? buildLessonChatSystemPrompt(lessonContextRef.current)
+      : buildChatSystemPrompt(scheduleContext, classSummaries)
+
+    // 기존 대화 히스토리 유지 (스트리밍 중이거나 빈 메시지 제외)
+    const conversationHistory = messages
+      .filter((m) => !m.streaming && m.text)
+      .map((m) => ({ role: m.role, parts: [{ text: m.text }] }))
+
+    chatRef.current = createChatSession(systemPrompt, conversationHistory)
     return chatRef.current
-  }, [])
+  }, [messages])
 
   const sendMessage = useCallback(async (text) => {
     if (!text.trim()) return

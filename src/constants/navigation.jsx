@@ -55,6 +55,14 @@ export const LibraryIcon = () => (
   </svg>
 )
 
+export const RecommendIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 18h6"></path>
+    <path d="M10 22h4"></path>
+    <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"></path>
+  </svg>
+)
+
 export const CurriculumIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <rect x="5" y="3.2" width="10.9" height="17.6" rx="1.6" />
@@ -75,6 +83,7 @@ export const NAV_ITEMS = [
   { path: '/', label: '오늘', emoji: '🏠', icon: HomeIcon, tab: 'home' },
   { path: '/weather', label: '날씨', emoji: '🌤️', icon: WeatherIcon, tab: 'weather' },
   { path: '/schedule', label: '시간표', emoji: '📅', icon: CalendarIcon, tab: 'schedule' },
+  { path: '/recommend', label: '수업 추천', emoji: '💡', icon: RecommendIcon, tab: 'recommend' },
   { path: '/curriculum', label: '수업 설계', emoji: '📚', icon: CurriculumIcon, tab: 'curriculum' },
   { path: '/classes', label: '학급', emoji: '📋', icon: UsersIcon, tab: 'classes' },
   { path: '/library', label: '자료실', emoji: '📦', icon: LibraryIcon, tab: 'library' },

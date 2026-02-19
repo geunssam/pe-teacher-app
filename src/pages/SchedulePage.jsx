@@ -17,7 +17,7 @@ import { confirm } from '../components/common/ConfirmDialog'
 import { useAI } from '../hooks/useAI'
 import { judgeOutdoorClass } from '../data/mockWeather'
 import { toLocalDateString, getTodayLocalDate } from '../utils/recordDate'
-import { LESSON_DOMAINS, LESSON_FORM_DEFAULT } from '../constants/lessonDefaults'
+import { LESSON_DOMAINS, LESSON_FORM_DEFAULT, parseEventTag } from '../constants/lessonDefaults'
 import { getLessonSuggestions } from '../utils/lessonSuggestions'
 
 const initialState = {
@@ -42,7 +42,21 @@ function scheduleReducer(state, action) {
     case 'SET_WEEK_OFFSET':
       return { ...state, weekOffset: action.payload }
     case 'TOGGLE_EDITING':
-      return { ...state, isEditing: !state.isEditing }
+      if (state.isEditing) {
+        // 편집 모드 종료 시 편집 관련 상태 전부 초기화
+        return {
+          ...state,
+          isEditing: false,
+          showClassSelect: false,
+          showMemoInput: false,
+          showSaveTypeModal: false,
+          selectedCell: null,
+          selectedClass: null,
+          memoText: '',
+          pendingPeriodData: null,
+        }
+      }
+      return { ...state, isEditing: true }
     case 'OPEN_CLASS_SELECT':
       return {
         ...state,
@@ -261,15 +275,18 @@ export default function SchedulePage() {
       },
     })
 
+    // 행사 태그 감지 → 활동명/도메인 자동채움
+    const { eventLabel } = parseEventTag(periodData?.memo)
+
     setLessonForm((prev) => ({
       ...prev,
-      activity: pendingActivity?.name || '',
+      activity: pendingActivity?.name || (eventLabel || ''),
       variation: '',
       memo: periodData?.memo || '',
-      domain: pendingActivity?.domain || nextDomain,
+      domain: pendingActivity?.domain || (eventLabel ? '기타' : nextDomain),
       sequence: pendingActivity?.domain
         ? (classId ? getNextLessonSequence(classId, pendingActivity.domain) : suggestedSequence)
-        : suggestedSequence,
+        : (eventLabel ? (classId ? getNextLessonSequence(classId, '기타') : suggestedSequence) : suggestedSequence),
       performance: '',
     }))
   }

@@ -1,7 +1,18 @@
-// 메모 입력 모달 — 시간표 셀에 메모 추가 | 부모→SchedulePage
+// 메모 입력 모달 — 시간표 셀에 메모 추가 + 행사 태그 칩 | 부모→SchedulePage
 import Modal from '../common/Modal'
+import { SPECIAL_EVENTS, parseEventTag, prependEventTag, removeEventTag } from '../../constants/lessonDefaults'
 
 export default function MemoInputModal({ selectedClass, memoText, onMemoChange, onSave, onClose }) {
+  const { eventLabel } = parseEventTag(memoText)
+
+  const handleChipClick = (label) => {
+    if (eventLabel === label) {
+      onMemoChange(removeEventTag(memoText))
+    } else {
+      onMemoChange(prependEventTag(memoText, label))
+    }
+  }
+
   return (
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold mb-2 text-text">
@@ -10,6 +21,27 @@ export default function MemoInputModal({ selectedClass, memoText, onMemoChange, 
       <p className="text-sm text-textMuted mb-4">
         수업 내용을 간단히 메모해보세요 (선택)
       </p>
+
+      {/* 행사 태그 칩 */}
+      <div className="mb-3">
+        <p className="text-xs text-textMuted mb-2">특별행사</p>
+        <div className="flex flex-wrap gap-1.5">
+          {SPECIAL_EVENTS.map((evt) => (
+            <button
+              key={evt.key}
+              type="button"
+              onClick={() => handleChipClick(evt.label)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
+                eventLabel === evt.label
+                  ? 'border-[#F5E07C] bg-[#FFF9C4] text-[#8B7D00]'
+                  : 'border-white/80 bg-white/60 text-textMuted hover:bg-white/80'
+              }`}
+            >
+              {evt.icon} {evt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <textarea
         value={memoText}

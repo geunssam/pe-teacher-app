@@ -3,7 +3,7 @@ import Modal from '../common/Modal'
 import AceLessonFlow from '../curriculum/AceLessonFlow'
 import AIButton from '../common/AIButton'
 import { formatRecordDate } from '../../utils/recordDate'
-import { LESSON_DOMAINS } from '../../constants/lessonDefaults'
+import { LESSON_DOMAINS, parseEventTag } from '../../constants/lessonDefaults'
 import { buildActivitySuggestionPrompt } from '../../services/aiPrompts'
 import { getSuggestionSummary } from '../../utils/lessonSuggestions'
 
@@ -25,6 +25,9 @@ export default function LessonLogModal({
   const isAceMode = !!aceSource
   const isViewingExisting = !!existingRecord
 
+  // 행사 태그 감지
+  const { eventLabel } = parseEventTag(target.periodData?.memo)
+
   return (
     <Modal
       onClose={onClose}
@@ -42,6 +45,19 @@ export default function LessonLogModal({
           <span className="ml-2">수업일 {formatRecordDate(target.scheduledDate)}</span>
         ) : null}
       </p>
+
+      {/* 행사 알림 배너 */}
+      {eventLabel && !isViewingExisting && (
+        <div className="mb-4 p-3 rounded-xl border border-[#F5E07C] bg-[#FFF9C4]/60">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm">📌</span>
+            <span className="text-sm font-bold text-[#8B7D00]">{eventLabel}</span>
+          </div>
+          <p className="text-xs text-[#92400E]">
+            이 교시에 특별 행사가 예정되어 있습니다. 체육 수업이 진행된 경우에만 기록해주세요.
+          </p>
+        </div>
+      )}
 
       {/* ACE 모드: ACE 수업 흐름 + 간소화된 폼 */}
       {isAceMode ? (

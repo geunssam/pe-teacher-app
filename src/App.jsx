@@ -26,6 +26,7 @@ function ScrollToTop() {
 const HomePage = lazy(() => import('./pages/HomePage'))
 const WeatherPage = lazy(() => import('./pages/WeatherPage'))
 const SchedulePage = lazy(() => import('./pages/SchedulePage'))
+const RecommendPage = lazy(() => import('./pages/RecommendPage'))
 const CurriculumPage = lazy(() => import('./pages/CurriculumPage'))
 const ClassesPage = lazy(() => import('./pages/ClassesPage'))
 const LibraryPage = lazy(() => import('./pages/LibraryPage'))
@@ -139,6 +140,7 @@ function AppContent() {
               <Route path="/" element={<HomePage />} />
               <Route path="/weather" element={<WeatherPage />} />
               <Route path="/schedule" element={<SchedulePage />} />
+              <Route path="/recommend" element={<RecommendPage />} />
               <Route path="/curriculum" element={<CurriculumPage />} />
               <Route path="/classes" element={<ClassesPage />} />
               <Route path="/library" element={<LibraryPage />} />

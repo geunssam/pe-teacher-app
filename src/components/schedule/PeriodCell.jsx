@@ -1,5 +1,6 @@
-// 교시 셀 — 시간표 한 칸 (과목명 + 편집 + ACE 배지) | 부모→ScheduleGrid.jsx, 학급색상→hooks/useClassManager.js
+// 교시 셀 — 시간표 한 칸 (과목명 + 편집 + ACE 배지 + 행사 표시) | 부모→ScheduleGrid.jsx, 학급색상→hooks/useClassManager.js
 import { useClassManager } from '../../hooks/useClassManager'
+import { parseEventTag } from '../../constants/lessonDefaults'
 
 export default function PeriodCell({
   day,
@@ -31,6 +32,9 @@ export default function PeriodCell({
     ? getClassColor(periodData.classId)
     : null
 
+  // 행사 태그 파싱
+  const { eventLabel, cleanMemo } = parseEventTag(periodData?.memo)
+
   // 셀 배경색 결정
   const getCellBackground = () => {
     if (isCurrent) {
@@ -48,6 +52,13 @@ export default function PeriodCell({
   const cellStyle = getCellBackground()
   const className = typeof cellStyle === 'string' ? cellStyle : cellStyle.className || ''
   const style = typeof cellStyle === 'object' && cellStyle.style ? cellStyle.style : {}
+
+  // 행사가 있으면 노란 틴트 오버레이
+  if (eventLabel && periodData?.className) {
+    style.background = style.backgroundColor
+      ? `linear-gradient(to bottom, rgba(245, 224, 124, 0.25), rgba(245, 224, 124, 0.1)), ${style.backgroundColor}`
+      : undefined
+  }
 
   return (
     <div
@@ -72,14 +83,18 @@ export default function PeriodCell({
           >
             {periodData.className}
           </div>
-          {periodData.memo && (
+          {eventLabel ? (
+            <div className="text-[9px] mt-0.5 leading-tight font-semibold" style={{ color: '#B8860B' }}>
+              📌 {eventLabel}
+            </div>
+          ) : cleanMemo ? (
             <div
               className="text-[10px] mt-0.5 leading-tight"
               style={classColor ? { color: `${classColor.text}cc` } : {}}
             >
-              {periodData.memo}
+              {cleanMemo}
             </div>
-          )}
+          ) : null}
           {isCurrent && (
             <div className="text-[10px] text-primary font-semibold mt-0.5">
               ● 현재

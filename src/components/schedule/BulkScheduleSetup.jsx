@@ -5,10 +5,21 @@ import { useClassManager } from '../../hooks/useClassManager'
 import toast from 'react-hot-toast'
 
 export default function BulkScheduleSetup({ onClose }) {
-  const { WEEKDAYS, WEEKDAY_LABELS, MAX_PERIODS, updateBaseCell } = useSchedule()
+  const { WEEKDAYS, WEEKDAY_LABELS, MAX_PERIODS, baseTimetable, updateBaseCell, deleteBaseCell } = useSchedule()
   const { classes } = useClassManager()
 
-  // 초기 빈 시간표 생성
+  // 기존 기본 시간표를 불러와서 초기값으로 사용
+  const [schedule, setSchedule] = useState(() => {
+    const initial = {}
+    WEEKDAYS.forEach((day) => {
+      for (let period = 1; period <= MAX_PERIODS; period++) {
+        const cellKey = `${day}-${period}`
+        initial[cellKey] = baseTimetable[cellKey] || null
+      }
+    })
+    return initial
+  })
+
   const createEmptySchedule = () => {
     const schedule = {}
     WEEKDAYS.forEach((day) => {
@@ -18,8 +29,6 @@ export default function BulkScheduleSetup({ onClose }) {
     })
     return schedule
   }
-
-  const [schedule, setSchedule] = useState(createEmptySchedule())
   const [selectedClassId, setSelectedClassId] = useState(classes[0]?.id || '')
 
   const handleCellClick = (day, period) => {
@@ -47,11 +56,14 @@ export default function BulkScheduleSetup({ onClose }) {
   }
 
   const handleSave = () => {
-    // 모든 셀을 기본 시간표에 저장
+    // 모든 셀을 기본 시간표에 저장 (추가 + 삭제 모두 처리)
     Object.keys(schedule).forEach((cellKey) => {
       const data = schedule[cellKey]
       if (data) {
         updateBaseCell(cellKey, data)
+      } else if (baseTimetable[cellKey]) {
+        // 기존에 있었지만 이번에 비워진 셀 → 삭제
+        deleteBaseCell(cellKey)
       }
     })
 

@@ -1,14 +1,65 @@
 // 글로벌 AI 채팅 — 우하단 플로팅 버튼 + 슬라이드업 채팅 패널 | 훅→hooks/useAI.js, 스타일→css/components/ai.css
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAIChat } from '../../hooks/useAI'
 import { isAIAvailable } from '../../services/ai'
 import { checkGenkitHealth } from '../../services/genkit'
 import { stripMarkdown } from '../../utils/stripMarkdown'
+import { useSchedule, getWeekRange } from '../../hooks/useSchedule'
+import { useClassManager } from '../../hooks/useClassManager'
 
 export default function AIChatPanel() {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
-  const { messages, loading, error, sendMessage, clearChat, lessonContext, setLessonContext, clearLessonContext } = useAIChat()
+  const { getTimetableForWeek } = useSchedule()
+  const { classes, records } = useClassManager()
+
+  // 시간표 컨텍스트를 AI에게 전달하는 콜백 (채팅 세션 생성 시 호출됨)
+  const getScheduleContext = useCallback(() => {
+    try {
+      const { weekKey } = getWeekRange(0)
+      const { timetable } = getTimetableForWeek(weekKey)
+      const cells = []
+      const days = ['mon', 'tue', 'wed', 'thu', 'fri']
+      for (const day of days) {
+        for (let period = 1; period <= 7; period++) {
+          const cellKey = `${day}-${period}`
+          const cell = timetable[cellKey]
+          if (!cell || !cell.classId) continue
+          cells.push({ day, period, className: cell.className || '', memo: cell.memo || '' })
+        }
+      }
+      return cells
+    } catch {
+      return []
+    }
+  }, [getTimetableForWeek])
+
+  // 학급별 수업 요약 데이터를 AI에게 전달하는 콜백
+  const getClassSummaries = useCallback(() => {
+    try {
+      return classes.map((cls) => {
+        const classRecords = records[cls.id] || []
+        const domainCounts = {}
+        for (const r of classRecords) {
+          const d = r.domain || '스포츠'
+          domainCounts[d] = (domainCounts[d] || 0) + 1
+        }
+        const last = classRecords[classRecords.length - 1]
+        return {
+          grade: cls.grade,
+          classNum: cls.classNum,
+          totalRecords: classRecords.length,
+          domainCounts,
+          lastActivity: last?.activity || null,
+          lastDomain: last?.domain || null,
+        }
+      })
+    } catch {
+      return []
+    }
+  }, [classes, records])
+
+  const { messages, loading, error, sendMessage, clearChat, lessonContext, setLessonContext, clearLessonContext } = useAIChat({ getScheduleContext, getClassSummaries })
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const [genkitReady, setGenkitReady] = useState(false)
@@ -86,7 +137,7 @@ export default function AIChatPanel() {
           {/* 헤더 */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
-              <span className="text-lg">&#10024;</span>
+              <img src="/ai-sparkle.png" alt="AI" className="w-5 h-5" />
               <h3 className="text-sm font-bold text-gray-800">체육 AI 도우미</h3>
               {genkitReady && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">RAG</span>
@@ -134,7 +185,7 @@ export default function AIChatPanel() {
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[200px] max-h-[calc(70vh-130px)] scrollbar-hide">
             {messages.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-2xl mb-2">&#10024;</p>
+                <img src="/ai-sparkle.png" alt="AI" className="w-8 h-8 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-600 mb-1">
                   {lessonContext ? `${contextLabel || '차시'} AI 도우미` : '체육 AI 도우미'}
                 </p>

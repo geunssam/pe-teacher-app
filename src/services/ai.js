@@ -82,9 +82,10 @@ export async function streamPEContent(prompt, onChunk) {
 /**
  * 채팅 세션 생성 (멀티턴 대화)
  * @param {string} systemPrompt - 시스템 프롬프트
+ * @param {Array} conversationHistory - 기존 대화 히스토리 [{ role, parts }] (세션 재생성 시 대화 유지용)
  * @returns {{ sendMessage, sendMessageStream }} 채팅 메서드
  */
-export function createChatSession(systemPrompt) {
+export function createChatSession(systemPrompt, conversationHistory = []) {
   const chat = model.startChat({
     history: [
       {
@@ -95,6 +96,7 @@ export function createChatSession(systemPrompt) {
         role: 'model',
         parts: [{ text: '네, 알겠습니다. 체육 수업 전문 AI 어시스턴트로서 도움을 드리겠습니다.' }],
       },
+      ...conversationHistory,
     ],
   })
 

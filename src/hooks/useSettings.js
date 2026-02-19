@@ -15,6 +15,11 @@ const DEFAULT_SETTINGS = {
     lon: 127.3845,
     stationName: '대전',
   },
+  recommend: {
+    priorityOrder: ['weather', 'continuity', 'space', 'domainBalance'],
+    availableSpaces: ['운동장', '체육관', '교실'],
+    specialEvents: [],
+  },
   lastUpdated: null,
 }
 
@@ -91,6 +96,25 @@ export function useSettings() {
   }, [setSettings, syncToFirestore])
 
   /**
+   * 추천 설정 업데이트
+   * @param {Object} updates - { priorityOrder?, availableSpaces?, specialEvents? }
+   */
+  const updateRecommendSettings = useCallback((updates) => {
+    setSettings((prev) => {
+      const next = {
+        ...prev,
+        recommend: {
+          ...(prev.recommend || DEFAULT_SETTINGS.recommend),
+          ...updates,
+        },
+        lastUpdated: new Date().toISOString(),
+      }
+      syncToFirestore(next)
+      return next
+    })
+  }, [setSettings, syncToFirestore])
+
+  /**
    * 설정 초기화
    */
   const resetSettings = useCallback(() => {
@@ -110,8 +134,10 @@ export function useSettings() {
     settings,
     nickname: settings.nickname || '',
     location: settings.location,
+    recommendSettings: settings.recommend || DEFAULT_SETTINGS.recommend,
     updateNickname,
     updateLocation,
+    updateRecommendSettings,
     resetSettings,
     hasLocationSet,
   }

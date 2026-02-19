@@ -138,6 +138,10 @@
   color: var(--color-tab-curriculum);
 }
 
+.nav-item.active[data-tab="recommend"] {
+  color: var(--color-tab-recommend);
+}
+
 .nav-item.active[data-tab="library"] {
   color: var(--color-tab-library);
 }

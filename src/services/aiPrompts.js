@@ -271,15 +271,118 @@ function buildUnitContext() {
 }
 
 /**
- * AI 채팅 시스템 프롬프트 — 로컬 교육과정 에셋 그라운딩 포함
+ * 시간표 컨텍스트를 문자열로 빌드
+ * @param {Array} scheduleContext - [{ day, period, className, memo }]
  */
-export function buildChatSystemPrompt() {
+function buildScheduleSection(scheduleContext) {
+  if (!scheduleContext?.length) return ''
+
+  const dayLabels = { mon: '월요일', tue: '화요일', wed: '수요일', thu: '목요일', fri: '금요일' }
+  const grouped = {}
+  for (const cell of scheduleContext) {
+    if (!grouped[cell.day]) grouped[cell.day] = []
+    grouped[cell.day].push(cell)
+  }
+
+  let section = '\n\n---\n\n## 이번 주 시간표 (교사의 실제 수업 일정)\n'
+  const dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri']
+  for (const day of dayOrder) {
+    const cells = grouped[day]
+    if (!cells?.length) continue
+    section += `\n${dayLabels[day]}:\n`
+    for (const cell of cells) {
+      section += `- ${cell.period}교시: ${cell.className}`
+      if (cell.memo) {
+        section += ` [메모: ${cell.memo}]`
+      }
+      section += '\n'
+    }
+  }
+
+  section += `\n중요 규칙: 시간표 메모에 특별행사 키워드가 있으면 반드시 해당 내용을 우선 반영하여 답변하세요.
+- "운동회", "현장학습", "소풍", "시험" 등 → 해당 교시는 체육 수업이 없으므로 수업 추천 대신 행사 안내
+- "대피훈련", "방송조회" 등 → 수업 시간이 조정될 수 있으므로 담임선생님과 상의 권유
+- "공개수업", "체육대회" 등 → 특별 상황에 맞는 수업 조언
+예시: 메모에 "지진대피훈련"이 있으면 "이 교시는 지진대피훈련이 예정되어 있습니다! 담임선생님과 시간표 조정을 상의해주세요."라고 안내\n`
+
+  return section
+}
+
+/**
+ * 현재 날짜/요일 정보를 생성
+ */
+function buildDateContext() {
+  const now = new Date()
+  const dayNames = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
+  const dayOfWeek = dayNames[now.getDay()]
+  // 요일 → 시간표 day 키 매핑
+  const dayKeyMap = { 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri' }
+  const todayKey = dayKeyMap[now.getDay()] || null
+  const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`
+  return { dateStr, dayOfWeek, todayKey }
+}
+
+/**
+ * 학급별 수업 현황 스냅샷 빌드
+ * @param {Array|null} classSummaries - [{ grade, classNum, totalRecords, domainCounts, lastActivity, lastDomain }]
+ * @returns {string}
+ */
+function buildTeacherSnapshot(classSummaries) {
+  if (!classSummaries?.length) return ''
+
+  let section = '\n\n---\n\n## 학급별 수업 현황\n'
+  for (const cls of classSummaries) {
+    const domains = cls.domainCounts || {}
+    const domainParts = Object.entries(domains)
+      .filter(([, count]) => count > 0)
+      .map(([d, count]) => `${d}${count}`)
+      .join(', ')
+    const domainText = domainParts ? ` (${domainParts})` : ''
+    const lastText = cls.lastActivity
+      ? ` / 최근: ${cls.lastActivity}(${cls.lastDomain || '?'})`
+      : ''
+    section += `- ${cls.grade}학년 ${cls.classNum}반: 총 ${cls.totalRecords}차시${domainText}${lastText}\n`
+  }
+  section += `\n이 데이터를 활용하여 영역 균형이 부족한 학급에는 해당 영역 활동을 우선 추천하세요.\n`
+  return section
+}
+
+/**
+ * AI 채팅 시스템 프롬프트 — 로컬 교육과정 에셋 그라운딩 포함
+ * @param {Array|null} scheduleContext - 이번 주 시간표 [{ day, period, className, memo }]
+ * @param {Array|null} classSummaries - 학급별 수업 요약 데이터
+ */
+export function buildChatSystemPrompt(scheduleContext, classSummaries = null) {
   const standardsCtx = buildStandardsContext()
   const activityCtx = buildActivityContext()
   const unitCtx = buildUnitContext()
+  const scheduleSection = buildScheduleSection(scheduleContext)
+  const teacherSnapshot = buildTeacherSnapshot(classSummaries)
+  const { dateStr, dayOfWeek, todayKey } = buildDateContext()
+
+  // 오늘 시간표만 추출
+  let todayScheduleText = ''
+  if (todayKey && scheduleContext?.length) {
+    const todayCells = scheduleContext.filter((c) => c.day === todayKey)
+    if (todayCells.length > 0) {
+      todayScheduleText = `\n\n## 오늘의 수업 (${dayOfWeek})\n`
+      for (const cell of todayCells) {
+        todayScheduleText += `- ${cell.period}교시: ${cell.className}`
+        if (cell.memo) todayScheduleText += ` [메모: ${cell.memo}]`
+        todayScheduleText += '\n'
+      }
+    } else {
+      todayScheduleText = `\n\n## 오늘의 수업 (${dayOfWeek})\n오늘은 체육 수업이 없습니다.\n`
+    }
+  } else if (!todayKey) {
+    todayScheduleText = `\n\n## 오늘의 수업\n오늘은 ${dayOfWeek}이라 수업이 없습니다.\n`
+  }
 
   return `당신은 "체육 AI 도우미"입니다. 초등학교 체육교사를 돕는 전문 AI 어시스턴트입니다.
 
+## 오늘 날짜
+- ${dateStr} (${dayOfWeek})
+${todayScheduleText}
 ## 핵심 규칙 (반드시 준수)
 
 1. **아래 제공된 "2022 개정 교육과정" 데이터만을 근거로 답변합니다.**
@@ -293,6 +396,7 @@ export function buildChatSystemPrompt() {
 5. 답변은 간결하고 실용적으로 작성합니다 (300자 이내 권장).
 6. 성취기준을 인용할 때는 반드시 코드(예: [4체02-03])와 함께 표기합니다.
 7. **마크다운 서식을 사용하지 마세요.** 볼드(**), 이탈릭(*), 헤딩(#), 코드블록(\`) 등의 마크다운 문법을 쓰지 않고 일반 텍스트로만 답변합니다. 목록은 "- " 대시 기호만 허용합니다.
+8. **시간표 메모에 행사가 있으면 수업 추천보다 행사 안내를 우선합니다.**
 
 ## 역할
 - 2022 개정 체육과 교육과정 성취기준 안내
@@ -301,7 +405,9 @@ export function buildChatSystemPrompt() {
 - FMS(기본운동기술) 관련 질문 답변
 - 날씨/환경에 따른 실내외 활동 전환 조언
 - 학급 관리 및 수업 운영 팁
-
+- **시간표 메모의 행사/일정 감지 및 맞춤 안내**
+- **학급별 수업 현황 기반 영역 균형 고려 추천**
+${scheduleSection}${teacherSnapshot}
 ---
 
 ## 📚 2022 개정 체육과 교육과정 성취기준 (참조 데이터)
@@ -426,7 +532,12 @@ export function buildLessonChatSystemPrompt(ctx) {
     }
   }
 
+  const { dateStr, dayOfWeek } = buildDateContext()
+
   return `당신은 "체육 AI 도우미"입니다. 초등학교 체육교사를 돕는 전문 AI 어시스턴트입니다.
+
+## 오늘 날짜
+- ${dateStr} (${dayOfWeek})
 
 ## 핵심 규칙 (반드시 준수)
 
@@ -454,6 +565,73 @@ ${standardsCtx}
 
 ## 📋 등록된 활동 목록
 ${activityCtx}`
+}
+
+/**
+ * 수업 추천 시스템 AI 프롬프트
+ * @param {Object} context - { classInfo, weather, air, recentRecords, domainBalance, priorityOrder, availableSpaces, weatherContext }
+ */
+export function buildRecommendationPrompt(context) {
+  const { classInfo, weather, air, recentRecords, domainBalance, priorityOrder, availableSpaces, weatherContext } = context
+
+  const weatherText = weather
+    ? `현재 날씨: ${weather.t1h || '?'}℃, 하늘 ${weather.sky || '?'}, 강수 ${weather.pty === '0' || weather.pty === 0 ? '없음' : '있음'}`
+    : '날씨 정보 없음'
+
+  const airText = air
+    ? `미세먼지: ${air.pm10Value || '?'}㎍/㎥, 초미세먼지: ${air.pm25Value || '?'}㎍/㎥`
+    : '대기질 정보 없음'
+
+  const outdoorStatus = weatherContext
+    ? `야외수업 판단: ${weatherContext.text || '확인 중'} (${weatherContext.reason || ''})`
+    : ''
+
+  const recentText = recentRecords?.length
+    ? recentRecords.map((r) =>
+        `- ${r.sequence || '?'}차시: ${r.activity || '활동'} (${r.domain || '스포츠'})`
+      ).join('\n')
+    : '수업 기록 없음'
+
+  const balanceText = domainBalance
+    ? `운동 ${domainBalance['운동'] || 0}회, 스포츠 ${domainBalance['스포츠'] || 0}회, 표현 ${domainBalance['표현'] || 0}회 → 부족 영역: ${domainBalance.suggestedDomain}`
+    : ''
+
+  const priorityText = (priorityOrder || []).map((p, i) => {
+    const labels = { weather: '날씨', continuity: '진도 연속성', space: '사용 가능 공간', domainBalance: '영역 균형' }
+    return `${i + 1}. ${labels[p] || p}`
+  }).join('\n')
+
+  return `당신은 초등학교 체육 수업 추천 전문가입니다.
+
+## 학급 정보
+- ${classInfo?.grade || '?'}학년 ${classInfo?.classNum || '?'}반
+
+## 환경 조건
+- ${weatherText}
+- ${airText}
+- ${outdoorStatus}
+- 사용 가능 공간: ${(availableSpaces || []).join(', ')}
+
+## 최근 수업 기록
+${recentText}
+
+## 영역별 분포
+${balanceText}
+
+## 추천 우선순위
+${priorityText}
+
+위 조건을 종합하여 오늘 수업 활동을 추천해주세요.
+
+반드시 다음 형식으로 작성:
+추천 활동: [활동명]
+영역: [운동/스포츠/표현]
+장소: [운동장/체육관/교실]
+이유: [50자 이내]
+대체활동1: [활동명] (장소)
+대체활동2: [활동명] (장소)
+
+한국어로 작성하고, 초등학생 수준에 맞는 활동을 추천합니다.`
 }
 
 /**

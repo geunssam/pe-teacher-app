@@ -111,6 +111,10 @@
   border-top: 3px solid var(--color-tab-classes);
 }
 
+.card-accent-recommend {
+  border-top: 3px solid var(--color-tab-recommend);
+}
+
 /* 모바일 최적화 - backdrop-filter 비활성화 */
 @media (max-width: 639px) {
   .glass-card,
