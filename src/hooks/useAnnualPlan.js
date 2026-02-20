@@ -279,7 +279,7 @@ export function useAnnualPlan() {
     let weekIdx = 0
     const perWeek = Math.max(1, weeklyPEHours)
 
-    updatePlanInList((prev) => ({
+    updatePlanInList(planId, (prev) => ({
       ...prev,
       units: prev.units.map((unit) => {
         const neededWeeks = Math.ceil(unit.totalLessons / perWeek)
@@ -297,7 +297,7 @@ export function useAnnualPlan() {
           weekEnd: endWeek.weekKey,
         }
       }),
-    }), planId)
+    }))
   }, [plans, updatePlanInList])
 
   // --- 계산 ---
