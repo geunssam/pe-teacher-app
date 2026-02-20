@@ -45,6 +45,7 @@ export default function CurriculumPage() {
     removeUnit,
     assignUnitWeeks,
     autoAssignAllWeeks,
+    reorderUnits,
     updateLesson,
     getDomainDistribution,
     getPlanSummary,
@@ -331,6 +332,7 @@ export default function CurriculumPage() {
             onRemoveUnit={removeUnit}
             onAssignUnitWeeks={assignUnitWeeks}
             onAutoAssignWeeks={autoAssignAllWeeks}
+            onReorderUnits={reorderUnits}
             onUpdateLesson={updateLesson}
             getDomainDistribution={getDomainDistribution}
             getPlanSummary={getPlanSummary}

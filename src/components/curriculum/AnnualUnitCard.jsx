@@ -26,7 +26,7 @@ function formatWeekRange(weekStart, weekEnd) {
   return startNum === endNum ? `W${startNum}` : `W${startNum}~W${endNum}`
 }
 
-export default function AnnualUnitCard({ unit, index, onUpdate, onRemove, onAssignWeeks, teachableWeeks }) {
+export default function AnnualUnitCard({ unit, index, totalCount, onUpdate, onRemove, onAssignWeeks, onMoveUp, onMoveDown, teachableWeeks }) {
   const { id, title, domain, totalLessons, weekStart, weekEnd, lessons, standardCodes } = unit
   const borderColor = DOMAIN_BORDER_COLORS[domain] || '#8f8f8f'
   const badge = DOMAIN_BADGE[domain] || { bg: 'bg-gray-200', text: 'text-gray-700' }
@@ -183,24 +183,44 @@ export default function AnnualUnitCard({ unit, index, onUpdate, onRemove, onAssi
         </div>
       )}
 
-      {/* 주차 배정 / 삭제 */}
-      <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-        <button
-          onClick={() => {
-            setPickStart(weekStart || '')
-            setPickEnd(weekEnd || '')
-            setWeekPickerOpen(!weekPickerOpen)
-          }}
-          className="text-xs font-semibold text-primary hover:bg-primary/10 px-2.5 py-1 rounded-lg transition-colors"
-        >
-          {weekStart ? '주차 변경' : '주차 배정'}
-        </button>
-        <button
-          onClick={() => onRemove(id)}
-          className="text-xs font-semibold text-danger hover:bg-danger/10 px-2.5 py-1 rounded-lg transition-colors"
-        >
-          삭제
-        </button>
+      {/* 순서 이동 / 주차 배정 / 삭제 */}
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onMoveUp(id)}
+            disabled={index === 0}
+            className="p-1 rounded-md text-gray-400 hover:bg-gray-100 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+            title="위로 이동"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4L4 9h8L8 4z" fill="currentColor"/></svg>
+          </button>
+          <button
+            onClick={() => onMoveDown(id)}
+            disabled={index === totalCount - 1}
+            className="p-1 rounded-md text-gray-400 hover:bg-gray-100 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+            title="아래로 이동"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 12L4 7h8L8 12z" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setPickStart(weekStart || '')
+              setPickEnd(weekEnd || '')
+              setWeekPickerOpen(!weekPickerOpen)
+            }}
+            className="text-xs font-semibold text-primary hover:bg-primary/10 px-2.5 py-1 rounded-lg transition-colors"
+          >
+            {weekStart ? '주차 변경' : '주차 배정'}
+          </button>
+          <button
+            onClick={() => onRemove(id)}
+            className="text-xs font-semibold text-danger hover:bg-danger/10 px-2.5 py-1 rounded-lg transition-colors"
+          >
+            삭제
+          </button>
+        </div>
       </div>
     </div>
   )

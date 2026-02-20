@@ -17,6 +17,7 @@ export default function AnnualPlanView({
   onRemoveUnit,
   onAssignUnitWeeks,
   onAutoAssignWeeks,
+  onReorderUnits,
   onUpdateLesson,
   getDomainDistribution,
   getPlanSummary,
@@ -85,6 +86,18 @@ export default function AnnualPlanView({
   const handleAssignWeeks = (unitId, weeks) => {
     if (!currentPlan) return
     onAssignUnitWeeks(currentPlan.id, unitId, weeks)
+  }
+
+  const handleMoveUnit = (unitId, direction) => {
+    if (!currentPlan?.units) return
+    const units = currentPlan.units
+    const idx = units.findIndex((u) => u.id === unitId)
+    if (idx < 0) return
+    const newIdx = idx + direction
+    if (newIdx < 0 || newIdx >= units.length) return
+    const newIds = units.map((u) => u.id)
+    ;[newIds[idx], newIds[newIdx]] = [newIds[newIdx], newIds[idx]]
+    onReorderUnits(currentPlan.id, newIds)
   }
 
   return (
@@ -169,9 +182,12 @@ export default function AnnualPlanView({
                   key={unit.id}
                   unit={unit}
                   index={idx}
+                  totalCount={currentPlan.units.length}
                   onUpdate={(unitId, updates) => handleUpdateUnit(unitId, updates)}
                   onRemove={handleRemoveUnit}
                   onAssignWeeks={(unitId, weeks) => handleAssignWeeks(unitId, weeks)}
+                  onMoveUp={(unitId) => handleMoveUnit(unitId, -1)}
+                  onMoveDown={(unitId) => handleMoveUnit(unitId, 1)}
                   teachableWeeks={teachableWeeks}
                 />
               ))}
