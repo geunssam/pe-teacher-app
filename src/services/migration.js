@@ -20,6 +20,7 @@ const LOCAL_KEYS = [
   'curriculum_my_activities_v1',
   'curriculum_custom_activities_v1',
   'curriculum_custom_alternative_ids_v1',
+  'pe_school_calendar',
 ];
 
 const MIGRATION_FLAG = 'pe_migrated_to_firestore';
@@ -84,7 +85,7 @@ export function getMigrationSummary() {
  */
 export async function migrateLocalStorageToFirestore(uid, onProgress = () => {}) {
   const userRef = doc(db, 'users', uid);
-  const totalSteps = 8;
+  const totalSteps = 9;
   let currentStep = 0;
 
   const report = (message) => {
@@ -268,7 +269,33 @@ export async function migrateLocalStorageToFirestore(uid, onProgress = () => {})
       });
     }
 
-    // ── 8. 완료 플래그 ──────────────────────────────────
+    // ── 8. 학사 일정 + 특별행사 이관 ────────────────────
+    report('학사 일정 이전 중...');
+
+    const schoolCalendar = safeParse('pe_school_calendar', null);
+    if (schoolCalendar) {
+      // 기존 특별행사(settings.specialEvents)를 학사 일정 events에 이관
+      const existingEvents = schoolCalendar.events || [];
+      const specialEvents = settings?.specialEvents || settings?.recommendSettings?.specialEvents || [];
+      if (specialEvents.length > 0) {
+        const migratedEvents = specialEvents
+          .filter((se) => !existingEvents.some((e) => e.date === se.date && e.label === se.label))
+          .map((se) => ({
+            id: `evt_mig_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            date: se.date,
+            label: se.label,
+            type: se.type || 'special',
+            source: 'manual',
+          }));
+        schoolCalendar.events = [...existingEvents, ...migratedEvents];
+      }
+      await setDoc(doc(db, 'users', uid, 'calendar', 'main'), {
+        ...schoolCalendar,
+        migratedAt: serverTimestamp(),
+      });
+    }
+
+    // ── 9. 완료 플래그 ──────────────────────────────────
     report('마이그레이션 완료!');
 
     localStorage.setItem(MIGRATION_FLAG, new Date().toISOString());

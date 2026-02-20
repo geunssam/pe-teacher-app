@@ -1,14 +1,22 @@
 // 🏠 오늘 탭 — 날씨 요약 + AI 제안 + 오늘 시간표 + 최근 수업 기록 | 위젯→components/home/, 날씨데이터→services/weather/
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useClassManager } from '../hooks/useClassManager'
+import { useAnnualPlan } from '../hooks/useAnnualPlan'
+import { useSchoolCalendar } from '../hooks/useSchoolCalendar'
+import { getWeekRange } from '../hooks/useSchedule'
 import GlassCard from '../components/common/GlassCard'
 import HourlyWeatherSummary from '../components/home/HourlyWeatherSummary'
 import TodaySchedule from '../components/home/TodaySchedule'
 import RecentLessons from '../components/home/RecentLessons'
 import AIDailySuggestion from '../components/home/AIDailySuggestion'
+import WeeklyPlanReminder from '../components/home/WeeklyPlanReminder'
 
 export default function HomePage() {
+  const navigate = useNavigate()
   const { classes, getClassesByGrade } = useClassManager()
+  const { plans } = useAnnualPlan()
+  const { teachableWeeks } = useSchoolCalendar()
+  const weekInfo = getWeekRange(0)
   const classesByGrade = getClassesByGrade()
 
   return (
@@ -20,6 +28,14 @@ export default function HomePage() {
         <GlassCard accent="home">
           <AIDailySuggestion />
         </GlassCard>
+
+        {/* 주간 수업 계획 알림 (금/월요일만 표시) */}
+        <WeeklyPlanReminder
+          plans={plans}
+          teachableWeeks={teachableWeeks}
+          weekKey={weekInfo.weekKey}
+          onNavigate={() => navigate('/curriculum')}
+        />
 
         {/* 시간별 날씨 요약 */}
         <GlassCard accent="weather">

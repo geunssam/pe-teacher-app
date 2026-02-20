@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { useLocationPicker } from '../hooks/useLocationPicker'
 import { useClassManager } from '../hooks/useClassManager'
 import { useSettings } from '../hooks/useSettings'
+import { useSchedule } from '../hooks/useSchedule'
+import { useSchoolCalendar } from '../hooks/useSchoolCalendar'
 import { useAuthContext } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { confirm } from '../components/common/ConfirmDialog'
@@ -14,6 +16,9 @@ const LocationMapPicker = lazy(
   () => import('../components/settings/LocationMapPicker')
 )
 const StationPicker = lazy(() => import('../components/weather/StationPicker'))
+const SchoolCalendarEditor = lazy(
+  () => import('../components/settings/SchoolCalendarEditor')
+)
 
 function buildNearestStationMessage(baseName, stationName, distanceKm = null) {
   const safeBaseName = baseName || '선택 위치'
@@ -21,61 +26,6 @@ function buildNearestStationMessage(baseName, stationName, distanceKm = null) {
   const distanceText =
     Number.isFinite(distanceKm) && distanceKm > 0 ? ` (${distanceKm.toFixed(1)}km)` : ''
   return `${safeBaseName}에서 가장 가까운 측정소는 ${safeStationName}입니다!${distanceText}`
-}
-
-function AddEventForm({ onAdd }) {
-  const [date, setDate] = useState('')
-  const [label, setLabel] = useState('')
-  const [type, setType] = useState('skip')
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!date || !label.trim()) return
-    onAdd({ date, label: label.trim(), type })
-    setDate('')
-    setLabel('')
-    setType('skip')
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="flex items-end gap-2 flex-wrap">
-      <div className="flex-1 min-w-[120px]">
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full py-2 px-3 rounded-lg border border-gray-200 bg-white/60 text-sm focus:outline-none focus:border-[#4DD0E1]/50"
-        />
-      </div>
-      <div className="flex-1 min-w-[100px]">
-        <input
-          type="text"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder="행사명"
-          maxLength={20}
-          className="w-full py-2 px-3 rounded-lg border border-gray-200 bg-white/60 text-sm focus:outline-none focus:border-[#4DD0E1]/50"
-        />
-      </div>
-      <select
-        value={type}
-        onChange={(e) => setType(e.target.value)}
-        className="py-2 px-2 rounded-lg border border-gray-200 bg-white/60 text-xs focus:outline-none"
-      >
-        <option value="skip">수업없음</option>
-        <option value="indoor">실내전환</option>
-        <option value="special">특별행사</option>
-      </select>
-      <button
-        type="submit"
-        disabled={!date || !label.trim()}
-        className="py-2 px-3 rounded-lg text-sm font-semibold text-white disabled:opacity-40 transition-all"
-        style={{ backgroundColor: '#4DD0E1' }}
-      >
-        추가
-      </button>
-    </form>
-  )
 }
 
 export default function SettingsPage() {
@@ -96,6 +46,21 @@ export default function SettingsPage() {
     closeMapPicker,
   } = useLocationPicker()
   const { nickname, updateNickname, recommendSettings, updateRecommendSettings } = useSettings()
+  const { baseTimetable } = useSchedule()
+  const {
+    calendar,
+    schoolDays,
+    teachableWeeks,
+    updateSemester,
+    updateVacation,
+    addEvent,
+    removeEvent,
+    applyHolidays,
+    getWeeklyPEHours,
+    getTotalPEHours,
+  } = useSchoolCalendar()
+  const weeklyPEHours = getWeeklyPEHours(baseTimetable)
+  const totalPEHours = getTotalPEHours(baseTimetable)
   const [editingNickname, setEditingNickname] = useState(false)
   const [nicknameInput, setNicknameInput] = useState('')
   const { resetClassSetup } = useClassManager()
@@ -285,6 +250,24 @@ export default function SettingsPage() {
           )}
         </GlassCard>
 
+        {/* 학사 일정 */}
+        <GlassCard>
+          <Suspense fallback={<div className="text-caption text-textMuted py-4 text-center">학사 일정을 불러오는 중...</div>}>
+            <SchoolCalendarEditor
+              calendar={calendar}
+              schoolDays={schoolDays}
+              teachableWeeks={teachableWeeks}
+              onUpdateSemester={updateSemester}
+              onUpdateVacation={updateVacation}
+              onAddEvent={addEvent}
+              onRemoveEvent={removeEvent}
+              onApplyHolidays={applyHolidays}
+              weeklyPEHours={weeklyPEHours}
+              totalPEHours={totalPEHours}
+            />
+          </Suspense>
+        </GlassCard>
+
         {/* 수업 추천 설정 */}
         <GlassCard>
           <h2 className="text-card-title mb-md">수업 추천 설정</h2>
@@ -326,43 +309,11 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* 특별 행사 등록 */}
+          {/* 특별 행사 안내 */}
           <div className="pt-3 border-t border-gray-100">
-            <label className="text-xs font-semibold text-gray-500 mb-2 block">특별 행사 등록</label>
-            <p className="text-[10px] text-gray-400 mb-2">
-              행사가 있는 날 수업을 건너뛰거나 실내 전환합니다
+            <p className="text-xs text-gray-400 text-center py-2">
+              특별행사는 위 <span className="font-semibold text-gray-500">학사 일정</span>에서 통합 관리됩니다
             </p>
-            {(recommendSettings?.specialEvents || []).length > 0 && (
-              <div className="space-y-1.5 mb-3">
-                {recommendSettings.specialEvents.map((evt, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-2 px-3 py-2 bg-white/40 rounded-lg border border-white/60 text-xs">
-                    <span className="font-medium text-text">{evt.date}</span>
-                    <span className="text-textMuted">{evt.label}</span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100">
-                      {evt.type === 'skip' ? '수업없음' : evt.type === 'indoor' ? '실내전환' : '특별'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        const next = [...(recommendSettings?.specialEvents || [])]
-                        next.splice(idx, 1)
-                        updateRecommendSettings({ specialEvents: next })
-                        toast.success('행사가 삭제되었습니다')
-                      }}
-                      className="text-danger text-[10px] font-semibold hover:bg-danger/10 px-1.5 py-0.5 rounded"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <AddEventForm
-              onAdd={(evt) => {
-                const current = recommendSettings?.specialEvents || []
-                updateRecommendSettings({ specialEvents: [...current, evt] })
-                toast.success('행사가 등록되었습니다')
-              }}
-            />
           </div>
         </GlassCard>
 

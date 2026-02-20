@@ -10,6 +10,7 @@ export default function ScheduleGrid({
   onRemovePeriod,
   onOpenLessonLog,
   cellRecordMap,
+  planOverlayMap,
 }) {
   const { WEEKDAYS, WEEKDAY_LABELS, MAX_PERIODS, getTimetableForWeek } = useSchedule()
   const { isCurrentPeriod } = useCurrentPeriod()
@@ -60,6 +61,7 @@ export default function ScheduleGrid({
                   onRemove={onRemovePeriod}
                   onOpenLessonLog={onOpenLessonLog}
                   hasAceRecord={!!cellRecord?.aceLesson}
+                  planOverlay={planOverlayMap?.[cellKey]}
                 />
               )
             })}

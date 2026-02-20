@@ -1,7 +1,9 @@
-// 교육과정 단원 설계 — 필터 칩 바 + viewMode 전환 (전체/교과서/내 활동/활동 추가) | 훅→useCurriculum, 컴포넌트→components/curriculum/
-import { useState, useMemo } from 'react'
+// 교육과정 단원 설계 — 필터 칩 바 + viewMode 전환 (전체/교과서/내 활동/연간 계획/활동 추가) | 훅→useCurriculum, 컴포넌트→components/curriculum/
+import { useState, useMemo, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCurriculum } from '../hooks/useCurriculum'
+import { useAnnualPlan } from '../hooks/useAnnualPlan'
+import { useSchoolCalendar } from '../hooks/useSchoolCalendar'
 import UnitCard from '../components/curriculum/UnitCard'
 import LessonTimeline from '../components/curriculum/LessonTimeline'
 import ActivityDetailModal from '../components/curriculum/ActivityDetailModal'
@@ -12,10 +14,13 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useEditedAceLesson } from '../hooks/useEditedAceLesson'
 import { generateId } from '../utils/generateId'
 
+const AnnualPlanView = lazy(() => import('../components/curriculum/AnnualPlanView'))
+
 const VIEW_CHIPS = [
   { key: 'all', label: '전체' },
   { key: 'textbook', label: '교과서' },
   { key: 'grade', label: '학년별' },
+  { key: 'annual', label: '연간 계획' },
   { key: 'archive', label: '내 활동' },
 ]
 
@@ -29,6 +34,20 @@ export default function CurriculumPage() {
     findRelatedActivities,
   } = useCurriculum()
   const { getEditedAceLesson } = useEditedAceLesson()
+  const {
+    plans,
+    createPlan,
+    deletePlan,
+    addUnitFromTemplate,
+    addCustomUnit,
+    updateUnit,
+    removeUnit,
+    assignUnitWeeks,
+    updateLesson,
+    getDomainDistribution,
+    getPlanSummary,
+  } = useAnnualPlan()
+  const { calendar, teachableWeeks } = useSchoolCalendar()
 
   // --- 뷰 모드: 'all' | 'textbook' | 'grade' | 'archive' | 'addForm' ---
   const [viewMode, setViewMode] = useState('all')
@@ -54,6 +73,7 @@ export default function CurriculumPage() {
     if (viewMode === 'archive') return '내 활동'
     if (viewMode === 'addForm') return '활동 추가'
     if (viewMode === 'grade') return '학년별 활동'
+    if (viewMode === 'annual') return '연간 수업 계획'
     return '교육과정 단원'
   }, [viewMode])
 
@@ -61,6 +81,7 @@ export default function CurriculumPage() {
     if (viewMode === 'archive') return '직접 추가한 활동을 관리합니다'
     if (viewMode === 'addForm') return '새로운 활동을 추가합니다'
     if (viewMode === 'grade') return '학년을 선택하면 해당 단원을 볼 수 있습니다'
+    if (viewMode === 'annual') return '학년별 단원을 배치하고 주차를 배정합니다'
     return '단원을 선택하면 차시별 수업 흐름을 확인할 수 있습니다'
   }, [viewMode])
 
@@ -290,6 +311,27 @@ export default function CurriculumPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Step 1 - 연간 계획 뷰 */}
+      {step === 1 && viewMode === 'annual' && (
+        <Suspense fallback={<div className="text-caption text-textMuted py-8 text-center">연간 계획을 불러오는 중...</div>}>
+          <AnnualPlanView
+            plans={plans}
+            teachableWeeks={teachableWeeks}
+            onCreatePlan={createPlan}
+            onDeletePlan={deletePlan}
+            onAddUnitFromTemplate={addUnitFromTemplate}
+            onAddCustomUnit={addCustomUnit}
+            onUpdateUnit={updateUnit}
+            onRemoveUnit={removeUnit}
+            onAssignUnitWeeks={assignUnitWeeks}
+            onUpdateLesson={updateLesson}
+            getDomainDistribution={getDomainDistribution}
+            getPlanSummary={getPlanSummary}
+            calendarYear={calendar.year}
+          />
+        </Suspense>
       )}
 
       {/* Step 1 - 내 활동 목록 */}

@@ -13,6 +13,7 @@ export default function PeriodCell({
   onRemove,
   onOpenLessonLog,
   hasAceRecord,
+  planOverlay,
 }) {
   const { getClassColor } = useClassManager()
 
@@ -93,6 +94,10 @@ export default function PeriodCell({
               style={classColor ? { color: `${classColor.text}cc` } : {}}
             >
               {cleanMemo}
+            </div>
+          ) : planOverlay ? (
+            <div className="text-[9px] mt-0.5 leading-tight text-primary/60 truncate max-w-full">
+              {planOverlay.lessonNumber}차시: {planOverlay.lessonTitle}
             </div>
           ) : null}
           {isCurrent && (

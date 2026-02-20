@@ -33,3 +33,24 @@ export function generateStudentId() {
 export function generateRecordId() {
   return generateId('rec')
 }
+
+/**
+ * 학사 이벤트 ID 생성
+ */
+export function generateEventId() {
+  return generateId('evt')
+}
+
+/**
+ * 연간 수업 계획 ID 생성
+ */
+export function generatePlanId() {
+  return generateId('ap')
+}
+
+/**
+ * 계획 단원 ID 생성
+ */
+export function generatePlanUnitId() {
+  return generateId('pu')
+}

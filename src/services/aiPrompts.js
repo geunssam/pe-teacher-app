@@ -348,16 +348,82 @@ function buildTeacherSnapshot(classSummaries) {
 }
 
 /**
+ * 학사 일정 컨텍스트 빌드
+ * @param {Object} calendarData - { calendar, schoolDays, teachableWeeks }
+ */
+function buildCalendarContext(calendarData) {
+  if (!calendarData?.calendar) return ''
+
+  const { calendar, schoolDays, teachableWeeks } = calendarData
+  const { semesters, events } = calendar
+
+  let section = '\n\n---\n\n## 학사 일정\n'
+  section += `- 1학기: ${semesters?.first?.startDate || '?'} ~ ${semesters?.first?.endDate || '?'} (수업일 ${schoolDays?.first ?? '?'}일)\n`
+  section += `- 2학기: ${semesters?.second?.startDate || '?'} ~ ${semesters?.second?.endDate || '?'} (수업일 ${schoolDays?.second ?? '?'}일)\n`
+  section += `- 총 수업일: ${schoolDays?.total ?? '?'}일, 수업 주수: ${teachableWeeks?.length ?? '?'}주\n`
+
+  // 2주 이내 행사 표시
+  const now = new Date()
+  const twoWeeksLater = new Date(now)
+  twoWeeksLater.setDate(twoWeeksLater.getDate() + 14)
+  const todayStr = now.toISOString().split('T')[0]
+  const futureStr = twoWeeksLater.toISOString().split('T')[0]
+
+  const upcomingEvents = (events || []).filter((e) => e.date >= todayStr && e.date <= futureStr)
+  if (upcomingEvents.length > 0) {
+    section += '\n2주 이내 행사:\n'
+    for (const evt of upcomingEvents) {
+      const typeLabels = { holiday: '공휴일', skip: '수업없음', indoor: '실내전환', special: '특별행사' }
+      section += `- ${evt.date} ${evt.label} (${typeLabels[evt.type] || evt.type})\n`
+    }
+  } else {
+    section += '\n2주 이내 행사: 없음\n'
+  }
+
+  return section
+}
+
+/**
+ * 연간 수업 계획 진도 컨텍스트 빌드
+ * @param {Object} planData - { plans, progressMap } (progressMap은 optional)
+ */
+function buildAnnualPlanSection(planData) {
+  if (!planData?.plans?.length) return ''
+
+  let section = '\n\n---\n\n## 연간 수업 계획 현황\n'
+
+  for (const plan of planData.plans) {
+    section += `\n### ${plan.grade} (${plan.title || '연간 계획'})\n`
+    if (!plan.units?.length) {
+      section += '- 등록된 단원 없음\n'
+      continue
+    }
+    for (const unit of plan.units) {
+      const weekRange = unit.weekStart && unit.weekEnd
+        ? `${unit.weekStart}~${unit.weekEnd}`
+        : '미배정'
+      section += `- ${unit.title} (${unit.domain}, ${unit.totalLessons}차시, 주차: ${weekRange})\n`
+    }
+  }
+
+  return section
+}
+
+/**
  * AI 채팅 시스템 프롬프트 — 로컬 교육과정 에셋 그라운딩 포함
  * @param {Array|null} scheduleContext - 이번 주 시간표 [{ day, period, className, memo }]
  * @param {Array|null} classSummaries - 학급별 수업 요약 데이터
+ * @param {Object|null} calendarData - 학사 일정 데이터 (optional)
+ * @param {Object|null} planData - 연간 계획 데이터 (optional)
  */
-export function buildChatSystemPrompt(scheduleContext, classSummaries = null) {
+export function buildChatSystemPrompt(scheduleContext, classSummaries = null, calendarData = null, planData = null) {
   const standardsCtx = buildStandardsContext()
   const activityCtx = buildActivityContext()
   const unitCtx = buildUnitContext()
   const scheduleSection = buildScheduleSection(scheduleContext)
   const teacherSnapshot = buildTeacherSnapshot(classSummaries)
+  const calendarSection = buildCalendarContext(calendarData)
+  const planSection = buildAnnualPlanSection(planData)
   const { dateStr, dayOfWeek, todayKey } = buildDateContext()
 
   // 오늘 시간표만 추출
@@ -407,7 +473,9 @@ ${todayScheduleText}
 - 학급 관리 및 수업 운영 팁
 - **시간표 메모의 행사/일정 감지 및 맞춤 안내**
 - **학급별 수업 현황 기반 영역 균형 고려 추천**
-${scheduleSection}${teacherSnapshot}
+- **학사 일정 기반 수업일수/행사 고려**
+- **연간 수업 계획 기반 진도 고려**
+${scheduleSection}${teacherSnapshot}${calendarSection}${planSection}
 ---
 
 ## 📚 2022 개정 체육과 교육과정 성취기준 (참조 데이터)

@@ -3,6 +3,7 @@ import { useMemo, useCallback, useState } from 'react'
 import { useClassManager } from './useClassManager'
 import { useSchedule, getWeekRange } from './useSchedule'
 import { useSettings } from './useSettings'
+import { useSchoolCalendar } from './useSchoolCalendar'
 import { useCurrentPeriod } from './useCurrentPeriod'
 import { useCurriculum } from './useCurriculum'
 import { useAI } from './useAI'
@@ -186,6 +187,7 @@ export function useLessonRecommend({ weather = null, air = null } = {}) {
   const { classes, records, getClassRecords } = useClassManager()
   const { getTimetableForWeek } = useSchedule()
   const { recommendSettings } = useSettings()
+  const { getSpecialEventsForRecommend } = useSchoolCalendar()
   const { currentDay } = useCurrentPeriod()
   const { activitiesByGrade } = useCurriculum()
   const ai = useAI()
@@ -194,7 +196,8 @@ export function useLessonRecommend({ weather = null, air = null } = {}) {
   // 추천 설정 (우선순위, 공간)
   const priorityOrder = recommendSettings?.priorityOrder || ['weather', 'continuity', 'space', 'domainBalance']
   const availableSpaces = recommendSettings?.availableSpaces || ['운동장', '체육관', '교실']
-  const specialEvents = recommendSettings?.specialEvents || []
+  // 학사 일정에서 특별행사 가져오기 (기존 recommendSettings.specialEvents 대체)
+  const specialEvents = getSpecialEventsForRecommend()
 
   // 날씨 컨텍스트 (메모이제이션)
   const weatherCtx = useMemo(

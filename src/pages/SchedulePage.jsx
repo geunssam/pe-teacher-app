@@ -19,6 +19,7 @@ import { judgeOutdoorClass } from '../data/mockWeather'
 import { toLocalDateString, getTodayLocalDate } from '../utils/recordDate'
 import { LESSON_DOMAINS, LESSON_FORM_DEFAULT, parseEventTag } from '../constants/lessonDefaults'
 import { getLessonSuggestions } from '../utils/lessonSuggestions'
+import { useAnnualPlan } from '../hooks/useAnnualPlan'
 
 const initialState = {
   weekOffset: 0,
@@ -162,6 +163,7 @@ export default function SchedulePage() {
 
   const { classes, setClassColor, addClassRecord, getClass, getNextLessonSequence, findRecordForCell, records } = useClassManager()
   const { location } = useSettings()
+  const { plans, getScheduleOverlay, advanceProgress } = useAnnualPlan()
 
   const routerLocation = useLocation()
   const navigate = useNavigate()
@@ -212,6 +214,33 @@ export default function SchedulePage() {
     })
     return map
   }, [timetable, weekInfo.monday, records])
+
+  // planOverlayMap 계산 — 연간 계획의 차시 정보를 각 체육 셀에 매핑
+  const planOverlayMap = useMemo(() => {
+    if (!plans || plans.length === 0) return {}
+    const map = {}
+
+    // 학급별로 체육 셀 그룹화 (다른 학급 셀이 섞이면 차시 번호 어긋남 방지)
+    const cellsByClass = {}
+    Object.entries(timetable).forEach(([cellKey, periodData]) => {
+      if (!periodData?.classId) return
+      if (!cellsByClass[periodData.classId]) cellsByClass[periodData.classId] = {}
+      cellsByClass[periodData.classId][cellKey] = periodData
+    })
+
+    // 각 학급별로 매칭되는 연간 계획 찾아 오버레이 계산
+    Object.entries(cellsByClass).forEach(([classId, classTimetable]) => {
+      for (const plan of plans) {
+        const overlay = getScheduleOverlay(plan.id, classId, weekInfo.weekKey, classTimetable)
+        if (overlay && Object.keys(overlay).length > 0) {
+          Object.assign(map, overlay)
+          break
+        }
+      }
+    })
+
+    return map
+  }, [plans, timetable, weekInfo.weekKey, getScheduleOverlay])
 
   const clearLessonQuery = () => {
     if (!searchParams.has('day') && !searchParams.has('period') && !searchParams.has('classId')) {
@@ -494,6 +523,18 @@ export default function SchedulePage() {
       aceLesson: pendingActivity?.aceLesson || null,
     })
 
+    // 연간 계획 진도 전진 — 해당 학급의 학년에 맞는 계획이 있으면 자동 1차시 전진
+    if (plans && plans.length > 0) {
+      const targetClassId = state.lessonLogTarget.classId
+      const targetClass = getClass(targetClassId)
+      const gradeLabel = targetClass ? `${targetClass.grade}학년` : null
+      for (const plan of plans) {
+        if (gradeLabel && plan.grade && plan.grade !== gradeLabel) continue
+        try { advanceProgress(plan.id, targetClassId) } catch { /* noop */ }
+        break
+      }
+    }
+
     toast.success('수업 기록이 저장되었습니다')
     setPendingActivity(null)
     closeLessonLog()
@@ -680,6 +721,7 @@ export default function SchedulePage() {
           onRemovePeriod={handleRemovePeriod}
           onOpenLessonLog={handleOpenLessonLog}
           cellRecordMap={cellRecordMap}
+          planOverlayMap={planOverlayMap}
         />
       </div>
 
