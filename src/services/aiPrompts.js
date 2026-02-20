@@ -362,22 +362,19 @@ function buildCalendarContext(calendarData) {
   section += `- 2학기: ${semesters?.second?.startDate || '?'} ~ ${semesters?.second?.endDate || '?'} (수업일 ${schoolDays?.second ?? '?'}일)\n`
   section += `- 총 수업일: ${schoolDays?.total ?? '?'}일, 수업 주수: ${teachableWeeks?.length ?? '?'}주\n`
 
-  // 2주 이내 행사 표시
-  const now = new Date()
-  const twoWeeksLater = new Date(now)
-  twoWeeksLater.setDate(twoWeeksLater.getDate() + 14)
-  const todayStr = now.toISOString().split('T')[0]
-  const futureStr = twoWeeksLater.toISOString().split('T')[0]
+  // 등록된 전체 행사 표시 (AI가 특정 날짜 질문에 대응 가능하도록)
+  const typeLabels = { holiday: '공휴일', skip: '수업없음', indoor: '실내전환', special: '특별행사' }
+  const sortedEvents = [...(events || [])].sort((a, b) => a.date.localeCompare(b.date))
 
-  const upcomingEvents = (events || []).filter((e) => e.date >= todayStr && e.date <= futureStr)
-  if (upcomingEvents.length > 0) {
-    section += '\n2주 이내 행사:\n'
-    for (const evt of upcomingEvents) {
-      const typeLabels = { holiday: '공휴일', skip: '수업없음', indoor: '실내전환', special: '특별행사' }
+  if (sortedEvents.length > 0) {
+    section += '\n### 등록된 공휴일·학교행사 (수업 없는 날 포함)\n'
+    section += '아래 날짜에는 해당 유형에 따라 수업이 없거나 변경됩니다:\n'
+    for (const evt of sortedEvents) {
       section += `- ${evt.date} ${evt.label} (${typeLabels[evt.type] || evt.type})\n`
     }
+    section += '\n**중요**: "수업없음" 또는 "공휴일"로 등록된 날에는 체육 수업이 없습니다. 해당 날짜의 수업을 물어보면 수업이 없다고 안내하세요.\n'
   } else {
-    section += '\n2주 이내 행사: 없음\n'
+    section += '\n등록된 행사: 없음\n'
   }
 
   return section

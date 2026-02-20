@@ -6,12 +6,16 @@ import { checkGenkitHealth } from '../../services/genkit'
 import { stripMarkdown } from '../../utils/stripMarkdown'
 import { useSchedule, getWeekRange } from '../../hooks/useSchedule'
 import { useClassManager } from '../../hooks/useClassManager'
+import { useSchoolCalendar } from '../../hooks/useSchoolCalendar'
+import { useAnnualPlan } from '../../hooks/useAnnualPlan'
 
 export default function AIChatPanel() {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const { getTimetableForWeek } = useSchedule()
   const { classes, records } = useClassManager()
+  const { calendar, schoolDays, teachableWeeks } = useSchoolCalendar()
+  const { plans } = useAnnualPlan()
 
   // 시간표 컨텍스트를 AI에게 전달하는 콜백 (채팅 세션 생성 시 호출됨)
   const getScheduleContext = useCallback(() => {
@@ -59,7 +63,15 @@ export default function AIChatPanel() {
     }
   }, [classes, records])
 
-  const { messages, loading, error, sendMessage, clearChat, lessonContext, setLessonContext, clearLessonContext } = useAIChat({ getScheduleContext, getClassSummaries })
+  const getCalendarData = useCallback(() => {
+    return { calendar, schoolDays, teachableWeeks }
+  }, [calendar, schoolDays, teachableWeeks])
+
+  const getPlanData = useCallback(() => {
+    return { plans }
+  }, [plans])
+
+  const { messages, loading, error, sendMessage, clearChat, lessonContext, setLessonContext, clearLessonContext } = useAIChat({ getScheduleContext, getClassSummaries, getCalendarData, getPlanData })
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const [genkitReady, setGenkitReady] = useState(false)

@@ -96,7 +96,7 @@ export function useAI() {
  * @param {{ getScheduleContext?: () => Array, getClassSummaries?: () => Array }} options
  * @returns {{ messages, loading, error, sendMessage, clearChat }}
  */
-export function useAIChat({ getScheduleContext, getClassSummaries } = {}) {
+export function useAIChat({ getScheduleContext, getClassSummaries, getCalendarData, getPlanData } = {}) {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -107,6 +107,8 @@ export function useAIChat({ getScheduleContext, getClassSummaries } = {}) {
   const lessonContextRef = useRef(null)
   const getScheduleContextRef = useRef(getScheduleContext)
   const getClassSummariesRef = useRef(getClassSummaries)
+  const getCalendarDataRef = useRef(getCalendarData)
+  const getPlanDataRef = useRef(getPlanData)
 
   // Keep refs up-to-date
   useEffect(() => {
@@ -116,6 +118,14 @@ export function useAIChat({ getScheduleContext, getClassSummaries } = {}) {
   useEffect(() => {
     getClassSummariesRef.current = getClassSummaries
   }, [getClassSummaries])
+
+  useEffect(() => {
+    getCalendarDataRef.current = getCalendarData
+  }, [getCalendarData])
+
+  useEffect(() => {
+    getPlanDataRef.current = getPlanData
+  }, [getPlanData])
 
   // Check Genkit availability on mount
   useEffect(() => {
@@ -145,9 +155,11 @@ export function useAIChat({ getScheduleContext, getClassSummaries } = {}) {
     // 매번 최신 시간표 + 학급 컨텍스트로 세션 재생성
     const scheduleContext = getScheduleContextRef.current?.() || null
     const classSummaries = getClassSummariesRef.current?.() || null
+    const calendarData = getCalendarDataRef.current?.() || null
+    const planData = getPlanDataRef.current?.() || null
     const systemPrompt = lessonContextRef.current
       ? buildLessonChatSystemPrompt(lessonContextRef.current)
-      : buildChatSystemPrompt(scheduleContext, classSummaries)
+      : buildChatSystemPrompt(scheduleContext, classSummaries, calendarData, planData)
 
     // 기존 대화 히스토리 유지 (스트리밍 중이거나 빈 메시지 제외)
     const conversationHistory = messages
