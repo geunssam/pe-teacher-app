@@ -402,10 +402,24 @@ export default function LessonPoolPanel({
     : '차시 풀 관리'
 
   return (
-    <Modal onClose={onClose} title={title} maxWidth="max-w-lg">
+    <Modal onClose={onClose} maxWidth="max-w-lg" contentClassName="!p-0 max-h-[80vh] flex flex-col">
+      {/* 헤더: 타이틀 + 닫기 */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+        <h3 className="text-sm font-bold text-gray-800">{title}</h3>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          aria-label="닫기"
+        >
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        </button>
+      </div>
+
       {/* 모드 전환 탭 (targetWeekKey가 있을 때만) */}
       {targetWeekKey && (
-        <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-1 mb-4">
+        <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-1 mx-5 mb-3 shrink-0">
           <button
             onClick={() => setMode('pick')}
             className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
@@ -429,27 +443,30 @@ export default function LessonPoolPanel({
         </div>
       )}
 
-      {mode === 'pick' ? (
-        <PickMode
-          groups={pickGroups}
-          weekNum={weekNum}
-          onAssignToWeek={onAssignToWeek}
-          targetWeekKey={targetWeekKey}
-          onSwitchToManage={() => setMode('manage')}
-        />
-      ) : (
-        <ManageMode
-          pool={pool}
-          groups={manageGroups}
-          assignedIds={assignedIds}
-          gradeTemplates={gradeTemplates}
-          addedTemplateIds={addedTemplateIds}
-          onImportTemplate={onImportTemplate}
-          onRemoveTemplate={onRemoveTemplate}
-          onToggleIncluded={onToggleIncluded}
-          onAddCustomLesson={onAddCustomLesson}
-        />
-      )}
+      {/* 스크롤 영역 */}
+      <div className="flex-1 overflow-y-auto px-5 pb-5 custom-scroll">
+        {mode === 'pick' ? (
+          <PickMode
+            groups={pickGroups}
+            weekNum={weekNum}
+            onAssignToWeek={onAssignToWeek}
+            targetWeekKey={targetWeekKey}
+            onSwitchToManage={() => setMode('manage')}
+          />
+        ) : (
+          <ManageMode
+            pool={pool}
+            groups={manageGroups}
+            assignedIds={assignedIds}
+            gradeTemplates={gradeTemplates}
+            addedTemplateIds={addedTemplateIds}
+            onImportTemplate={onImportTemplate}
+            onRemoveTemplate={onRemoveTemplate}
+            onToggleIncluded={onToggleIncluded}
+            onAddCustomLesson={onAddCustomLesson}
+          />
+        )}
+      </div>
     </Modal>
   )
 }
