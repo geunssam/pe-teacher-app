@@ -268,6 +268,38 @@ export function useAnnualPlan() {
     updateUnit(planId, unitId, { weekStart, weekEnd })
   }, [updateUnit])
 
+  /**
+   * 자동 주차 배정 — teachableWeeks 기반으로 순서대로 배정
+   * 주당 체육 시수(weeklyPEHours)를 고려하여 필요 주수 계산
+   */
+  const autoAssignAllWeeks = useCallback((planId, teachableWeeksArr, weeklyPEHours = 3) => {
+    const plan = plans.find((p) => p.id === planId)
+    if (!plan || !plan.units?.length || !teachableWeeksArr?.length) return
+
+    let weekIdx = 0
+    const perWeek = Math.max(1, weeklyPEHours)
+
+    updatePlanInList((prev) => ({
+      ...prev,
+      units: prev.units.map((unit) => {
+        const neededWeeks = Math.ceil(unit.totalLessons / perWeek)
+        if (weekIdx >= teachableWeeksArr.length) return unit
+
+        const startWeek = teachableWeeksArr[weekIdx]
+        const endWeekIdx = Math.min(weekIdx + neededWeeks - 1, teachableWeeksArr.length - 1)
+        const endWeek = teachableWeeksArr[endWeekIdx]
+
+        weekIdx = endWeekIdx + 1
+
+        return {
+          ...unit,
+          weekStart: startWeek.weekKey,
+          weekEnd: endWeek.weekKey,
+        }
+      }),
+    }), planId)
+  }, [plans, updatePlanInList])
+
   // --- 계산 ---
 
   const getDomainDistribution = useCallback((planId) => {
@@ -610,6 +642,7 @@ export function useAnnualPlan() {
     removeLesson,
 
     assignUnitWeeks,
+    autoAssignAllWeeks,
 
     getDomainDistribution,
     getPlanSummary,

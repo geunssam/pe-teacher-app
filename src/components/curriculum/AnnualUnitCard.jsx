@@ -1,4 +1,5 @@
 // 연간 계획 단원 카드 — 단원 정보 + ACE 분포 + 주차 배정 | 부모→AnnualPlanView
+import { useState } from 'react'
 import AceBadge from './AceBadge'
 
 const DOMAIN_BORDER_COLORS = {
@@ -13,6 +14,11 @@ const DOMAIN_BADGE = {
   '표현':   { bg: 'bg-[#A78BFA]', text: 'text-white' },
 }
 
+function formatWeekLabel(weekKey) {
+  if (!weekKey) return ''
+  return weekKey.replace('-', ' ')
+}
+
 function formatWeekRange(weekStart, weekEnd) {
   if (!weekStart) return '주차 미배정'
   const startNum = weekStart.split('-W')[1]
@@ -24,6 +30,9 @@ export default function AnnualUnitCard({ unit, index, onUpdate, onRemove, onAssi
   const { id, title, domain, totalLessons, weekStart, weekEnd, lessons, standardCodes } = unit
   const borderColor = DOMAIN_BORDER_COLORS[domain] || '#8f8f8f'
   const badge = DOMAIN_BADGE[domain] || { bg: 'bg-gray-200', text: 'text-gray-700' }
+  const [weekPickerOpen, setWeekPickerOpen] = useState(false)
+  const [pickStart, setPickStart] = useState(weekStart || '')
+  const [pickEnd, setPickEnd] = useState(weekEnd || '')
 
   // ACE 배분 계산
   const aceCounts = { A: 0, C: 0, E: 0 }
@@ -36,6 +45,21 @@ export default function AnnualUnitCard({ unit, index, onUpdate, onRemove, onAssi
   }
 
   const weekLabel = formatWeekRange(weekStart, weekEnd)
+  const weeks = teachableWeeks || []
+
+  const handleSaveWeeks = () => {
+    if (pickStart) {
+      onAssignWeeks(id, { weekStart: pickStart, weekEnd: pickEnd || pickStart })
+    }
+    setWeekPickerOpen(false)
+  }
+
+  const handleClearWeeks = () => {
+    onAssignWeeks(id, { weekStart: null, weekEnd: null })
+    setPickStart('')
+    setPickEnd('')
+    setWeekPickerOpen(false)
+  }
 
   return (
     <div
@@ -57,7 +81,16 @@ export default function AnnualUnitCard({ unit, index, onUpdate, onRemove, onAssi
       <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
         <span>{totalLessons}차시</span>
         <span className="text-gray-300">|</span>
-        <span className={weekStart ? 'text-gray-500' : 'text-gray-300'}>{weekLabel}</span>
+        <span className={weekStart ? 'text-primary font-semibold' : 'text-gray-300'}>{weekLabel}</span>
+        {weekStart && weeks.length > 0 && (
+          <>
+            <span className="text-gray-300">|</span>
+            <span className="text-gray-400">
+              {weeks.find(w => w.weekKey === weekStart)?.mondayDate?.slice(5) || ''}~
+              {weeks.find(w => w.weekKey === (weekEnd || weekStart))?.fridayDate?.slice(5) || ''}
+            </span>
+          </>
+        )}
       </div>
 
       {/* ACE 분포 */}
@@ -82,13 +115,85 @@ export default function AnnualUnitCard({ unit, index, onUpdate, onRemove, onAssi
         </div>
       )}
 
+      {/* 주차 배정 피커 */}
+      {weekPickerOpen && (
+        <div className="p-3 mb-3 bg-white/60 rounded-lg border border-primary/20">
+          <div className="text-xs font-semibold text-gray-600 mb-2">주차 배정</div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex-1">
+              <label className="text-[10px] text-gray-400 block mb-1">시작 주</label>
+              <select
+                value={pickStart}
+                onChange={(e) => {
+                  setPickStart(e.target.value)
+                  if (!pickEnd || e.target.value > pickEnd) setPickEnd(e.target.value)
+                }}
+                className="w-full py-1.5 px-2 rounded-lg border border-gray-200 bg-white text-xs focus:outline-none focus:border-primary/50"
+              >
+                <option value="">선택</option>
+                {weeks.map((w) => (
+                  <option key={w.weekKey} value={w.weekKey}>
+                    {w.weekKey.split('-W')[1]}주 ({w.mondayDate.slice(5)}~{w.fridayDate.slice(5)})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="text-gray-400 mt-4">~</div>
+            <div className="flex-1">
+              <label className="text-[10px] text-gray-400 block mb-1">종료 주</label>
+              <select
+                value={pickEnd}
+                onChange={(e) => setPickEnd(e.target.value)}
+                className="w-full py-1.5 px-2 rounded-lg border border-gray-200 bg-white text-xs focus:outline-none focus:border-primary/50"
+              >
+                <option value="">선택</option>
+                {weeks
+                  .filter((w) => !pickStart || w.weekKey >= pickStart)
+                  .map((w) => (
+                    <option key={w.weekKey} value={w.weekKey}>
+                      {w.weekKey.split('-W')[1]}주 ({w.mondayDate.slice(5)}~{w.fridayDate.slice(5)})
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSaveWeeks}
+              disabled={!pickStart}
+              className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-primary disabled:opacity-40 transition-all"
+            >
+              확인
+            </button>
+            {weekStart && (
+              <button
+                onClick={handleClearWeeks}
+                className="py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-500 bg-gray-100 transition-all"
+              >
+                해제
+              </button>
+            )}
+            <button
+              onClick={() => setWeekPickerOpen(false)}
+              className="py-1.5 px-3 rounded-lg text-xs font-semibold text-gray-500 bg-gray-100 transition-all"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 주차 배정 / 삭제 */}
       <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
         <button
-          onClick={() => onAssignWeeks(id, { weekStart, weekEnd })}
+          onClick={() => {
+            setPickStart(weekStart || '')
+            setPickEnd(weekEnd || '')
+            setWeekPickerOpen(!weekPickerOpen)
+          }}
           className="text-xs font-semibold text-primary hover:bg-primary/10 px-2.5 py-1 rounded-lg transition-colors"
         >
-          주차 배정
+          {weekStart ? '주차 변경' : '주차 배정'}
         </button>
         <button
           onClick={() => onRemove(id)}

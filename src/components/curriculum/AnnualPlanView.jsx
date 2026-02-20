@@ -16,10 +16,12 @@ export default function AnnualPlanView({
   onUpdateUnit,
   onRemoveUnit,
   onAssignUnitWeeks,
+  onAutoAssignWeeks,
   onUpdateLesson,
   getDomainDistribution,
   getPlanSummary,
   calendarYear,
+  weeklyPEHours,
 }) {
   const [selectedGrade, setSelectedGrade] = useState('5학년')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -148,6 +150,16 @@ export default function AnnualPlanView({
             <h3 className="text-xs font-semibold text-gray-500 mb-3">영역 분포</h3>
             <AnnualDomainChart distribution={distribution} />
           </div>
+
+          {/* 자동 주차 배정 버튼 */}
+          {currentPlan.units && currentPlan.units.length > 0 && teachableWeeks?.length > 0 && (
+            <button
+              onClick={() => onAutoAssignWeeks(currentPlan.id, teachableWeeks, weeklyPEHours || 3)}
+              className="w-full py-2.5 rounded-xl text-xs font-semibold border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+            >
+              전체 단원 자동 주차 배정 (주 {weeklyPEHours || 3}시간 기준)
+            </button>
+          )}
 
           {/* 단원 카드 리스트 */}
           {currentPlan.units && currentPlan.units.length > 0 ? (

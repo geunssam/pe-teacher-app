@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCurriculum } from '../hooks/useCurriculum'
 import { useAnnualPlan } from '../hooks/useAnnualPlan'
 import { useSchoolCalendar } from '../hooks/useSchoolCalendar'
+import { useSchedule } from '../hooks/useSchedule'
 import UnitCard from '../components/curriculum/UnitCard'
 import LessonTimeline from '../components/curriculum/LessonTimeline'
 import ActivityDetailModal from '../components/curriculum/ActivityDetailModal'
@@ -43,11 +44,14 @@ export default function CurriculumPage() {
     updateUnit,
     removeUnit,
     assignUnitWeeks,
+    autoAssignAllWeeks,
     updateLesson,
     getDomainDistribution,
     getPlanSummary,
   } = useAnnualPlan()
-  const { calendar, teachableWeeks } = useSchoolCalendar()
+  const { calendar, teachableWeeks, getWeeklyPEHours } = useSchoolCalendar()
+  const { baseTimetable } = useSchedule()
+  const weeklyPEHours = getWeeklyPEHours(baseTimetable)
 
   // --- 뷰 모드: 'all' | 'textbook' | 'grade' | 'archive' | 'addForm' ---
   const [viewMode, setViewMode] = useState('all')
@@ -326,10 +330,12 @@ export default function CurriculumPage() {
             onUpdateUnit={updateUnit}
             onRemoveUnit={removeUnit}
             onAssignUnitWeeks={assignUnitWeeks}
+            onAutoAssignWeeks={autoAssignAllWeeks}
             onUpdateLesson={updateLesson}
             getDomainDistribution={getDomainDistribution}
             getPlanSummary={getPlanSummary}
             calendarYear={calendar.year}
+            weeklyPEHours={weeklyPEHours}
           />
         </Suspense>
       )}

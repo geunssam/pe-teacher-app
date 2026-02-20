@@ -413,8 +413,9 @@ export function useSchoolCalendar() {
 
   const getWeeklyPEHours = useCallback((baseTimetable) => {
     if (!baseTimetable) return 0
+    // 체육 전담 앱이므로 classId가 있는 셀 = 체육 수업
     return Object.values(baseTimetable).filter(
-      (cell) => cell && cell.subject === '체육'
+      (cell) => cell && cell.classId
     ).length
   }, [])
 
