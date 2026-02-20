@@ -163,7 +163,7 @@ export default function SchedulePage() {
 
   const { classes, setClassColor, addClassRecord, getClass, getNextLessonSequence, findRecordForCell, records } = useClassManager()
   const { location } = useSettings()
-  const { plans, getScheduleOverlay, advanceProgress } = useAnnualPlan()
+  const { plans, getScheduleOverlay, markLessonComplete } = useAnnualPlan()
 
   const routerLocation = useLocation()
   const navigate = useNavigate()
@@ -299,6 +299,7 @@ export default function SchedulePage() {
       payload: {
         day,
         period,
+        cellKey: `${day}-${period}`,
         classId: periodData?.classId,
         className: periodData?.className,
         periodData,
@@ -367,6 +368,7 @@ export default function SchedulePage() {
         payload: {
           day,
           period,
+          cellKey: `${day}-${period}`,
           classId: periodData?.classId,
           className: periodData?.className,
           periodData,
@@ -527,15 +529,19 @@ export default function SchedulePage() {
       aceLesson: pendingActivity?.aceLesson || null,
     })
 
-    // 연간 계획 진도 전진 — 해당 학급의 학년에 맞는 계획이 있으면 자동 1차시 전진
-    if (plans && plans.length > 0) {
+    // 연간 계획 진도 완료 — 해당 셀의 poolId가 있으면 완료 표시
+    if (plans && plans.length > 0 && state.lessonLogTarget) {
       const targetClassId = state.lessonLogTarget.classId
-      const targetClass = getClass(targetClassId)
-      const gradeLabel = targetClass ? `${targetClass.grade}학년` : null
-      for (const plan of plans) {
-        if (gradeLabel && plan.grade && plan.grade !== gradeLabel) continue
-        try { advanceProgress(plan.id, targetClassId) } catch { /* noop */ }
-        break
+      const cellKey = state.lessonLogTarget.cellKey
+      const overlayData = cellKey ? planOverlayMap[cellKey] : null
+      if (overlayData?.poolId) {
+        const targetClass = getClass(targetClassId)
+        const gradeLabel = targetClass ? `${targetClass.grade}학년` : null
+        for (const plan of plans) {
+          if (gradeLabel && plan.grade && plan.grade !== gradeLabel) continue
+          try { markLessonComplete(plan.id, targetClassId, overlayData.poolId) } catch { /* noop */ }
+          break
+        }
       }
     }
 

@@ -15,7 +15,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useEditedAceLesson } from '../hooks/useEditedAceLesson'
 import { generateId } from '../utils/generateId'
 
-const AnnualPlanView = lazy(() => import('../components/curriculum/AnnualPlanView'))
+const WeeklyPlanView = lazy(() => import('../components/curriculum/WeeklyPlanView'))
 
 const VIEW_CHIPS = [
   { key: 'all', label: '전체' },
@@ -39,16 +39,18 @@ export default function CurriculumPage() {
     plans,
     createPlan,
     deletePlan,
-    addUnitFromTemplate,
-    addCustomUnit,
-    updateUnit,
-    removeUnit,
-    assignUnitWeeks,
-    autoAssignAllWeeks,
-    reorderUnits,
-    updateLesson,
+    importTemplateToPool,
+    removeTemplateFromPool,
+    addCustomLesson,
+    toggleLessonIncluded,
+    assignLessonToWeek,
+    removeLessonFromWeek,
+    reorderWeekLessons,
+    moveLessonToWeek,
+    autoFillWeeks,
     getDomainDistribution,
     getPlanSummary,
+    getLessonsForWeek,
   } = useAnnualPlan()
   const { calendar, teachableWeeks, getWeeklyPEHours } = useSchoolCalendar()
   const { baseTimetable } = useSchedule()
@@ -321,23 +323,25 @@ export default function CurriculumPage() {
       {/* Step 1 - 연간 계획 뷰 */}
       {step === 1 && viewMode === 'annual' && (
         <Suspense fallback={<div className="text-caption text-textMuted py-8 text-center">연간 계획을 불러오는 중...</div>}>
-          <AnnualPlanView
+          <WeeklyPlanView
             plans={plans}
             teachableWeeks={teachableWeeks}
-            onCreatePlan={createPlan}
-            onDeletePlan={deletePlan}
-            onAddUnitFromTemplate={addUnitFromTemplate}
-            onAddCustomUnit={addCustomUnit}
-            onUpdateUnit={updateUnit}
-            onRemoveUnit={removeUnit}
-            onAssignUnitWeeks={assignUnitWeeks}
-            onAutoAssignWeeks={autoAssignAllWeeks}
-            onReorderUnits={reorderUnits}
-            onUpdateLesson={updateLesson}
-            getDomainDistribution={getDomainDistribution}
-            getPlanSummary={getPlanSummary}
             calendarYear={calendar.year}
             weeklyPEHours={weeklyPEHours}
+            onCreatePlan={createPlan}
+            onDeletePlan={deletePlan}
+            onImportTemplate={importTemplateToPool}
+            onRemoveTemplate={removeTemplateFromPool}
+            onAddCustomLesson={addCustomLesson}
+            onToggleIncluded={toggleLessonIncluded}
+            onAssignToWeek={assignLessonToWeek}
+            onRemoveLessonFromWeek={removeLessonFromWeek}
+            onReorderWeekLessons={reorderWeekLessons}
+            onMoveLessonToWeek={moveLessonToWeek}
+            onAutoFillWeeks={autoFillWeeks}
+            getDomainDistribution={getDomainDistribution}
+            getPlanSummary={getPlanSummary}
+            getLessonsForWeek={getLessonsForWeek}
           />
         </Suspense>
       )}

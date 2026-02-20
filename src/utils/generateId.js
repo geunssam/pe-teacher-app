@@ -54,3 +54,10 @@ export function generatePlanId() {
 export function generatePlanUnitId() {
   return generateId('pu')
 }
+
+/**
+ * 차시 풀 항목 ID 생성
+ */
+export function generatePoolLessonId() {
+  return generateId('lp')
+}

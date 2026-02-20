@@ -1,36 +1,69 @@
-// 연간계획 훅 — 학년별 연간 수업 계획 CRUD (단원/차시/주차 배정, Firestore + localStorage fallback) | 사용처→CurriculumPage/AnnualPlanView
+// 연간계획 훅 — 학년별 연간 수업 계획 CRUD (차시 풀 + 주차별 배정, Firestore + localStorage fallback) | 사용처→CurriculumPage/WeeklyPlanView
 import { useCallback, useEffect, useRef, useMemo } from 'react'
 import { useLocalStorage } from './useLocalStorage'
 import { getUid } from './useDataSource'
 import { setDocument, getDocument, getCollection, deleteDocument } from '../services/firestore'
-import { generatePlanId, generatePlanUnitId } from '../utils/generateId'
+import { generatePlanId, generatePoolLessonId } from '../utils/generateId'
 import unitTemplatesData from '../data/curriculum/unitTemplates.json'
 
 const PLANS_KEY = 'pe_annual_plans'
 const PROGRESS_KEY = 'pe_plan_progress'
-const OVERRIDES_KEY = 'pe_weekly_overrides'
 
 // ===== Helper =====
 
-/**
- * unitTemplates.json에서 templateId로 템플릿 찾기
- */
 function findTemplate(templateId) {
   return unitTemplatesData.templates.find((t) => t.id === templateId) || null
 }
 
 /**
- * lessonPlan → unit.lessons 변환
- * 템플릿의 lessonPlan 배열을 plan의 lessons 형태로 복사
+ * 기존 units[] 데이터를 새 lessonPool[] + weekSlots{} 형식으로 마이그레이션
  */
-function convertLessonPlanToLessons(lessonPlan) {
-  return lessonPlan.map((lp) => ({
-    lesson: lp.lesson,
-    acePhase: lp.acePhase,
-    title: lp.title,
-    activityIds: [...lp.activityIds],
-    note: '',
-  }))
+function migratePlanToNewFormat(plan) {
+  if (plan.lessonPool) return plan // 이미 새 형식
+
+  const units = plan.units || []
+  const lessonPool = []
+  const weekSlots = {}
+
+  for (const unit of units) {
+    const lessons = unit.lessons || []
+    const poolIds = []
+
+    for (const lesson of lessons) {
+      const poolId = generatePoolLessonId()
+      lessonPool.push({
+        poolId,
+        sourceTemplateId: unit.sourceTemplateId || null,
+        unitTitle: unit.title || '',
+        domain: unit.domain || '스포츠',
+        lesson: lesson.lesson,
+        acePhase: lesson.acePhase || 'A',
+        title: lesson.title || '',
+        activityIds: [...(lesson.activityIds || [])],
+        note: lesson.note || '',
+        included: true,
+      })
+      poolIds.push(poolId)
+    }
+
+    // 주차 범위가 있으면 weekSlots으로 변환
+    if (unit.weekStart && unit.weekEnd) {
+      // 단순화: 시작 주에 모든 차시 배치 (이후 자동 배정으로 재분배 가능)
+      if (poolIds.length > 0) {
+        weekSlots[unit.weekStart] = [
+          ...(weekSlots[unit.weekStart] || []),
+          ...poolIds,
+        ]
+      }
+    }
+  }
+
+  return {
+    ...plan,
+    lessonPool,
+    weekSlots,
+    units: undefined, // 기존 필드 제거
+  }
 }
 
 // ===== Hook =====
@@ -39,11 +72,9 @@ export function useAnnualPlan() {
   const [plans, setPlans] = useLocalStorage(PLANS_KEY, [])
   const firestoreLoaded = useRef(false)
 
-  // Progress & Overrides state
+  // Progress state — { planId: { classId: { completedPoolIds: [] } } }
   const [progress, setProgress] = useLocalStorage(PROGRESS_KEY, {})
   const progressFirestoreLoaded = useRef(false)
-  const [overrides, setOverrides] = useLocalStorage(OVERRIDES_KEY, {})
-  const overridesFirestoreLoaded = useRef(false)
 
   // --- Firestore 동기화 ---
 
@@ -56,7 +87,15 @@ export function useAnnualPlan() {
       try {
         const docs = await getCollection(`users/${uid}/annualPlans`)
         if (docs && docs.length > 0) {
-          setPlans(docs)
+          // 마이그레이션 적용
+          const migrated = docs.map(migratePlanToNewFormat)
+          setPlans(migrated)
+          // 마이그레이션된 plan은 다시 저장
+          for (const plan of migrated) {
+            if (!docs.find((d) => d.id === plan.id)?.lessonPool) {
+              setDocument(`users/${uid}/annualPlans/${plan.id}`, plan, false).catch(() => {})
+            }
+          }
         }
       } catch (err) {
         console.warn('[useAnnualPlan] Firestore load failed, using localStorage:', err.message)
@@ -65,6 +104,14 @@ export function useAnnualPlan() {
 
     loadFromFirestore()
   }, [])
+
+  // localStorage에서 로드할 때도 마이그레이션
+  useEffect(() => {
+    if (plans.some((p) => p.units && !p.lessonPool)) {
+      const migrated = plans.map(migratePlanToNewFormat)
+      setPlans(migrated)
+    }
+  }, []) // 최초 1회만
 
   const syncPlanToFirestore = useCallback((plan) => {
     const uid = getUid()
@@ -86,7 +133,6 @@ export function useAnnualPlan() {
 
   // --- 내부 업데이트 헬퍼 ---
 
-  /** plans 배열 내 특정 plan을 업데이트하고 Firestore 동기화 */
   const updatePlanInList = useCallback((planId, updater) => {
     setPlans((prev) => {
       const idx = prev.findIndex((p) => p.id === planId)
@@ -104,228 +150,6 @@ export function useAnnualPlan() {
     })
   }, [setPlans, syncPlanToFirestore])
 
-  // --- Plan CRUD ---
-
-  const getPlanByGrade = useCallback((grade) => {
-    return plans.find((p) => p.grade === grade) || null
-  }, [plans])
-
-  const createPlan = useCallback(({ year, grade, title }) => {
-    const now = new Date().toISOString()
-    const plan = {
-      id: generatePlanId(),
-      year,
-      grade,
-      title: title || `${grade} 연간 수업 계획`,
-      units: [],
-      createdAt: now,
-      updatedAt: now,
-    }
-
-    setPlans((prev) => {
-      const next = [...prev, plan]
-      syncPlanToFirestore(plan)
-      return next
-    })
-
-    return plan
-  }, [setPlans, syncPlanToFirestore])
-
-  const deletePlan = useCallback((planId) => {
-    setPlans((prev) => prev.filter((p) => p.id !== planId))
-    deletePlanFromFirestore(planId)
-  }, [setPlans, deletePlanFromFirestore])
-
-  // --- Unit CRUD ---
-
-  const addUnitFromTemplate = useCallback((planId, templateId) => {
-    const template = findTemplate(templateId)
-    if (!template) {
-      console.warn(`[useAnnualPlan] Template not found: ${templateId}`)
-      return null
-    }
-
-    const unit = {
-      id: generatePlanUnitId(),
-      sourceTemplateId: templateId,
-      title: template.title,
-      domain: template.domain,
-      totalLessons: template.totalLessons,
-      weekStart: null,
-      weekEnd: null,
-      standardCodes: [...template.standardCodes],
-      lessons: convertLessonPlanToLessons(template.lessonPlan),
-    }
-
-    updatePlanInList(planId, (plan) => ({
-      units: [...plan.units, unit],
-    }))
-
-    return unit
-  }, [updatePlanInList])
-
-  const addCustomUnit = useCallback((planId, { title, domain, totalLessons, standardCodes }) => {
-    const unit = {
-      id: generatePlanUnitId(),
-      sourceTemplateId: null,
-      title,
-      domain,
-      totalLessons: totalLessons || 0,
-      weekStart: null,
-      weekEnd: null,
-      standardCodes: standardCodes || [],
-      lessons: [],
-    }
-
-    updatePlanInList(planId, (plan) => ({
-      units: [...plan.units, unit],
-    }))
-
-    return unit
-  }, [updatePlanInList])
-
-  const updateUnit = useCallback((planId, unitId, updates) => {
-    updatePlanInList(planId, (plan) => ({
-      units: plan.units.map((u) => (u.id === unitId ? { ...u, ...updates } : u)),
-    }))
-  }, [updatePlanInList])
-
-  const removeUnit = useCallback((planId, unitId) => {
-    updatePlanInList(planId, (plan) => ({
-      units: plan.units.filter((u) => u.id !== unitId),
-    }))
-  }, [updatePlanInList])
-
-  const reorderUnits = useCallback((planId, unitIds) => {
-    updatePlanInList(planId, (plan) => {
-      const unitMap = new Map(plan.units.map((u) => [u.id, u]))
-      const reordered = unitIds
-        .map((id) => unitMap.get(id))
-        .filter(Boolean)
-      return { units: reordered }
-    })
-  }, [updatePlanInList])
-
-  // --- Lesson CRUD ---
-
-  const updateLesson = useCallback((planId, unitId, lessonNumber, updates) => {
-    updatePlanInList(planId, (plan) => ({
-      units: plan.units.map((u) => {
-        if (u.id !== unitId) return u
-        return {
-          ...u,
-          lessons: u.lessons.map((l) =>
-            l.lesson === lessonNumber ? { ...l, ...updates } : l
-          ),
-        }
-      }),
-    }))
-  }, [updatePlanInList])
-
-  const addLesson = useCallback((planId, unitId, lessonData) => {
-    updatePlanInList(planId, (plan) => ({
-      units: plan.units.map((u) => {
-        if (u.id !== unitId) return u
-        const nextLessonNum = u.lessons.length > 0
-          ? Math.max(...u.lessons.map((l) => l.lesson)) + 1
-          : 1
-        const newLesson = {
-          lesson: nextLessonNum,
-          acePhase: 'A',
-          title: '',
-          activityIds: [],
-          note: '',
-          ...lessonData,
-        }
-        return {
-          ...u,
-          lessons: [...u.lessons, newLesson],
-          totalLessons: u.totalLessons + 1,
-        }
-      }),
-    }))
-  }, [updatePlanInList])
-
-  const removeLesson = useCallback((planId, unitId, lessonNumber) => {
-    updatePlanInList(planId, (plan) => ({
-      units: plan.units.map((u) => {
-        if (u.id !== unitId) return u
-        const filtered = u.lessons.filter((l) => l.lesson !== lessonNumber)
-        // Re-number lessons
-        const renumbered = filtered.map((l, i) => ({ ...l, lesson: i + 1 }))
-        return {
-          ...u,
-          lessons: renumbered,
-          totalLessons: renumbered.length,
-        }
-      }),
-    }))
-  }, [updatePlanInList])
-
-  // --- Week Assignment ---
-
-  const assignUnitWeeks = useCallback((planId, unitId, { weekStart, weekEnd }) => {
-    updateUnit(planId, unitId, { weekStart, weekEnd })
-  }, [updateUnit])
-
-  /**
-   * 자동 주차 배정 — teachableWeeks 기반으로 순서대로 배정
-   * 주당 체육 시수(weeklyPEHours)를 고려하여 필요 주수 계산
-   */
-  const autoAssignAllWeeks = useCallback((planId, teachableWeeksArr, weeklyPEHours = 3) => {
-    const plan = plans.find((p) => p.id === planId)
-    if (!plan || !plan.units?.length || !teachableWeeksArr?.length) return
-
-    let weekIdx = 0
-    const perWeek = Math.max(1, weeklyPEHours)
-
-    updatePlanInList(planId, (prev) => ({
-      ...prev,
-      units: prev.units.map((unit) => {
-        const neededWeeks = Math.ceil(unit.totalLessons / perWeek)
-        if (weekIdx >= teachableWeeksArr.length) return unit
-
-        const startWeek = teachableWeeksArr[weekIdx]
-        const endWeekIdx = Math.min(weekIdx + neededWeeks - 1, teachableWeeksArr.length - 1)
-        const endWeek = teachableWeeksArr[endWeekIdx]
-
-        weekIdx = endWeekIdx + 1
-
-        return {
-          ...unit,
-          weekStart: startWeek.weekKey,
-          weekEnd: endWeek.weekKey,
-        }
-      }),
-    }))
-  }, [plans, updatePlanInList])
-
-  // --- 계산 ---
-
-  const getDomainDistribution = useCallback((planId) => {
-    const plan = plans.find((p) => p.id === planId)
-    if (!plan) return {}
-
-    const dist = {}
-    for (const unit of plan.units) {
-      const domain = unit.domain || '미분류'
-      dist[domain] = (dist[domain] || 0) + unit.totalLessons
-    }
-    return dist
-  }, [plans])
-
-  const getPlanSummary = useCallback((planId) => {
-    const plan = plans.find((p) => p.id === planId)
-    if (!plan) return { totalUnits: 0, totalLessons: 0, assignedWeeks: 0, unassignedWeeks: 0 }
-
-    const totalUnits = plan.units.length
-    const totalLessons = plan.units.reduce((sum, u) => sum + u.totalLessons, 0)
-    const assignedWeeks = plan.units.filter((u) => u.weekStart && u.weekEnd).length
-    const unassignedWeeks = totalUnits - assignedWeeks
-
-    return { totalUnits, totalLessons, assignedWeeks, unassignedWeeks }
-  }, [plans])
-
   // --- Firestore 동기화: Progress ---
 
   useEffect(() => {
@@ -335,7 +159,6 @@ export function useAnnualPlan() {
 
     async function loadProgress() {
       try {
-        // Load all planProgress documents
         const docs = await getCollection(`users/${uid}/planProgress`)
         if (docs && docs.length > 0) {
           const merged = {}
@@ -363,206 +186,390 @@ export function useAnnualPlan() {
     }
   }, [])
 
-  // --- Firestore 동기화: Overrides ---
+  // --- Plan CRUD ---
 
-  useEffect(() => {
-    const uid = getUid()
-    if (!uid || overridesFirestoreLoaded.current) return
-    overridesFirestoreLoaded.current = true
+  const getPlanByGrade = useCallback((grade) => {
+    return plans.find((p) => p.grade === grade) || null
+  }, [plans])
 
-    async function loadOverrides() {
-      try {
-        const docs = await getCollection(`users/${uid}/weeklyOverrides`)
-        if (docs && docs.length > 0) {
-          const merged = {}
-          for (const doc of docs) {
-            if (doc.id) merged[doc.id] = doc.data || doc
-          }
-          if (Object.keys(merged).length > 0) {
-            setOverrides(merged)
+  const createPlan = useCallback(({ year, grade, title }) => {
+    const now = new Date().toISOString()
+    const plan = {
+      id: generatePlanId(),
+      year,
+      grade,
+      title: title || `${grade} 연간 수업 계획`,
+      lessonPool: [],
+      weekSlots: {},
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    setPlans((prev) => {
+      const next = [...prev, plan]
+      syncPlanToFirestore(plan)
+      return next
+    })
+
+    return plan
+  }, [setPlans, syncPlanToFirestore])
+
+  const deletePlan = useCallback((planId) => {
+    setPlans((prev) => prev.filter((p) => p.id !== planId))
+    deletePlanFromFirestore(planId)
+  }, [setPlans, deletePlanFromFirestore])
+
+  // --- 차시 풀 관리 ---
+
+  /** 단원 템플릿의 차시들을 풀에 추가 */
+  const importTemplateToPool = useCallback((planId, templateId) => {
+    const template = findTemplate(templateId)
+    if (!template) {
+      console.warn(`[useAnnualPlan] Template not found: ${templateId}`)
+      return
+    }
+
+    const newLessons = (template.lessonPlan || []).map((lp) => ({
+      poolId: generatePoolLessonId(),
+      sourceTemplateId: templateId,
+      unitTitle: template.title,
+      domain: template.domain,
+      lesson: lp.lesson,
+      acePhase: lp.acePhase,
+      title: lp.title,
+      activityIds: [...(lp.activityIds || [])],
+      note: '',
+      included: true,
+    }))
+
+    updatePlanInList(planId, (plan) => ({
+      lessonPool: [...(plan.lessonPool || []), ...newLessons],
+    }))
+  }, [updatePlanInList])
+
+  /** 해당 템플릿 차시 일괄 삭제 (풀에서 제거 + weekSlots에서도 제거) */
+  const removeTemplateFromPool = useCallback((planId, templateId) => {
+    updatePlanInList(planId, (plan) => {
+      const removingIds = new Set(
+        (plan.lessonPool || [])
+          .filter((lp) => lp.sourceTemplateId === templateId)
+          .map((lp) => lp.poolId)
+      )
+
+      const newPool = (plan.lessonPool || []).filter((lp) => lp.sourceTemplateId !== templateId)
+
+      // weekSlots에서도 제거
+      const newWeekSlots = {}
+      for (const [weekKey, ids] of Object.entries(plan.weekSlots || {})) {
+        const filtered = ids.filter((id) => !removingIds.has(id))
+        if (filtered.length > 0) {
+          newWeekSlots[weekKey] = filtered
+        }
+      }
+
+      return { lessonPool: newPool, weekSlots: newWeekSlots }
+    })
+  }, [updatePlanInList])
+
+  /** 직접 차시 추가 */
+  const addCustomLesson = useCallback((planId, { title, domain, acePhase, unitTitle }) => {
+    const newLesson = {
+      poolId: generatePoolLessonId(),
+      sourceTemplateId: null,
+      unitTitle: unitTitle || '직접 추가',
+      domain: domain || '스포츠',
+      lesson: 0,
+      acePhase: acePhase || 'A',
+      title: title || '',
+      activityIds: [],
+      note: '',
+      included: true,
+    }
+
+    updatePlanInList(planId, (plan) => ({
+      lessonPool: [...(plan.lessonPool || []), newLesson],
+    }))
+
+    return newLesson
+  }, [updatePlanInList])
+
+  /** 차시 편집 */
+  const updatePoolLesson = useCallback((planId, poolId, updates) => {
+    updatePlanInList(planId, (plan) => ({
+      lessonPool: (plan.lessonPool || []).map((lp) =>
+        lp.poolId === poolId ? { ...lp, ...updates } : lp
+      ),
+    }))
+  }, [updatePlanInList])
+
+  /** 영구 삭제 */
+  const removePoolLesson = useCallback((planId, poolId) => {
+    updatePlanInList(planId, (plan) => {
+      const newPool = (plan.lessonPool || []).filter((lp) => lp.poolId !== poolId)
+      // weekSlots에서도 제거
+      const newWeekSlots = {}
+      for (const [weekKey, ids] of Object.entries(plan.weekSlots || {})) {
+        const filtered = ids.filter((id) => id !== poolId)
+        if (filtered.length > 0) {
+          newWeekSlots[weekKey] = filtered
+        }
+      }
+      return { lessonPool: newPool, weekSlots: newWeekSlots }
+    })
+  }, [updatePlanInList])
+
+  /** 포함/제외 토글 */
+  const toggleLessonIncluded = useCallback((planId, poolId) => {
+    updatePlanInList(planId, (plan) => {
+      const lesson = (plan.lessonPool || []).find((lp) => lp.poolId === poolId)
+      if (!lesson) return {}
+      const newIncluded = !lesson.included
+
+      // 제외하면 weekSlots에서도 제거
+      let newWeekSlots = plan.weekSlots
+      if (!newIncluded) {
+        newWeekSlots = {}
+        for (const [weekKey, ids] of Object.entries(plan.weekSlots || {})) {
+          const filtered = ids.filter((id) => id !== poolId)
+          if (filtered.length > 0) {
+            newWeekSlots[weekKey] = filtered
           }
         }
-      } catch (err) {
-        console.warn('[useAnnualPlan] Overrides Firestore load failed:', err.message)
+      }
+
+      return {
+        lessonPool: (plan.lessonPool || []).map((lp) =>
+          lp.poolId === poolId ? { ...lp, included: newIncluded } : lp
+        ),
+        weekSlots: newWeekSlots,
+      }
+    })
+  }, [updatePlanInList])
+
+  // --- 주차 배정 ---
+
+  /** 차시를 주에 추가 */
+  const assignLessonToWeek = useCallback((planId, poolId, weekKey) => {
+    updatePlanInList(planId, (plan) => {
+      const existing = plan.weekSlots?.[weekKey] || []
+      if (existing.includes(poolId)) return {} // 이미 있음
+
+      // 다른 주에서 제거
+      const newWeekSlots = {}
+      for (const [wk, ids] of Object.entries(plan.weekSlots || {})) {
+        const filtered = ids.filter((id) => id !== poolId)
+        if (filtered.length > 0) {
+          newWeekSlots[wk] = filtered
+        }
+      }
+
+      // 대상 주에 추가
+      newWeekSlots[weekKey] = [...(newWeekSlots[weekKey] || []), poolId]
+      return { weekSlots: newWeekSlots }
+    })
+  }, [updatePlanInList])
+
+  /** 주에서 제거 (풀로 반환) */
+  const removeLessonFromWeek = useCallback((planId, poolId, weekKey) => {
+    updatePlanInList(planId, (plan) => {
+      const newWeekSlots = { ...(plan.weekSlots || {}) }
+      const existing = newWeekSlots[weekKey] || []
+      const filtered = existing.filter((id) => id !== poolId)
+      if (filtered.length > 0) {
+        newWeekSlots[weekKey] = filtered
+      } else {
+        delete newWeekSlots[weekKey]
+      }
+      return { weekSlots: newWeekSlots }
+    })
+  }, [updatePlanInList])
+
+  /** 주 내 순서 변경 */
+  const reorderWeekLessons = useCallback((planId, weekKey, orderedPoolIds) => {
+    updatePlanInList(planId, (plan) => ({
+      weekSlots: {
+        ...(plan.weekSlots || {}),
+        [weekKey]: orderedPoolIds,
+      },
+    }))
+  }, [updatePlanInList])
+
+  /** 주 간 이동 */
+  const moveLessonToWeek = useCallback((planId, poolId, fromWeek, toWeek) => {
+    updatePlanInList(planId, (plan) => {
+      const newWeekSlots = { ...(plan.weekSlots || {}) }
+
+      // from 에서 제거
+      if (fromWeek && newWeekSlots[fromWeek]) {
+        const filtered = newWeekSlots[fromWeek].filter((id) => id !== poolId)
+        if (filtered.length > 0) {
+          newWeekSlots[fromWeek] = filtered
+        } else {
+          delete newWeekSlots[fromWeek]
+        }
+      }
+
+      // to에 추가
+      newWeekSlots[toWeek] = [...(newWeekSlots[toWeek] || []), poolId]
+      return { weekSlots: newWeekSlots }
+    })
+  }, [updatePlanInList])
+
+  /** 자동 배정 — 미배정 + included 차시를 주차별로 분배 */
+  const autoFillWeeks = useCallback((planId, teachableWeeksArr, weeklyPEHours = 3) => {
+    const plan = plans.find((p) => p.id === planId)
+    if (!plan || !teachableWeeksArr?.length) return
+
+    const pool = plan.lessonPool || []
+    const perWeek = Math.max(1, weeklyPEHours)
+
+    // 이미 배정된 poolId 집합
+    const assignedIds = new Set()
+    for (const ids of Object.values(plan.weekSlots || {})) {
+      for (const id of ids) assignedIds.add(id)
+    }
+
+    // 미배정 + included 차시 목록
+    const unassigned = pool
+      .filter((lp) => lp.included && !assignedIds.has(lp.poolId))
+      .map((lp) => lp.poolId)
+
+    if (unassigned.length === 0) return
+
+    // 기존 weekSlots 유지하면서 빈 주에 채우기
+    const newWeekSlots = { ...(plan.weekSlots || {}) }
+    let lessonIdx = 0
+
+    for (const week of teachableWeeksArr) {
+      if (lessonIdx >= unassigned.length) break
+
+      const existing = newWeekSlots[week.weekKey] || []
+      const remaining = perWeek - existing.length
+
+      if (remaining > 0) {
+        const toAdd = unassigned.slice(lessonIdx, lessonIdx + remaining)
+        newWeekSlots[week.weekKey] = [...existing, ...toAdd]
+        lessonIdx += toAdd.length
       }
     }
 
-    loadOverrides()
-  }, [])
+    updatePlanInList(planId, () => ({ weekSlots: newWeekSlots }))
+  }, [plans, updatePlanInList])
 
-  const syncOverridesToFirestore = useCallback((planId, data) => {
-    const uid = getUid()
-    if (uid) {
-      setDocument(`users/${uid}/weeklyOverrides/${planId}`, data, false).catch((err) => {
-        console.error('[useAnnualPlan] Overrides sync failed:', err)
-      })
-    }
-  }, [])
+  // --- 계산 ---
 
-  // --- 진도 추적 (Progress Tracking) ---
-
-  /** 학급별 진도 조회 */
-  const getClassProgress = useCallback((planId, classId) => {
+  /** 영역 분포 (included만) */
+  const getDomainDistribution = useCallback((planId) => {
     const plan = plans.find((p) => p.id === planId)
-    if (!plan || plan.units.length === 0) return null
+    if (!plan) return {}
 
-    const planProgress = progress[planId] || {}
-    const cp = planProgress[classId] || { unitIndex: 0, lessonIndex: 0 }
-
-    // 총 차시 수 계산
-    const totalLessons = plan.units.reduce((sum, u) => sum + u.lessons.length, 0)
-    if (totalLessons === 0) return null
-
-    // 현재까지 완료한 차시 수
-    let completedLessons = 0
-    for (let i = 0; i < cp.unitIndex && i < plan.units.length; i++) {
-      completedLessons += plan.units[i].lessons.length
+    const dist = {}
+    for (const lp of (plan.lessonPool || [])) {
+      if (!lp.included) continue
+      const domain = lp.domain || '미분류'
+      dist[domain] = (dist[domain] || 0) + 1
     }
-    completedLessons += cp.lessonIndex
+    return dist
+  }, [plans])
 
-    // 현재 단원/차시 정보
-    const currentUnit = plan.units[cp.unitIndex]
-    const currentLesson = currentUnit?.lessons?.[cp.lessonIndex]
+  /** 계획 요약 */
+  const getPlanSummary = useCallback((planId) => {
+    const plan = plans.find((p) => p.id === planId)
+    if (!plan) return { totalLessons: 0, assignedCount: 0, unassignedCount: 0 }
 
-    return {
-      unitIndex: cp.unitIndex,
-      lessonIndex: cp.lessonIndex,
-      unitId: currentUnit?.id || null,
-      unitTitle: currentUnit?.title || null,
-      lessonNumber: currentLesson?.lesson || null,
-      lessonTitle: currentLesson?.title || null,
-      percent: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
+    const pool = (plan.lessonPool || []).filter((lp) => lp.included)
+    const totalLessons = pool.length
+
+    const assignedIds = new Set()
+    for (const ids of Object.values(plan.weekSlots || {})) {
+      for (const id of ids) assignedIds.add(id)
     }
-  }, [plans, progress])
 
-  /** 현재 수업 차시 조회 */
-  const getCurrentLesson = useCallback((planId, classId) => {
+    const assignedCount = pool.filter((lp) => assignedIds.has(lp.poolId)).length
+    const unassignedCount = totalLessons - assignedCount
+
+    return { totalLessons, assignedCount, unassignedCount }
+  }, [plans])
+
+  /** 미배정 + included 차시 목록 */
+  const getUnassignedLessons = useCallback((planId) => {
     const plan = plans.find((p) => p.id === planId)
-    if (!plan || plan.units.length === 0) return null
+    if (!plan) return []
 
-    const planProgress = progress[planId] || {}
-    const cp = planProgress[classId] || { unitIndex: 0, lessonIndex: 0 }
+    const assignedIds = new Set()
+    for (const ids of Object.values(plan.weekSlots || {})) {
+      for (const id of ids) assignedIds.add(id)
+    }
 
-    const unit = plan.units[cp.unitIndex]
-    if (!unit) return null
+    return (plan.lessonPool || []).filter(
+      (lp) => lp.included && !assignedIds.has(lp.poolId)
+    )
+  }, [plans])
 
-    const lesson = unit.lessons[cp.lessonIndex]
-    if (!lesson) return null
-
-    return { unit, lesson }
-  }, [plans, progress])
-
-  /** 진도 1차시 전진 */
-  const advanceProgress = useCallback((planId, classId) => {
+  /** 해당 주 차시 객체 배열 */
+  const getLessonsForWeek = useCallback((planId, weekKey) => {
     const plan = plans.find((p) => p.id === planId)
-    if (!plan || plan.units.length === 0) return null
+    if (!plan) return []
 
+    const poolIds = plan.weekSlots?.[weekKey] || []
+    const poolMap = new Map((plan.lessonPool || []).map((lp) => [lp.poolId, lp]))
+
+    return poolIds.map((id) => poolMap.get(id)).filter(Boolean)
+  }, [plans])
+
+  // --- 진도 추적 ---
+
+  /** 차시 완료 표시 */
+  const markLessonComplete = useCallback((planId, classId, poolId) => {
     setProgress((prev) => {
       const planProgress = { ...(prev[planId] || {}) }
-      const cp = planProgress[classId] || { unitIndex: 0, lessonIndex: 0 }
+      const classProgress = { ...(planProgress[classId] || { completedPoolIds: [] }) }
 
-      const currentUnit = plan.units[cp.unitIndex]
-      if (!currentUnit) return prev // 전체 완료
-
-      let nextUnitIndex = cp.unitIndex
-      let nextLessonIndex = cp.lessonIndex + 1
-
-      // 현재 단원의 마지막 차시를 넘으면 다음 단원의 1차시로
-      if (nextLessonIndex >= currentUnit.lessons.length) {
-        nextUnitIndex += 1
-        nextLessonIndex = 0
+      // 기존 unitIndex/lessonIndex 형식이면 새 형식으로 변환
+      if (!classProgress.completedPoolIds) {
+        classProgress.completedPoolIds = []
       }
 
-      // 전체 완료 체크
-      if (nextUnitIndex >= plan.units.length) {
-        // 전체 완료 — 마지막 위치에 고정
-        planProgress[classId] = {
-          unitIndex: plan.units.length - 1,
-          lessonIndex: plan.units[plan.units.length - 1].lessons.length,
-        }
-      } else {
-        planProgress[classId] = {
-          unitIndex: nextUnitIndex,
-          lessonIndex: nextLessonIndex,
-        }
+      if (!classProgress.completedPoolIds.includes(poolId)) {
+        classProgress.completedPoolIds = [...classProgress.completedPoolIds, poolId]
       }
 
+      planProgress[classId] = classProgress
       const next = { ...prev, [planId]: planProgress }
       syncProgressToFirestore(planId, planProgress)
       return next
     })
+  }, [setProgress, syncProgressToFirestore])
 
-    // 전진 후 다음 차시 정보 반환
+  /** 학급별 진도 조회 */
+  const getClassProgress = useCallback((planId, classId) => {
+    const plan = plans.find((p) => p.id === planId)
+    if (!plan) return null
+
+    const pool = (plan.lessonPool || []).filter((lp) => lp.included)
+    const totalCount = pool.length
+    if (totalCount === 0) return null
+
     const planProgress = progress[planId] || {}
-    const cp = planProgress[classId] || { unitIndex: 0, lessonIndex: 0 }
-    const currentUnit = plan.units[cp.unitIndex]
-    if (!currentUnit) return null
+    const classData = planProgress[classId] || {}
+    const completedPoolIds = classData.completedPoolIds || []
+    const completedCount = completedPoolIds.length
 
-    let nextUnitIndex = cp.unitIndex
-    let nextLessonIndex = cp.lessonIndex + 1
-    if (nextLessonIndex >= currentUnit.lessons.length) {
-      nextUnitIndex += 1
-      nextLessonIndex = 0
+    return {
+      completedCount,
+      totalCount,
+      percent: Math.round((completedCount / totalCount) * 100),
+      completedPoolIds,
     }
-    if (nextUnitIndex >= plan.units.length) return null
+  }, [plans, progress])
 
-    const nextUnit = plan.units[nextUnitIndex]
-    const nextLesson = nextUnit?.lessons?.[nextLessonIndex]
-    return nextLesson ? { unit: nextUnit, lesson: nextLesson } : null
-  }, [plans, progress, setProgress, syncProgressToFirestore])
+  // --- 시간표 오버레이 ---
 
-  // --- 주간 오버라이드 (Weekly Overrides) ---
-
-  /** 특정 주의 오버라이드 조회 */
-  const getWeeklyOverride = useCallback((planId, weekKey) => {
-    return overrides[planId]?.[weekKey] || {}
-  }, [overrides])
-
-  /** 특정 셀에 수동 오버라이드 설정 */
-  const setWeeklyOverride = useCallback((planId, weekKey, cellKey, data) => {
-    setOverrides((prev) => {
-      const planOverrides = { ...(prev[planId] || {}) }
-      const weekOverrides = { ...(planOverrides[weekKey] || {}) }
-      weekOverrides[cellKey] = {
-        unitId: data.unitId,
-        lessonNumber: data.lessonNumber,
-        title: data.title,
-      }
-      planOverrides[weekKey] = weekOverrides
-
-      const next = { ...prev, [planId]: planOverrides }
-      syncOverridesToFirestore(planId, planOverrides)
-      return next
-    })
-  }, [setOverrides, syncOverridesToFirestore])
-
-  /** 특정 셀의 오버라이드 제거 */
-  const clearWeeklyOverride = useCallback((planId, weekKey, cellKey) => {
-    setOverrides((prev) => {
-      const planOverrides = { ...(prev[planId] || {}) }
-      const weekOverrides = { ...(planOverrides[weekKey] || {}) }
-      delete weekOverrides[cellKey]
-
-      if (Object.keys(weekOverrides).length === 0) {
-        delete planOverrides[weekKey]
-      } else {
-        planOverrides[weekKey] = weekOverrides
-      }
-
-      const next = { ...prev, [planId]: planOverrides }
-      syncOverridesToFirestore(planId, planOverrides)
-      return next
-    })
-  }, [setOverrides, syncOverridesToFirestore])
-
-  // --- 시간표 오버레이 (Schedule Overlay) ---
-
-  /** 특정 주의 체육 교시에 차시 정보 매핑 */
   const getScheduleOverlay = useCallback((planId, classId, weekKey, baseTimetable) => {
     const plan = plans.find((p) => p.id === planId)
     if (!plan || !baseTimetable) return {}
 
-    // 1. 해당 주의 체육 교시 셀 추출 (요일-교시 순서 유지)
+    // 1. 체육 교시 셀 추출 (요일-교시 순서)
     const dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri']
     const peCells = Object.entries(baseTimetable)
       .filter(([, cell]) => cell?.subject === '체육')
@@ -576,54 +583,41 @@ export function useAnnualPlan() {
 
     if (peCells.length === 0) return {}
 
-    // 2. 학급 진도에서 현재 차시부터 순서대로 매핑
-    const planProgress = progress[planId] || {}
-    const cp = planProgress[classId] || { unitIndex: 0, lessonIndex: 0 }
+    // 2. weekKey가 있으면 해당 주의 차시, 없으면 진도 기반
+    const poolMap = new Map((plan.lessonPool || []).map((lp) => [lp.poolId, lp]))
 
-    // 남은 차시들을 flat 리스트로 전개
-    const remainingLessons = []
-    for (let ui = cp.unitIndex; ui < plan.units.length; ui++) {
-      const unit = plan.units[ui]
-      const startLi = ui === cp.unitIndex ? cp.lessonIndex : 0
-      for (let li = startLi; li < unit.lessons.length; li++) {
-        remainingLessons.push({
-          unitId: unit.id,
-          unitTitle: unit.title,
-          lessonNumber: unit.lessons[li].lesson,
-          lessonTitle: unit.lessons[li].title,
-        })
-      }
+    let lessonsToMap = []
+
+    if (weekKey && plan.weekSlots?.[weekKey]) {
+      // weekSlots에서 해당 주 차시 가져오기
+      lessonsToMap = (plan.weekSlots[weekKey] || [])
+        .map((id) => poolMap.get(id))
+        .filter(Boolean)
+    } else {
+      // weekKey 없으면 진도 기반 (완료되지 않은 순서대로)
+      const planProgress = progress[planId] || {}
+      const classData = planProgress[classId] || {}
+      const completedSet = new Set(classData.completedPoolIds || [])
+
+      // 전체 풀에서 미완료 + included 순서대로
+      lessonsToMap = (plan.lessonPool || [])
+        .filter((lp) => lp.included && !completedSet.has(lp.poolId))
     }
 
-    // 3. 자동 매핑
+    // 3. 셀에 매핑
     const overlay = {}
-    for (let i = 0; i < peCells.length; i++) {
-      const cellKey = peCells[i]
-      if (i < remainingLessons.length) {
-        overlay[cellKey] = remainingLessons[i]
-      }
-    }
-
-    // 4. 주간 오버라이드 적용 (있으면 자동 매핑을 대체)
-    const weekOverride = overrides[planId]?.[weekKey] || {}
-    for (const [cellKey, data] of Object.entries(weekOverride)) {
-      overlay[cellKey] = {
-        unitId: data.unitId,
-        lessonNumber: data.lessonNumber,
-        title: data.title,
-        unitTitle: data.unitTitle || '',
-        isOverride: true,
+    for (let i = 0; i < peCells.length && i < lessonsToMap.length; i++) {
+      const lp = lessonsToMap[i]
+      overlay[peCells[i]] = {
+        poolId: lp.poolId,
+        unitTitle: lp.unitTitle,
+        lessonNumber: lp.lesson,
+        lessonTitle: lp.title,
       }
     }
 
     return overlay
-  }, [plans, progress, overrides])
-
-  /** 최종 병합: 자동 계산 + 오버라이드로 특정 셀의 수업 정보 */
-  const getEffectiveLessonForCell = useCallback((planId, classId, weekKey, cellKey, baseTimetable) => {
-    const overlay = getScheduleOverlay(planId, classId, weekKey, baseTimetable)
-    return overlay[cellKey] || null
-  }, [getScheduleOverlay])
+  }, [plans, progress])
 
   return {
     plans,
@@ -631,34 +625,32 @@ export function useAnnualPlan() {
     createPlan,
     deletePlan,
 
-    addUnitFromTemplate,
-    addCustomUnit,
-    updateUnit,
-    removeUnit,
-    reorderUnits,
+    // 차시 풀 관리
+    importTemplateToPool,
+    removeTemplateFromPool,
+    addCustomLesson,
+    updatePoolLesson,
+    removePoolLesson,
+    toggleLessonIncluded,
 
-    updateLesson,
-    addLesson,
-    removeLesson,
+    // 주차 배정
+    assignLessonToWeek,
+    removeLessonFromWeek,
+    reorderWeekLessons,
+    moveLessonToWeek,
+    autoFillWeeks,
 
-    assignUnitWeeks,
-    autoAssignAllWeeks,
-
+    // 계산
     getDomainDistribution,
     getPlanSummary,
+    getUnassignedLessons,
+    getLessonsForWeek,
 
-    // Progress tracking
+    // 진도
+    markLessonComplete,
     getClassProgress,
-    getCurrentLesson,
-    advanceProgress,
 
-    // Schedule overlay
+    // 시간표 오버레이
     getScheduleOverlay,
-
-    // Weekly overrides
-    getWeeklyOverride,
-    setWeeklyOverride,
-    clearWeeklyOverride,
-    getEffectiveLessonForCell,
   }
 }
