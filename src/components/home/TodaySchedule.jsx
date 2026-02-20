@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useSchedule } from '../../hooks/useSchedule'
 import { useCurrentPeriod } from '../../hooks/useCurrentPeriod'
 import { useAnnualPlan } from '../../hooks/useAnnualPlan'
+import { useClassManager } from '../../hooks/useClassManager'
 
 /**
  * 홈 탭의 오늘 시간표 요약
@@ -13,6 +14,7 @@ export default function TodaySchedule() {
   const { WEEKDAYS, WEEKDAY_LABELS, getTimetableForWeek } = useSchedule()
   const { currentDay, isCurrentPeriod } = useCurrentPeriod()
   const { plans, getScheduleOverlay } = useAnnualPlan()
+  const { getClass } = useClassManager()
 
   const getTodayFallback = () => {
     const dayOfWeek = new Date().getDay()
@@ -36,7 +38,11 @@ export default function TodaySchedule() {
       cellsByClass[pd.classId][cellKey] = pd
     }
     Object.entries(cellsByClass).forEach(([classId, classTimetable]) => {
+      const cls = getClass(classId)
+      const gradeLabel = cls ? `${cls.grade}학년` : null
+
       for (const plan of plans) {
+        if (gradeLabel && plan.grade && plan.grade !== gradeLabel) continue
         const overlay = getScheduleOverlay(plan.id, classId, undefined, classTimetable)
         if (overlay && Object.keys(overlay).length > 0) {
           Object.assign(overlays, overlay)
@@ -45,7 +51,7 @@ export default function TodaySchedule() {
       }
     })
     return overlays
-  }, [plans, timetable, today, getScheduleOverlay])
+  }, [plans, timetable, today, getScheduleOverlay, getClass])
 
   // 오늘 요일의 시간표만 필터링
   const todaySchedule = []

@@ -228,9 +228,13 @@ export default function SchedulePage() {
       cellsByClass[periodData.classId][cellKey] = periodData
     })
 
-    // 각 학급별로 매칭되는 연간 계획 찾아 오버레이 계산
+    // 각 학급별로 학년이 매칭되는 연간 계획 찾아 오버레이 계산
     Object.entries(cellsByClass).forEach(([classId, classTimetable]) => {
+      const cls = getClass(classId)
+      const gradeLabel = cls ? `${cls.grade}학년` : null
+
       for (const plan of plans) {
+        if (gradeLabel && plan.grade && plan.grade !== gradeLabel) continue
         const overlay = getScheduleOverlay(plan.id, classId, weekInfo.weekKey, classTimetable)
         if (overlay && Object.keys(overlay).length > 0) {
           Object.assign(map, overlay)
@@ -240,7 +244,7 @@ export default function SchedulePage() {
     })
 
     return map
-  }, [plans, timetable, weekInfo.weekKey, getScheduleOverlay])
+  }, [plans, timetable, weekInfo.weekKey, getScheduleOverlay, getClass])
 
   const clearLessonQuery = () => {
     if (!searchParams.has('day') && !searchParams.has('period') && !searchParams.has('classId')) {
