@@ -101,8 +101,21 @@ function isVacationDay(dateStr, vacations) {
 // ===== Hook =====
 
 export function useSchoolCalendar() {
-  const [calendar, setCalendar] = useLocalStorage(CALENDAR_KEY, () => buildDefaultCalendar(getSchoolYear()))
+  const [rawCalendar, setCalendar] = useLocalStorage(CALENDAR_KEY, () => buildDefaultCalendar(getSchoolYear()))
   const firestoreLoaded = useRef(false)
+
+  // 기존 데이터에 누락 필드가 있을 수 있으므로 기본값과 병합
+  const defaults = useMemo(() => buildDefaultCalendar(getSchoolYear()), [])
+  const calendar = useMemo(() => {
+    if (!rawCalendar) return defaults
+    return {
+      ...defaults,
+      ...rawCalendar,
+      semesters: { ...defaults.semesters, ...rawCalendar.semesters },
+      vacations: { ...defaults.vacations, ...rawCalendar.vacations },
+      events: rawCalendar.events || defaults.events,
+    }
+  }, [rawCalendar, defaults])
 
   // --- Firestore 동기화 ---
 
@@ -116,7 +129,15 @@ export function useSchoolCalendar() {
         const data = await getDocument(FIRESTORE_PATH(uid))
         if (data) {
           const { id, ...calendarData } = data
-          setCalendar(calendarData)
+          // 기본값과 병합하여 누락 필드 보완
+          const defaults = buildDefaultCalendar(getSchoolYear())
+          setCalendar({
+            ...defaults,
+            ...calendarData,
+            semesters: { ...defaults.semesters, ...calendarData.semesters },
+            vacations: { ...defaults.vacations, ...calendarData.vacations },
+            events: calendarData.events || defaults.events,
+          })
         }
       } catch (err) {
         console.warn('[useSchoolCalendar] Firestore load failed, using localStorage:', err.message)
@@ -145,6 +166,16 @@ export function useSchoolCalendar() {
       return withTimestamp
     })
   }, [setCalendar, syncToFirestore])
+
+  // --- 학년도 변경 ---
+
+  const changeYear = useCallback((newYear) => {
+    const newDefaults = buildDefaultCalendar(newYear)
+    update((prev) => ({
+      ...newDefaults,
+      events: (prev.events || []).filter((e) => e.source === 'manual'), // 수동 행사만 유지
+    }))
+  }, [update])
 
   // --- 학기/방학 설정 ---
 
@@ -401,6 +432,9 @@ export function useSchoolCalendar() {
 
   return {
     calendar,
+
+    // 학년도 변경
+    changeYear,
 
     // 학기/방학 설정
     updateSemester,

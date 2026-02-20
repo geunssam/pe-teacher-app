@@ -28,6 +28,7 @@ export default function SchoolCalendarEditor({
   onAddEvent,
   onRemoveEvent,
   onApplyHolidays,
+  onChangeYear,
   weeklyPEHours,
   totalPEHours,
 }) {
@@ -73,9 +74,27 @@ export default function SchoolCalendarEditor({
     setNewType('holiday')
   }
 
+  // 학년도 선택 옵션 (현재 ±2년)
+  const currentSchoolYear = calendar.year || new Date().getFullYear()
+  const yearOptions = []
+  for (let y = currentSchoolYear - 2; y <= currentSchoolYear + 2; y++) {
+    yearOptions.push(y)
+  }
+
   return (
     <div>
-      <h2 className="text-card-title mb-md">학사 일정</h2>
+      <div className="flex items-center justify-between mb-md">
+        <h2 className="text-card-title">학사 일정</h2>
+        <select
+          value={currentSchoolYear}
+          onChange={(e) => onChangeYear(Number(e.target.value))}
+          className="py-1.5 px-2 rounded-lg border border-gray-200 bg-white/60 text-sm font-semibold text-primary focus:outline-none focus:border-primary/50"
+        >
+          {yearOptions.map((y) => (
+            <option key={y} value={y}>{y}학년도</option>
+          ))}
+        </select>
+      </div>
 
       {/* Section 1: 학기/방학 기간 (Collapsible) */}
       <div className="mb-4">

@@ -56,6 +56,7 @@ export default function SettingsPage() {
     addEvent,
     removeEvent,
     applyHolidays,
+    changeYear,
     getWeeklyPEHours,
     getTotalPEHours,
   } = useSchoolCalendar()
@@ -262,6 +263,7 @@ export default function SettingsPage() {
               onAddEvent={addEvent}
               onRemoveEvent={removeEvent}
               onApplyHolidays={applyHolidays}
+              onChangeYear={changeYear}
               weeklyPEHours={weeklyPEHours}
               totalPEHours={totalPEHours}
             />
