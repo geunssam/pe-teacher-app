@@ -174,7 +174,7 @@ export function useSchoolCalendar() {
     update((prev) => ({
       ...prev,
       events: [
-        ...prev.events,
+        ...(prev.events || []),
         { id: generateEventId(), date, label, type, source: 'manual' },
       ],
     }))
@@ -183,14 +183,14 @@ export function useSchoolCalendar() {
   const removeEvent = useCallback((eventId) => {
     update((prev) => ({
       ...prev,
-      events: prev.events.filter((e) => e.id !== eventId),
+      events: (prev.events || []).filter((e) => e.id !== eventId),
     }))
   }, [update])
 
   const updateEvent = useCallback((eventId, updates) => {
     update((prev) => ({
       ...prev,
-      events: prev.events.map((e) => (e.id === eventId ? { ...e, ...updates } : e)),
+      events: (prev.events || []).map((e) => (e.id === eventId ? { ...e, ...updates } : e)),
     }))
   }, [update])
 
@@ -210,7 +210,7 @@ export function useSchoolCalendar() {
     update((prev) => ({
       ...prev,
       events: [
-        ...prev.events.filter((e) => e.source !== 'auto'),
+        ...(prev.events || []).filter((e) => e.source !== 'auto'),
         ...autoEvents,
       ],
     }))
@@ -219,7 +219,8 @@ export function useSchoolCalendar() {
   // --- 계산: 수업일수 ---
 
   const schoolDays = useMemo(() => {
-    const { semesters, vacations, events } = calendar
+    const { semesters, vacations, events = [] } = calendar || {}
+    if (!semesters || !vacations) return { first: 0, second: 0, total: 0 }
 
     // 휴일/결과일 날짜 Set
     const skipDates = new Set()
@@ -264,7 +265,8 @@ export function useSchoolCalendar() {
   // --- 계산: teachableWeeks ---
 
   const teachableWeeks = useMemo(() => {
-    const { semesters, vacations, events } = calendar
+    const { semesters, vacations, events = [] } = calendar || {}
+    if (!semesters || !vacations) return []
     const weeks = []
 
     const skipDates = new Set()
@@ -337,14 +339,16 @@ export function useSchoolCalendar() {
 
   // --- 유틸 ---
 
+  const events = calendar?.events || []
+
   const getEventsForMonth = useCallback((year, month) => {
     const prefix = `${year}-${String(month).padStart(2, '0')}`
-    return calendar.events.filter((e) => e.date.startsWith(prefix))
-  }, [calendar.events])
+    return events.filter((e) => e.date.startsWith(prefix))
+  }, [events])
 
   const getEventsForDate = useCallback((dateStr) => {
-    return calendar.events.filter((e) => e.date === dateStr)
-  }, [calendar.events])
+    return events.filter((e) => e.date === dateStr)
+  }, [events])
 
   const isSchoolDay = useCallback((dateStr) => {
     const date = parseDate(dateStr)
@@ -364,7 +368,8 @@ export function useSchoolCalendar() {
     if (isVacationDay(dateStr, vacations)) return false
 
     // 휴일/결과일
-    for (const evt of events) {
+    const evts = calendar?.events || []
+    for (const evt of evts) {
       if (evt.date === dateStr && (evt.type === 'holiday' || evt.type === 'skip')) {
         return false
       }
@@ -389,10 +394,10 @@ export function useSchoolCalendar() {
   // --- 추천 훅 호환 ---
 
   const getSpecialEventsForRecommend = useCallback(() => {
-    return calendar.events
+    return events
       .filter((e) => e.type === 'skip' || e.type === 'indoor' || e.type === 'special')
       .map(({ date, label, type }) => ({ date, label, type }))
-  }, [calendar.events])
+  }, [events])
 
   return {
     calendar,
