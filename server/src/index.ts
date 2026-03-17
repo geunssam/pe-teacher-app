@@ -9,6 +9,7 @@ import { recommendFlow } from './flows/recommendFlow.js';
 import { syncRecordsFlow } from './flows/syncRecordsFlow.js';
 import { ingestDocumentFlow } from './flows/ingestDocumentFlow.js';
 import { uploadPdfFlow } from './flows/uploadPdfFlow.js';
+import { ingestYouTubeFlow } from './flows/ingestYouTubeFlow.js';
 
 import { indexStaticData } from './rag/indexer.js';
 import type {
@@ -147,7 +148,7 @@ async function main(): Promise<void> {
   const port = Number(process.env.PORT) || 3400;
 
   startFlowServer({
-    flows: [chatFlow, recommendFlow, syncRecordsFlow, ingestDocumentFlow, uploadPdfFlow],
+    flows: [chatFlow, recommendFlow, syncRecordsFlow, ingestDocumentFlow, uploadPdfFlow, ingestYouTubeFlow],
     port,
     cors: {
       origin: '*',  // dev mode: allow all origins
@@ -162,6 +163,7 @@ async function main(): Promise<void> {
   console.log(`  POST http://localhost:${port}/syncRecordsFlow`);
   console.log(`  POST http://localhost:${port}/ingestDocumentFlow`);
   console.log(`  POST http://localhost:${port}/uploadPdfFlow`);
+  console.log(`  POST http://localhost:${port}/ingestYouTubeFlow`);
 }
 
 main().catch(console.error);

@@ -107,6 +107,66 @@ export function knowledgeChunkToDocument(chunk: KnowledgeChunk): Document {
   });
 }
 
+// --- YouTube video shape (from youtube-crawler structured data) ---
+
+export interface YouTubeVideo {
+  video_id: string;
+  title: string;
+  url: string;
+  is_short: boolean;
+  is_pe_activity: boolean;
+  activity?: {
+    name: string;
+    summary: string;
+    steps: string[];
+    cautions: string[];
+    equipment: string[];
+    suitable_grades: string | string[];
+    space: string | string[];
+    domain: string;
+  };
+}
+
+export function youtubeVideoToDocument(video: YouTubeVideo): Document {
+  const act = video.activity;
+  if (!act) {
+    return Document.fromText(`영상 제목: ${video.title}\nURL: ${video.url}`, {
+      videoId: video.video_id,
+      source: 'youtube',
+    });
+  }
+
+  const grades = Array.isArray(act.suitable_grades)
+    ? act.suitable_grades.join(', ')
+    : act.suitable_grades ?? '미지정';
+  const space = Array.isArray(act.space)
+    ? act.space.join(', ')
+    : act.space ?? '미지정';
+
+  const text = [
+    `활동명: ${act.name}`,
+    `출처: 양수쌤체육수업 YouTube`,
+    `영상: ${video.title}`,
+    `URL: ${video.url}`,
+    `내용: ${act.summary}`,
+    `진행 순서: ${act.steps?.map((s, i) => `${i + 1}. ${s}`).join(' ') ?? ''}`,
+    `주의사항: ${act.cautions?.join(', ') ?? '없음'}`,
+    `준비물: ${act.equipment?.join(', ') ?? '없음'}`,
+    `적합 학년: ${grades}`,
+    `장소: ${space}`,
+    `영역: ${act.domain ?? '미지정'}`,
+  ].join('\n');
+
+  return Document.fromText(text, {
+    videoId: video.video_id,
+    activityName: act.name,
+    source: 'youtube',
+    domain: act.domain,
+    space: act.space,
+    isShort: video.is_short,
+  });
+}
+
 // --- Class record shape (from localStorage pe_class_records) ---
 
 export interface ClassRecord {

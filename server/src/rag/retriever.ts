@@ -6,6 +6,7 @@ const activityRetriever = devLocalRetrieverRef('pe_activities');
 const curriculumRetriever = devLocalRetrieverRef('pe_curriculum');
 const recordRetriever = devLocalRetrieverRef('pe_records');
 const knowledgeRetriever = devLocalRetrieverRef('pe_knowledge');
+const youtubeRetriever = devLocalRetrieverRef('pe_youtube');
 
 /**
  * Search activities, sports, and skills by semantic similarity.
@@ -58,6 +59,20 @@ export async function searchKnowledge(
 ): Promise<Document[]> {
   return ai.retrieve({
     retriever: knowledgeRetriever,
+    query,
+    options: { k },
+  });
+}
+
+/**
+ * Search YouTube video activities by semantic similarity.
+ */
+export async function searchYouTube(
+  query: string,
+  k: number = 5,
+): Promise<Document[]> {
+  return ai.retrieve({
+    retriever: youtubeRetriever,
     query,
     options: { k },
   });

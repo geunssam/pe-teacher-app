@@ -2,7 +2,7 @@ import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import { devLocalVectorstore } from '@genkit-ai/dev-local-vectorstore';
 
-const embedder = 'googleai/gemini-embedding-001';
+const embedder = 'googleai/gemini-embedding-2-preview';
 
 export const ai = genkit({
   plugins: [
@@ -22,6 +22,10 @@ export const ai = genkit({
       },
       {
         indexName: 'pe_knowledge',
+        embedder,
+      },
+      {
+        indexName: 'pe_youtube',
         embedder,
       },
     ]),

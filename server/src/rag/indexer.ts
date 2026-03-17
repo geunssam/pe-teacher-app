@@ -9,6 +9,7 @@ import {
   standardToDocument,
   recordToDocument,
   knowledgeChunkToDocument,
+  youtubeVideoToDocument,
   type Activity,
   type CurriculumActivity,
   type Sport,
@@ -16,12 +17,14 @@ import {
   type Standard,
   type ClassRecord,
   type KnowledgeChunk,
+  type YouTubeVideo,
 } from './dataLoader.js';
 
 const activityIndexer = devLocalIndexerRef('pe_activities');
 const curriculumIndexer = devLocalIndexerRef('pe_curriculum');
 const recordIndexer = devLocalIndexerRef('pe_records');
 const knowledgeIndexer = devLocalIndexerRef('pe_knowledge');
+const youtubeIndexer = devLocalIndexerRef('pe_youtube');
 
 // --- Rate-limit-safe batch indexing ---
 
@@ -128,6 +131,26 @@ export async function indexKnowledgeChunks(
     knowledgeIndexer,
     chunks.map(knowledgeChunkToDocument),
     '교사자료',
+  );
+  return { embedded };
+}
+
+/**
+ * Index YouTube video activities from 양수쌤체육수업 channel.
+ */
+export async function indexYouTubeVideos(
+  videos: YouTubeVideo[],
+): Promise<{ embedded: number }> {
+  // Only index PE activity videos
+  const peVideos = videos.filter((v) => v.is_pe_activity && v.activity);
+  if (peVideos.length === 0) {
+    return { embedded: 0 };
+  }
+
+  const embedded = await indexInBatches(
+    youtubeIndexer,
+    peVideos.map(youtubeVideoToDocument),
+    'YouTube',
   );
   return { embedded };
 }
