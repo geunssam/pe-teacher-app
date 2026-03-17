@@ -11,6 +11,7 @@ import { sanitizeForFirestore, trimLargeFields } from '../utils/firestoreHelpers
 import { CLASS_COLOR_PRESETS } from '../constants/classColors'
 import { useRosterManager } from './useRosterManager'
 import { useRecordManager } from './useRecordManager'
+import { useTeamManager } from './useTeamManager'
 import toast from 'react-hot-toast'
 
 export { CLASS_COLOR_PRESETS } from '../constants/classColors'
@@ -20,6 +21,7 @@ export function useClassManager() {
   const [classes, setClasses] = useLocalStorage('pe_classes', [])
   const [rosters, setRosters] = useLocalStorage('pe_rosters', {})
   const [records, setRecords] = useLocalStorage('pe_class_records', {})
+  const [teams, setTeams] = useLocalStorage('pe_teams', {})
   const firestoreLoaded = useRef(false)
   const [dataReady, setDataReady] = useState(false)
 
@@ -74,10 +76,22 @@ export function useClassManager() {
     })
   }, [])
 
+  const syncTeamsToFirestore = useCallback((classId, teamsData) => {
+    const uid = getUid()
+    if (!uid || !classId) return
+    setDocument(`users/${uid}/classes/${classId}`, { teams: teamsData }, true).catch((err) => {
+      console.error('Failed to sync teams:', err)
+    })
+  }, [])
+
   // --- Compose sub-hooks ---
   const rosterManager = useRosterManager({
     rosters, setRosters, setClasses,
     syncRosterToFirestore, syncClassToFirestore,
+  })
+
+  const teamManager = useTeamManager({
+    teams, setTeams, syncTeamsToFirestore,
   })
 
   const recordManager = useRecordManager({
@@ -114,6 +128,10 @@ export function useClassManager() {
             const { roster, records: classRecords, id, ...classData } = classDoc
             loadedClasses.push({ id, ...classData })
             if (roster) loadedRosters[id] = roster
+            if (classDoc.teams) {
+              // teams 로드 시 setTeams에 반영
+              setTeams((prev) => ({ ...prev, [id]: classDoc.teams }))
+            }
             if (classRecords) {
               const sorted = Array.isArray(classRecords)
                 ? [...classRecords].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 50)
@@ -381,5 +399,8 @@ export function useClassManager() {
 
     // 기록 관리 (from useRecordManager)
     ...recordManager,
+
+    // 모둠 관리 (from useTeamManager)
+    ...teamManager,
   }
 }

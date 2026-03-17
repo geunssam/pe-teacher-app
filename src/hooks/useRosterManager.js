@@ -116,6 +116,22 @@ export function useRosterManager({ rosters, setRosters, setClasses, syncRosterTo
     }
   }, [rosters, updateRoster, setClasses, syncClassToFirestore])
 
+  // 학생 순서 변경 (드래그앤드롭용)
+  const reorderStudent = useCallback((classId, studentId, targetId, position) => {
+    const roster = [...(rosters[classId] || [])]
+    const dragIdx = roster.findIndex((s) => s.id === studentId)
+    const dropIdx = roster.findIndex((s) => s.id === targetId)
+    if (dragIdx === -1 || dropIdx === -1 || dragIdx === dropIdx) return
+
+    const [moved] = roster.splice(dragIdx, 1)
+    const insertIdx = position === 'after' ? dropIdx + (dragIdx < dropIdx ? 0 : 1) : dropIdx - (dragIdx < dropIdx ? 1 : 0)
+    roster.splice(insertIdx < 0 ? 0 : insertIdx, 0, moved)
+
+    // num 재정렬
+    const reNumbered = roster.map((s, i) => ({ ...s, num: i + 1 }))
+    updateRoster(classId, reNumbered)
+  }, [rosters, updateRoster])
+
   return {
     getRoster,
     updateRoster,
@@ -123,5 +139,6 @@ export function useRosterManager({ rosters, setRosters, setClasses, syncRosterTo
     removeStudent,
     updateStudent,
     bulkImportRoster,
+    reorderStudent,
   }
 }

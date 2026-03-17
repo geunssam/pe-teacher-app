@@ -4,6 +4,7 @@ import { useClassManager } from '../hooks/useClassManager'
 import GlassCard from '../components/common/GlassCard'
 import RosterEditor from '../components/classes/RosterEditor'
 import ClassEditModal from '../components/classes/ClassEditModal'
+import TeamEditModal from '../components/classes/TeamEditModal'
 import { formatRecordDate, getRecordSortValue } from '../utils/recordDate'
 import { confirm } from '../components/common/ConfirmDialog'
 import AIButton from '../components/common/AIButton'
@@ -29,6 +30,7 @@ export default function ClassesPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const { loading: aiLoading, error: aiError, result: aiResult, generate: aiGenerate, reset: aiReset } = useAI()
   const [analyzingClassId, setAnalyzingClassId] = useState(null)
+  const [teamEditClass, setTeamEditClass] = useState(null)
 
   const handleClassAnalysis = (classItem) => {
     const classRecords = getClassRecords(classItem.id)
@@ -116,7 +118,7 @@ export default function ClassesPage() {
                 {grade}학년 ({classList.length}개 반)
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
+              <div className="flex flex-col gap-md">
                 {classList.map((classItem) => {
                   const roster = rosters[classItem.id] || []
                   const filledRoster = roster.filter((s) => s.name).length
@@ -146,29 +148,82 @@ export default function ClassesPage() {
                       clickable
                       onClick={() => setSelectedClass(classItem)}
                     >
-                      <div className="flex items-start justify-between mb-md">
-                        <div>
-                          <h3 className="text-body-bold">
-                            {classItem.grade}학년 {classItem.classNum}반
+                      {/* 가로 레이아웃: 색상바 + 정보 + 최근수업 + 액션 */}
+                      <div className="flex items-stretch gap-3">
+                        {/* 왼쪽 색상 바 */}
+                        <div
+                          className="w-1.5 rounded-full shrink-0 self-stretch"
+                          style={{ backgroundColor: classItem.color || '#7C9EF5' }}
+                        />
+
+                        {/* 학급 정보 영역 */}
+                        <div className="flex flex-col justify-center min-w-[60px] shrink-0">
+                          <h3 className="text-body-bold whitespace-nowrap">
+                            {classItem.grade}-{classItem.classNum}
                           </h3>
-                          <p className="text-caption text-muted">
-                            학생 {classItem.studentCount}명
+                          <p className="text-caption text-muted whitespace-nowrap">
+                            {classItem.studentCount}명
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <span
-                            className={`badge ${
-                              filledRoster === classItem.studentCount
-                                ? 'badge-success'
-                                : filledRoster > 0
-                                ? 'badge-warning'
-                                : 'badge-danger'
-                            }`}
+                        {/* 구분선 */}
+                        <div className="w-px bg-border shrink-0 self-stretch" />
+
+                        {/* 최근 수업 기록 영역 */}
+                        <div className="flex-1 flex flex-col justify-center min-w-0">
+                          {latestRecord ? (
+                            <>
+                              <p className="text-sm font-medium truncate">
+                                {latestRecord.activity || classItem.lastActivity}
+                                {latestPeriod ? ` · ${latestPeriod}교시` : ''}
+                              </p>
+                              <p className="text-caption text-muted truncate">
+                                {latestDomain} · {latestRecord.sequence || latestDomainCount}차시 · {getRecordDateLabel(latestDate)}
+                              </p>
+                              {(latestVariation || latestMemo || latestPerformance) && (
+                                <p className="text-caption text-muted truncate">
+                                  {[
+                                    latestVariation && `변형: ${latestVariation}`,
+                                    latestMemo && `메모: ${latestMemo}`,
+                                    latestPerformance && `평가: ${latestPerformance}`,
+                                  ].filter(Boolean).join(' · ')}
+                                </p>
+                              )}
+                              <p className="text-caption text-muted mt-0.5">
+                                총 {totalRecords}차시 · 다음 {latestDomain}: {nextSequenceInDomain}차시
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-caption text-muted">아직 수업 기록이 없습니다</p>
+                          )}
+                        </div>
+
+                        {/* 오른쪽 액션 버튼 영역 */}
+                        <div className="flex flex-col items-center justify-center gap-1 shrink-0 ml-1">
+                          <AIButton
+                            label=""
+                            loading={aiLoading && analyzingClassId === classItem.id}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleClassAnalysis(classItem)
+                            }}
+                            size="sm"
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setTeamEditClass(classItem)
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-purple-50 transition-colors text-muted hover:text-purple-500"
+                            title="모둠 편집"
                           >
-                            명단 {filledRoster}/{classItem.studentCount}
-                          </span>
-                          {/* 편집 */}
+                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                              <rect x="3" y="3" width="7" height="7" rx="1" />
+                              <rect x="14" y="3" width="7" height="7" rx="1" />
+                              <rect x="3" y="14" width="7" height="7" rx="1" />
+                              <rect x="14" y="14" width="7" height="7" rx="1" />
+                            </svg>
+                          </button>
                           <button
                             onClick={(e) => handleOpenEditModal(e, classItem)}
                             className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-muted"
@@ -178,7 +233,6 @@ export default function ClassesPage() {
                               <path d="M10.5 1.5a2.12 2.12 0 0 1 3 3L4.5 13.5 1 14l.5-3.5z" />
                             </svg>
                           </button>
-                          {/* 삭제 */}
                           <button
                             onClick={(e) => handleDeleteClass(e, classItem)}
                             className="p-1.5 rounded-lg hover:bg-red-50 transition-colors text-muted hover:text-red-500"
@@ -192,55 +246,9 @@ export default function ClassesPage() {
                         </div>
                       </div>
 
-                      {latestRecord ? (
-                        <div className="pt-md border-t border-border">
-                          <p className="text-caption text-muted">
-                            최근 수업: {latestRecord.activity || classItem.lastActivity}
-                            {latestPeriod ? ` · ${latestPeriod}교시` : ''}
-                          </p>
-                          <p className="text-caption text-muted">
-                            {latestDomain} · {latestRecord.sequence || latestDomainCount}차시
-                          </p>
-                          <p className="text-caption text-muted">
-                            {getRecordDateLabel(latestDate)}
-                          </p>
-                          {latestVariation && (
-                            <p className="text-caption text-muted">
-                              변형: {latestVariation}
-                            </p>
-                          )}
-                          {latestMemo && (
-                            <p className="text-caption text-muted">
-                              메모: {latestMemo}
-                            </p>
-                          )}
-                          {latestPerformance && (
-                            <p className="text-caption text-muted">
-                              평가: {latestPerformance}
-                            </p>
-                          )}
-                          <p className="text-caption text-muted mt-1">
-                            총 {totalRecords}차시 · 다음차시 {latestDomain}: {nextSequenceInDomain}차시
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="pt-md border-t border-border">
-                          <p className="text-caption text-muted">아직 수업 기록이 없습니다</p>
-                        </div>
-                      )}
-
-                      {/* AI 분석 */}
-                      <div className="pt-2 border-t border-border mt-2">
-                        <AIButton
-                          label="AI 수업 분석"
-                          loading={aiLoading && analyzingClassId === classItem.id}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleClassAnalysis(classItem)
-                          }}
-                          size="sm"
-                        />
-                        {analyzingClassId === classItem.id && (
+                      {/* AI 분석 결과 (카드 하단에 펼쳐짐) */}
+                      {analyzingClassId === classItem.id && (
+                        <div className="mt-3 pt-3 border-t border-border">
                           <AIResponseCard
                             text={aiResult || ''}
                             loading={aiLoading}
@@ -250,8 +258,8 @@ export default function ClassesPage() {
                               setAnalyzingClassId(null)
                             }}
                           />
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </GlassCard>
                   )
                 })}
@@ -281,6 +289,14 @@ export default function ClassesPage() {
           classInfo={editModalClass}
           onSave={handleSaveClass}
           onClose={() => setShowEditModal(false)}
+        />
+      )}
+
+      {/* 모둠 편집 모달 */}
+      {teamEditClass && (
+        <TeamEditModal
+          classInfo={teamEditClass}
+          onClose={() => setTeamEditClass(null)}
         />
       )}
     </div>

@@ -12,6 +12,8 @@ export default function ClassEditModal({ classInfo, onSave, onClose }) {
   const [color, setColor] = useState(
     classInfo?.color || CLASS_COLOR_PRESETS[0]
   )
+  const [className, setClassName] = useState(classInfo?.className || '')
+  const [teacherName, setTeacherName] = useState(classInfo?.teacherName || '')
 
   useEffect(() => {
     if (classInfo) {
@@ -25,7 +27,7 @@ export default function ClassEditModal({ classInfo, onSave, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (studentCount < 1 || studentCount > 45) return
-    onSave({ grade, classNum, studentCount, color })
+    onSave({ grade, classNum, studentCount, color, className: className.trim() || undefined, teacherName: teacherName.trim() || undefined })
   }
 
   return (
@@ -97,18 +99,44 @@ export default function ClassEditModal({ classInfo, onSave, onClose }) {
           </div>
         </div>
 
-        {/* 버튼 */}
+        {/* 학급명 (선택) */}
+        <div>
+          <label className="text-caption text-muted block mb-1">학급명 (선택)</label>
+          <input
+            type="text"
+            value={className}
+            onChange={(e) => setClassName(e.target.value)}
+            placeholder="예: 해바라기반"
+            className="form-input w-full"
+          />
+        </div>
+
+        {/* 선생님명 (선택) */}
+        <div>
+          <label className="text-caption text-muted block mb-1">선생님명 (선택)</label>
+          <input
+            type="text"
+            value={teacherName}
+            onChange={(e) => setTeacherName(e.target.value)}
+            placeholder="예: 김선생"
+            className="form-input w-full"
+          />
+        </div>
+
+        {/* 버튼 — 파스텔 색상 */}
         <div className="flex gap-3 pt-md">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-3 px-4 bg-white/60 text-text rounded-xl font-medium hover:bg-white/80 transition-all border border-white/80"
+            className="flex-1 py-3 px-4 rounded-xl font-medium hover:brightness-[0.94] transition-all"
+            style={{ backgroundColor: '#fce4ec', color: '#c0392b' }}
           >
             취소
           </button>
           <button
             type="submit"
-            className="flex-1 py-3 px-4 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-all shadow-sm"
+            className="flex-1 py-3 px-4 rounded-xl font-medium hover:brightness-[0.94] transition-all"
+            style={{ backgroundColor: '#d6eaf8', color: '#2471a3' }}
           >
             {isEdit ? '수정' : '추가'}
           </button>
