@@ -1,0 +1,19 @@
+[project]
+name = "youtube-crawler"
+version = "0.1.0"
+description = "양수쌤체육수업 YouTube 크롤러"
+requires-python = ">=3.12"
+dependencies = [
+    "yt-dlp>=2025.1.0",
+    "youtube-transcript-api>=1.0.0",
+    "tqdm>=4.66.0",
+    "google-genai>=1.0.0",
+    "ollama>=0.6.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

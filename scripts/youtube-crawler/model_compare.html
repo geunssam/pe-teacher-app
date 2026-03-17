@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ollama 모델 비교 — qwen3.5:35b vs qwen3:14b</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a1a;
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 28px;
+  }
+
+  /* 속도 요약 카드 */
+  .speed-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .speed-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .speed-card .label { font-size: 0.8rem; color: #888; margin-bottom: 6px; }
+  .speed-card .value { font-size: 1.8rem; font-weight: 700; }
+  .speed-card .value.highlight { color: #22c55e; }
+  .speed-card .sub { font-size: 0.75rem; color: #aaa; margin-top: 4px; }
+
+  /* 영상 비교 카드 */
+  .video-compare {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .video-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .video-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .video-meta {
+    display: flex;
+    gap: 8px;
+  }
+  .badge {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .badge.time-35b { background: #fef3c7; color: #92400e; }
+  .badge.time-14b { background: #d1fae5; color: #065f46; }
+  .badge.speedup { background: #ede9fe; color: #5b21b6; }
+  .badge.transcript { background: #e0f2fe; color: #0369a1; }
+
+  /* 비교 그리드 */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .model-col {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .model-col.is-35b { border-color: #fbbf24; }
+  .model-col.is-14b { border-color: #34d399; }
+
+  .model-label {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .is-35b .model-label { background: #fef3c7; color: #92400e; }
+  .is-14b .model-label { background: #d1fae5; color: #065f46; }
+
+  .model-body { padding: 14px; }
+
+  .field-group { margin-bottom: 14px; }
+  .field-group:last-child { margin-bottom: 0; }
+  .field-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .field-value {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: #374151;
+  }
+
+  .steps-list {
+    list-style: none;
+    counter-reset: step;
+  }
+  .steps-list li {
+    counter-increment: step;
+    padding: 6px 0 6px 28px;
+    position: relative;
+    font-size: 0.83rem;
+    line-height: 1.5;
+    color: #374151;
+  }
+  .steps-list li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .is-35b .steps-list li::before { background: #fef3c7; color: #92400e; }
+  .is-14b .steps-list li::before { background: #d1fae5; color: #065f46; }
+
+  .equip-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .equip-tag {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+
+  /* 판정 바 */
+  .verdict {
+    margin-top: 20px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 0.82rem;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .verdict-icon { font-size: 1.1rem; }
+
+  /* 최종 결론 */
+  .conclusion {
+    background: linear-gradient(135deg, #ede9fe, #d1fae5);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .conclusion h2 { font-size: 1.2rem; margin-bottom: 10px; }
+  .conclusion p { font-size: 0.9rem; color: #374151; line-height: 1.6; }
+  .conclusion .big { font-size: 2rem; font-weight: 800; color: #059669; }
+
+  @media (max-width: 768px) {
+    .speed-summary { grid-template-columns: repeat(2, 1fr); }
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Ollama 모델 비교 테스트</h1>
+<p class="subtitle">qwen3.5:35b (23GB) vs qwen3:14b (9.3GB) — 동일 Whisper 자막, 동일 프롬프트</p>
+
+<!-- 속도 요약 -->
+<div class="speed-summary">
+  <div class="speed-card">
+    <div class="label">35b 평균</div>
+    <div class="value">336초</div>
+    <div class="sub">5분 36초/건</div>
+  </div>
+  <div class="speed-card">
+    <div class="label">14b 평균</div>
+    <div class="value highlight">71초</div>
+    <div class="sub">1분 11초/건</div>
+  </div>
+  <div class="speed-card">
+    <div class="label">속도 향상</div>
+    <div class="value highlight">4.7x</div>
+    <div class="sub">14b가 더 빠름</div>
+  </div>
+  <div class="speed-card">
+    <div class="label">예상 총 소요</div>
+    <div class="value">~27h</div>
+    <div class="sub">5.2일 → 1.1일</div>
+  </div>
+</div>
+
+<!-- 영상 1 -->
+<div class="video-compare">
+  <div class="video-header">
+    <span class="video-title">먼저 하교 놀이 — 나 먼저 집에 갈게!</span>
+    <div class="video-meta">
+      <span class="badge transcript">자막 679자</span>
+      <span class="badge time-35b">35b: 371초</span>
+      <span class="badge time-14b">14b: 90초</span>
+      <span class="badge speedup">4.1x</span>
+    </div>
+  </div>
+  <div class="compare-grid">
+    <div class="model-col is-35b">
+      <div class="model-label">qwen3.5:35b</div>
+      <div class="model-body">
+        <div class="field-group">
+          <div class="field-label">Summary</div>
+          <div class="field-value">이 게임은 수업 종료 시점이나 짬짬한 시간에 진행하는 숫자 맞추기 놀이입니다. 선생님과 학생이 가위바위보로 역할을 정하고, 선생님이 손가락으로 숫자를 보여줍니다. 학생들은 선생님이 외치는 숫자와 손가락 개수를 맞춰야 합니다.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Steps (5단계)</div>
+          <ol class="steps-list">
+            <li>가위바위보를 통해 선생님 역할과 학생 역할을 정합니다.</li>
+            <li>선생님이 '하나, 둘, 셋'을 외치며 손가락 개수 (0-4) 를 보여줍니다.</li>
+            <li>학생들은 선생님이 보인 숫자를 맞춥니다.</li>
+            <li>숫자를 맞춘 학생은 '나 먼저 급식/퇴근 갈게'라고 말하며 게임에서 탈락합니다.</li>
+            <li>마지막까지 남은 사람이 가장 늦게 나가는 사람으로 결정됩니다.</li>
+          </ol>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Equipment</div>
+          <div class="equip-tags"><span class="equip-tag">없음</span></div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Court Setup</div>
+          <div class="field-value">영상을 보고 경기장 구성을 확인하세요.</div>
+        </div>
+      </div>
+    </div>
+    <div class="model-col is-14b">
+      <div class="model-label">qwen3:14b</div>
+      <div class="model-body">
+        <div class="field-group">
+          <div class="field-label">Summary</div>
+          <div class="field-value">선생님과 학생들이 가위바위보를 통해 공격권을 결정하고, 숫자를 외치는 방식으로 차례로 빠져나가는 게임입니다. 마지막에 남은 학생은 급식실에 가장 늦게 가야 하는 규칙이 적용됩니다. 이 활동은 수업 종료 시나 학급 시간에 활용 가능합니다.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Steps (4단계)</div>
+          <ol class="steps-list">
+            <li>선생님과 학생들이 가위바위보를 통해 공격권과 수비권을 결정합니다.</li>
+            <li>선생님이 '하나, 둘, 셋'을 외치며 0부터 4까지의 숫자를 하나 선택합니다.</li>
+            <li>선택된 숫자와 손의 수가 일치하는 학생은 빠져나가며, 마지막에 남은 학생은 급식실에 가장 늦게 가야 합니다.</li>
+            <li>이 과정을 반복하여 모든 학생이 빠져나가도록 합니다.</li>
+          </ol>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Equipment</div>
+          <div class="equip-tags"><span class="equip-tag">손</span><span class="equip-tag">수업 공간</span></div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Court Setup</div>
+          <div class="field-value">영상을 보고 경기장 구성을 확인하세요.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="verdict">
+    <span class="verdict-icon">⚖️</span>
+    35b가 steps 1단계 더 상세하지만, 14b도 핵심 흐름은 정확히 담고 있음. equipment에서 14b가 '손', '수업 공간'을 넣은 건 불필요.
+  </div>
+</div>
+
+<!-- 영상 2 -->
+<div class="video-compare">
+  <div class="video-header">
+    <span class="video-title">새학년 마음 열기 추천 놀이 — 맥도널드!</span>
+    <div class="video-meta">
+      <span class="badge transcript">자막 1,178자</span>
+      <span class="badge time-35b">35b: 334초</span>
+      <span class="badge time-14b">14b: 68초</span>
+      <span class="badge speedup">4.9x</span>
+    </div>
+  </div>
+  <div class="compare-grid">
+    <div class="model-col is-35b">
+      <div class="model-label">qwen3.5:35b</div>
+      <div class="model-body">
+        <div class="field-group">
+          <div class="field-label">Summary</div>
+          <div class="field-value">새학년 마음 열기를 위한 몸으로 하는 액션 놀이입니다. 선생님이 햄버거나 콜라 메뉴를 외치면 학생들은 해당 동작을 따라 합니다. 햄버거는 점프와 팔 벌리기, 콜라는 컵과 빨대 모양을 만듭니다. 선생님과 같은 메뉴를 고른 학생은 스쿼트 벌칙.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Steps (5단계)</div>
+          <ol class="steps-list">
+            <li>선생님이 맥도날드 준비라고 외치면 학생들은 팔을 벌리고 준비 자세를 취합니다.</li>
+            <li>선생님이 햄버거 또는 콜라 메뉴 중 하나를 선택하여 외칩니다.</li>
+            <li>학생들은 선생님의 메뉴와 다른 동작을 하거나 같은 동작을 하여 반응합니다.</li>
+            <li>햄버거는 점프하며 팔을 벌리고, 콜라는 손으로 컵과 빨대 모양을 만듭니다.</li>
+            <li>선생님과 같은 메뉴를 고른 학생은 3회 스쿼트를 한 후 다시 참여합니다.</li>
+          </ol>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Equipment</div>
+          <div class="equip-tags"><span class="equip-tag">없음</span></div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Court Setup</div>
+          <div class="field-value">영상을 보고 경기장 구성을 확인하세요.</div>
+        </div>
+      </div>
+    </div>
+    <div class="model-col is-14b">
+      <div class="model-label">qwen3:14b</div>
+      <div class="model-body">
+        <div class="field-group">
+          <div class="field-label">Summary</div>
+          <div class="field-value">3학년 아이들과 함께하는 마음 열기 체육 활동으로, 햄버거와 콜라 메뉴를 주제로 한 신체 움직임 게임입니다. 아이들이 몸으로 움직이며 놀이를 통해 팀워크와 집중력을 키우는 활동입니다. 선생님과 동일한 메뉴를 선택한 학생은 스쿼트 벌칙.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Steps (5단계)</div>
+          <ol class="steps-list">
+            <li>선생님과 함께 '맥도널드 준비! 얏!'를 외치며 팔을 뻗어 준비합니다.</li>
+            <li>두 바퀴 돌며 다리를 움직이며 체력을 기르고, 제자리 점프를 합니다.</li>
+            <li>햄버거 메뉴 선택 시 패티와 빵 동작을, 콜라 메뉴 선택 시 컵과 빨대 동작을 합니다.</li>
+            <li>선생님과 같은 메뉴를 선택한 학생은 스쿼트 3개를 수행한 후 다시 도전합니다.</li>
+            <li>활동 종료 후 선생님과 함께 동작을 확인하고 뒤로 돌아서며 마무리합니다.</li>
+          </ol>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Equipment</div>
+          <div class="equip-tags"><span class="equip-tag">운동복</span><span class="equip-tag">편한 신발</span></div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Court Setup</div>
+          <div class="field-value">영상을 보고 경기장 구성을 확인하세요.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="verdict">
+    <span class="verdict-icon">⚖️</span>
+    둘 다 5단계로 동일. 35b는 규칙 중심, 14b는 실제 구호/동작까지 포함해서 오히려 더 생동감 있음. equipment에서 14b가 '운동복'을 넣은 건 불필요.
+  </div>
+</div>
+
+<!-- 영상 3 -->
+<div class="video-compare">
+  <div class="video-header">
+    <span class="video-title">새학년 마음열기 놀이 — 몸 코코코!</span>
+    <div class="video-meta">
+      <span class="badge transcript">자막 1,190자</span>
+      <span class="badge time-35b">35b: 304초</span>
+      <span class="badge time-14b">14b: 56초</span>
+      <span class="badge speedup">5.4x</span>
+    </div>
+  </div>
+  <div class="compare-grid">
+    <div class="model-col is-35b">
+      <div class="model-label">qwen3.5:35b</div>
+      <div class="model-body">
+        <div class="field-group">
+          <div class="field-label">Summary</div>
+          <div class="field-value">이 영상은 새학년 마음 열기를 위한 '몸코코코' 놀이를 소개합니다. 선생님이 신체 부위 이름의 마지막 한 글자나 두 글자를 힌트로 제시하면, 학생들은 해당 신체 부위를 추리해야 합니다. 정답을 맞춘 학생은 하이파이브로 칭찬.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Steps (4단계)</div>
+          <ol class="steps-list">
+            <li>선생님이 규칙을 설명하고 힌트 게임임을 알립니다.</li>
+            <li>학생들에게 신체 부위 이름의 끝소리 (한 글자 또는 두 글자) 를 힌트로 제시합니다.</li>
+            <li>학생들은 힌트를 듣고 정답인 신체 부위를 추리하여 답을 말합니다.</li>
+            <li>정답을 맞힌 학생과 하이파이브나 하이락을 하며 칭찬해 줍니다.</li>
+          </ol>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Equipment</div>
+          <div class="equip-tags"><span class="equip-tag">단어 리스트 파일</span><span class="equip-tag">별도 준비물 없음</span></div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Court Setup</div>
+          <div class="field-value">영상을 보고 경기장 구성을 확인하세요.</div>
+        </div>
+      </div>
+    </div>
+    <div class="model-col is-14b">
+      <div class="model-label">qwen3:14b</div>
+      <div class="model-body">
+        <div class="field-group">
+          <div class="field-label">Summary</div>
+          <div class="field-value">선생님이 몸의 신체 부위에 대한 단서를 주고, 아이들이 끝글자에 해당하는 신체 부위를 맞추는 놀이입니다. 예를 들어 '코코코코 톱'은 '손톱' 또는 '발톱'으로 맞추는 방식입니다. 이 놀이는 아이들의 추리 능력과 몸에 대한 이해를 키웁니다.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Steps (4단계)</div>
+          <ol class="steps-list">
+            <li>선생님이 몸의 신체 부위에 대한 단서를 말합니다 (예: '코코코코 톱').</li>
+            <li>아이들이 단서에 맞는 신체 부위를 추리하여 답을 제시합니다.</li>
+            <li>맞힌 아이에게 칭찬이나 하이파이브 등으로 긍정적인 피드백을 줍니다.</li>
+            <li>난이도를 점차 높이며 다양한 신체 부위를 활용해 놀이를 진행합니다.</li>
+          </ol>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Equipment</div>
+          <div class="equip-tags"><span class="equip-tag">없음 (구두로 진행)</span></div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Court Setup</div>
+          <div class="field-value">영상을 보고 경기장 구성을 확인하세요.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="verdict">
+    <span class="verdict-icon">⚖️</span>
+    둘 다 4단계. 14b는 구체적 예시('코코코코 톱')를 포함해서 이해하기 쉬움. 35b는 '단어 리스트 파일'이라는 환각이 있음. equipment는 14b가 더 정확.
+  </div>
+</div>
+
+<!-- 최종 결론 -->
+<div class="conclusion">
+  <h2>최종 결론</h2>
+  <p class="big">14b로 전환 추천</p>
+  <p style="margin-top: 12px;">
+    품질 차이 거의 없음 (오히려 14b가 구체적 예시를 더 잘 넣는 경향)<br>
+    속도 <strong>4.7배 향상</strong> → 전체 소요 <strong>5.2일 → ~1.1일</strong><br>
+    메모리 사용량 23GB → 9.3GB로 절반 이하
+  </p>
+</div>
+
+</body>
+</html>

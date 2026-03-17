@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>양수쌤 YouTube 구조화 뷰어</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Pretendard Variable', 'sans-serif'] }
+    }
+  }
+}
+</script>
+<style>
+  * { word-break: keep-all; }
+  body { font-family: 'Pretendard Variable', sans-serif; }
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<header class="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-200">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <h1 class="text-lg font-bold text-gray-900">양수쌤 YouTube 구조화 뷰어</h1>
+    <div id="stats" class="text-sm text-gray-500"></div>
+  </div>
+  <div class="max-w-6xl mx-auto px-4 pb-3 flex gap-2 flex-wrap">
+    <button onclick="setFilter('all', this)" class="filter-btn active px-3 py-1.5 text-sm rounded-full bg-gray-900 text-white">전체</button>
+    <button onclick="setFilter('pe', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">체육 활동</button>
+    <button onclick="setFilter('nonpe', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">비체육</button>
+    <button onclick="setFilter('shorts', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">쇼츠</button>
+    <span class="w-px h-6 bg-gray-300 mx-1"></span>
+    <button onclick="setFilter('축구', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">축구</button>
+    <button onclick="setFilter('농구', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">농구</button>
+    <button onclick="setFilter('야구', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">야구</button>
+    <button onclick="setFilter('배구', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">배구</button>
+    <button onclick="setFilter('술래잡기', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">술래잡기</button>
+    <button onclick="setFilter('피구', this)" class="filter-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">피구</button>
+    <div class="ml-auto relative">
+      <input id="search" type="text" placeholder="검색 (활동명, 제목...)"
+        class="px-3 py-1.5 text-sm rounded-full border border-gray-200 w-48 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        oninput="onSearchInput()" onfocus="onSearchInput()" autocomplete="off">
+      <ul id="autocomplete" class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 hidden max-h-64 overflow-y-auto"></ul>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-4">
+  <div id="progress-bar" class="mb-4 hidden">
+    <div class="flex justify-between text-sm text-gray-500 mb-1">
+      <span id="progress-text"></span>
+      <span id="progress-pct"></span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-2">
+      <div id="progress-fill" class="bg-blue-500 h-2 rounded-full transition-all"></div>
+    </div>
+  </div>
+  <div id="list" class="grid gap-3"></div>
+  <div id="empty" class="hidden text-center py-20 text-gray-400">
+    <p class="text-lg">아직 구조화된 데이터가 없습니다</p>
+    <p class="text-sm mt-1">structure.py를 실행하면 여기에 결과가 표시됩니다</p>
+  </div>
+</main>
+
+<script>
+let allData = [];
+let currentFilter = 'all';
+const TOTAL_VIDEOS = 1405;
+
+async function loadData() {
+  try {
+    const res = await fetch('/data/structured/activities.json?t=' + Date.now());
+    if (!res.ok) throw new Error('Not found');
+    allData = await res.json();
+  } catch {
+    allData = [];
+  }
+  updateStats();
+  applyFilter();
+  updateProgress();
+}
+
+function updateStats() {
+  const pe = allData.filter(d => d.is_pe_activity).length;
+  const nonPe = allData.length - pe;
+  const shorts = allData.filter(d => d.is_short).length;
+  document.getElementById('stats').textContent =
+    `총 ${allData.length}개 | 체육 ${pe} | 비체육 ${nonPe} | 쇼츠 ${shorts}`;
+}
+
+function updateProgress() {
+  const bar = document.getElementById('progress-bar');
+  if (allData.length > 0 && allData.length < TOTAL_VIDEOS) {
+    bar.classList.remove('hidden');
+    const pct = (allData.length / TOTAL_VIDEOS * 100).toFixed(1);
+    document.getElementById('progress-text').textContent = `${allData.length} / ${TOTAL_VIDEOS} 처리됨`;
+    document.getElementById('progress-pct').textContent = `${pct}%`;
+    document.getElementById('progress-fill').style.width = pct + '%';
+  } else if (allData.length >= TOTAL_VIDEOS) {
+    bar.classList.remove('hidden');
+    document.getElementById('progress-text').textContent = '구조화 완료!';
+    document.getElementById('progress-pct').textContent = '100%';
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('progress-fill').classList.replace('bg-blue-500', 'bg-green-500');
+  } else {
+    bar.classList.add('hidden');
+  }
+}
+
+const SPORT_FILTERS = ['축구', '농구', '야구', '배구', '술래잡기', '피구'];
+
+function matchesSport(d, sport) {
+  const text = [d.title, d.activity?.name, d.activity?.summary].filter(Boolean).join(' ');
+  return text.includes(sport);
+}
+
+function applyFilter() {
+  const query = document.getElementById('search').value.toLowerCase();
+  // 최근 구조화된 항목이 위에 오도록 역순
+  let filtered = [...allData].reverse();
+
+  if (currentFilter === 'pe') filtered = filtered.filter(d => d.is_pe_activity);
+  else if (currentFilter === 'nonpe') filtered = filtered.filter(d => !d.is_pe_activity);
+  else if (currentFilter === 'shorts') filtered = filtered.filter(d => d.is_short);
+  else if (SPORT_FILTERS.includes(currentFilter)) filtered = filtered.filter(d => d.is_pe_activity && matchesSport(d, currentFilter));
+
+  if (query) {
+    filtered = filtered.filter(d => {
+      const name = d.activity?.name || '';
+      const title = d.title || '';
+      const summary = d.activity?.summary || '';
+      return (name + title + summary).toLowerCase().includes(query);
+    });
+  }
+
+  renderList(filtered);
+}
+
+function renderList(items) {
+  const el = document.getElementById('list');
+  const empty = document.getElementById('empty');
+
+  if (items.length === 0 && allData.length === 0) {
+    el.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  el.innerHTML = items.map((d, i) => {
+    const act = d.activity || {};
+    const isPE = d.is_pe_activity;
+    const badge = isPE
+      ? '<span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">체육</span>'
+      : '<span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-500">비체육</span>';
+    const shortBadge = d.is_short
+      ? ' <span class="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600">쇼츠</span>' : '';
+    const transcriptBadge = d.has_transcript
+      ? ' <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-600">자막</span>' : '';
+
+    if (!isPE) {
+      return `<div class="bg-white rounded-xl border border-gray-100 p-4 opacity-60">
+        <div class="flex items-center gap-2 mb-1">${badge}${shortBadge}${transcriptBadge}</div>
+        <a href="${d.url}" target="_blank" class="text-sm text-gray-600 hover:underline">${d.title}</a>
+      </div>`;
+    }
+
+    const domain = act.domain || '';
+    const domainColors = {
+      '스포츠': 'bg-blue-50 text-blue-700 border-blue-200',
+      '건강': 'bg-green-50 text-green-700 border-green-200',
+      '표현': 'bg-purple-50 text-purple-700 border-purple-200',
+      '여가': 'bg-amber-50 text-amber-700 border-amber-200',
+    };
+    const domainClass = domainColors[domain] || 'bg-gray-50 text-gray-700 border-gray-200';
+
+    return `<div class="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition-shadow">
+      <div class="flex items-center gap-2 mb-2 flex-wrap">
+        ${badge}${shortBadge}${transcriptBadge}
+        ${domain ? `<span class="px-2 py-0.5 text-xs rounded-full border ${domainClass}">${domain}</span>` : ''}
+        ${(Array.isArray(act.suitable_grades) ? act.suitable_grades : act.suitable_grades ? [act.suitable_grades] : []).map(g => `<span class="px-2 py-0.5 text-xs rounded-full bg-yellow-50 text-yellow-700">${g}</span>`).join('')}
+        ${(Array.isArray(act.space) ? act.space : act.space ? [act.space] : []).map(s => `<span class="px-2 py-0.5 text-xs rounded-full bg-gray-50 text-gray-600">${s}</span>`).join('')}
+      </div>
+      <div class="flex items-start gap-2 mb-1">
+        <h3 class="font-bold text-base text-gray-900">${act.name || d.title}</h3>
+        <a href="${d.url}" target="_blank"
+          class="flex-shrink-0 inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-xs hover:bg-red-100 transition-colors max-w-[45%]">
+          <svg class="flex-shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2c-.3-1-1-1.8-2-2.1C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.5.6c-1 .3-1.7 1.1-2 2.1C0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 1 1.8 2 2.1 1.9.6 9.5.6 9.5.6s7.6 0 9.5-.6c1-.3 1.7-1.1 2-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+          <span class="truncate">${d.title}</span>
+        </a>
+      </div>
+      <p class="text-sm text-gray-600 mb-3 leading-relaxed">${act.summary || ''}</p>
+      ${act.court_setup ? `<p class="text-sm text-indigo-600 mb-2">🏟 ${act.court_setup}</p>` : ''}
+      ${(act.steps||[]).length ? `
+      <details class="mb-2">
+        <summary class="text-sm font-medium text-gray-700 cursor-pointer">진행 순서 (${act.steps.length}단계)</summary>
+        <ol class="mt-1 ml-4 text-sm text-gray-600 list-decimal space-y-0.5">
+          ${act.steps.map(s => `<li>${s}</li>`).join('')}
+        </ol>
+      </details>` : ''}
+      <div class="flex flex-wrap gap-1 mt-2">
+        ${(act.equipment||[]).map(e => `<span class="px-2 py-0.5 text-xs rounded-full bg-orange-50 text-orange-600">${e}</span>`).join('')}
+      </div>
+      ${(act.cautions||[]).length ? `
+      <div class="mt-2 text-xs text-red-500">
+        ${act.cautions.map(c => `<span class="mr-2">&#9888; ${c}</span>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function setActiveBtn(btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('active', 'bg-gray-900', 'text-white');
+    b.classList.add('bg-gray-100', 'text-gray-700');
+  });
+  btn.classList.add('active', 'bg-gray-900', 'text-white');
+  btn.classList.remove('bg-gray-100', 'text-gray-700');
+}
+
+function setFilter(filter, btn) { currentFilter = filter; setActiveBtn(btn); applyFilter(); }
+
+// 자동완성
+function onSearchInput() {
+  const query = document.getElementById('search').value.trim().toLowerCase();
+  const ac = document.getElementById('autocomplete');
+  if (!query) { ac.classList.add('hidden'); applyFilter(); return; }
+
+  // 활동명 + 제목에서 매칭, 중복 제거
+  const seen = new Set();
+  const suggestions = [];
+  for (const d of allData) {
+    if (!d.is_pe_activity) continue;
+    const name = d.activity?.name || '';
+    const title = d.title || '';
+    // 활동명 우선, 제목도 포함
+    for (const text of [name, title]) {
+      if (text && text.toLowerCase().includes(query) && !seen.has(text)) {
+        seen.add(text);
+        suggestions.push({ text, isName: text === name });
+      }
+    }
+    if (suggestions.length >= 8) break;
+  }
+
+  if (suggestions.length === 0) { ac.classList.add('hidden'); applyFilter(); return; }
+
+  // 활동명 먼저, 제목은 뒤로
+  suggestions.sort((a, b) => b.isName - a.isName);
+
+  ac.innerHTML = suggestions.map(s => {
+    const highlighted = s.text.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), '<mark class="bg-yellow-200 rounded">$1</mark>');
+    const label = s.isName ? '' : '<span class="text-gray-400 text-xs ml-1">(제목)</span>';
+    return `<li class="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 first:rounded-t-xl last:rounded-b-xl" onmousedown="selectSuggestion('${s.text.replace(/'/g, "\\'")}')">${highlighted}${label}</li>`;
+  }).join('');
+  ac.classList.remove('hidden');
+  applyFilter();
+}
+
+function selectSuggestion(text) {
+  document.getElementById('search').value = text;
+  document.getElementById('autocomplete').classList.add('hidden');
+  applyFilter();
+}
+
+// 검색창 밖 클릭 시 자동완성 닫기
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#search') && !e.target.closest('#autocomplete')) {
+    document.getElementById('autocomplete').classList.add('hidden');
+  }
+});
+
+// 초기 로드 + 3초마다 자동 새로고침 (구조화 실시간 반영)
+loadData();
+setInterval(loadData, 3000);
+</script>
+</body>
+</html>

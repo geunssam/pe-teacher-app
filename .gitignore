@@ -53,3 +53,14 @@ docs/.pdca-snapshots/
 # Preview/scratch files
 *.preview.html
 PEhub*
+
+# YouTube crawler
+scripts/youtube-crawler/__pycache__/
+scripts/youtube-crawler/.venv/
+scripts/youtube-crawler/data/raw/videos.json
+scripts/youtube-crawler/data/structured/activities*.json
+scripts/youtube-crawler/data/structured/*progress*.json
+scripts/youtube-crawler/data/structured/qa_issues.json
+scripts/youtube-crawler/data/whisper_temp/
+scripts/youtube-crawler/uv.lock
+*.wav
