@@ -246,7 +246,9 @@ export default function StationMap({
       stationMarkersRef.current.forEach((entry) => {
         if (entry?.coords) bounds.extend(entry.coords)
       })
-      if (!bounds.isEmpty()) {
+      const sw = bounds.getSW()
+      const ne = bounds.getNE()
+      if (sw && ne && (sw.lat() !== ne.lat() || sw.lng() !== ne.lng())) {
         markersReadyRef.current = false
         map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40, maxZoom: 15 })
         runAfterMapIdle(() => {
@@ -434,7 +436,9 @@ export default function StationMap({
           }
         }
 
-        if (!bounds.isEmpty()) {
+        const bSw = bounds.getSW()
+        const bNe = bounds.getNE()
+        if (bSw && bNe && (bSw.lat() !== bNe.lat() || bSw.lng() !== bNe.lng())) {
           map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40, maxZoom: 15 })
           runAfterMapIdle(markReady)
         } else {

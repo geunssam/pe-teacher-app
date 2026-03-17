@@ -1,7 +1,9 @@
 // 에어코리아 API — 대기오염(미세먼지/초미세먼지) 데이터 fetch | 사용처→WeatherPage, 측정소→stationSearch.js, API키→.env.local
 import { getAirQuality as getMockAirQuality } from '../../data/mockWeather'
-const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY
-const AIR_ENDPOINT = import.meta.env.VITE_AIR_API_ENDPOINT
+const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY || ''
+const AIR_ENDPOINT = import.meta.env.VITE_AIR_API_ENDPOINT || ''
+// 프로덕션에서는 API 키를 숨기기 위해 Netlify Function 프록시 사용
+const USE_PROXY = !API_KEY
 const AIR_CACHE_TTL_MS = 1000 * 60 * 5
 const AIR_STALE_TTL_MS = 1000 * 60 * 60 * 24
 const AIR_CACHE = new Map()
@@ -64,17 +66,31 @@ function getAirQualityFallbackData(stationName) {
  */
 export async function fetchAirQualityData(stationName = '대전') {
   try {
-    const params = new URLSearchParams({
-      serviceKey: API_KEY,
-      returnType: 'json',
-      numOfRows: '1',
-      pageNo: '1',
-      stationName: stationName,
-      dataTerm: 'DAILY',
-      ver: '1.0',
-    })
-
-    const url = `${AIR_ENDPOINT}/getMsrstnAcctoRltmMesureDnsty?${params}`
+    let url
+    if (USE_PROXY) {
+      const proxyParams = new URLSearchParams({
+        target: 'air',
+        path: 'getMsrstnAcctoRltmMesureDnsty',
+        returnType: 'json',
+        numOfRows: '1',
+        pageNo: '1',
+        stationName: stationName,
+        dataTerm: 'DAILY',
+        ver: '1.0',
+      })
+      url = `/api/public-data?${proxyParams}`
+    } else {
+      const params = new URLSearchParams({
+        serviceKey: API_KEY,
+        returnType: 'json',
+        numOfRows: '1',
+        pageNo: '1',
+        stationName: stationName,
+        dataTerm: 'DAILY',
+        ver: '1.0',
+      })
+      url = `${AIR_ENDPOINT}/getMsrstnAcctoRltmMesureDnsty?${params}`
+    }
     const cacheKey = url
     const cacheStationKey = getAirCacheKey(stationName)
 

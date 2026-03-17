@@ -2,8 +2,10 @@
 import { latLonToGrid, DEFAULT_LOCATION } from '../../utils/gridConvert'
 import { getCurrentWeather as getMockCurrentWeather, getHourlyForecast as getMockHourlyForecast } from '../../data/mockWeather'
 
-const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY
-const WEATHER_ENDPOINT = import.meta.env.VITE_WEATHER_API_ENDPOINT
+const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY || ''
+const WEATHER_ENDPOINT = import.meta.env.VITE_WEATHER_API_ENDPOINT || ''
+// 프로덕션에서는 API 키를 숨기기 위해 Netlify Function 프록시 사용
+const USE_PROXY = !API_KEY
 const ULTRA_SRT_NCST_DELAY_MIN = 40
 const VILAGE_FCST_DELAY_MIN = 10
 const VILAGE_BASE_HOURS = [2, 5, 8, 11, 14, 17, 20, 23]
@@ -291,8 +293,18 @@ function isNoDataError(error) {
 }
 
 async function fetchWeatherEndpoint(path, query) {
-  const params = new URLSearchParams(query)
-  const url = `${WEATHER_ENDPOINT}/${path}?${params}`
+  let url
+  if (USE_PROXY) {
+    // 프록시: serviceKey 제외, target/path 추가
+    const proxyParams = new URLSearchParams(query)
+    proxyParams.delete('serviceKey')
+    proxyParams.set('target', 'weather')
+    proxyParams.set('path', path)
+    url = `/api/public-data?${proxyParams}`
+  } else {
+    const params = new URLSearchParams(query)
+    url = `${WEATHER_ENDPOINT}/${path}?${params}`
+  }
   const cacheKey = url
   const fallbackKey = makeFallbackCacheKey(query)
 

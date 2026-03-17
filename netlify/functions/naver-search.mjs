@@ -17,7 +17,7 @@ export default async (request) => {
 
   const resHeaders = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://pehub.netlify.app',
   }
 
   if (!query) {

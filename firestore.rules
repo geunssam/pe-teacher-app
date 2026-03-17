@@ -64,6 +64,21 @@ service cloud.firestore {
       match /savedActivities/{activityId} {
         allow read, write: if isOwner(uid);
       }
+
+      // annualPlans — 연간 계획
+      match /annualPlans/{planId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // calendar — 학사 일정
+      match /calendar/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // planProgress — 연간 계획 진행 상황
+      match /planProgress/{docId} {
+        allow read, write: if isOwner(uid);
+      }
     }
 
     // 기본: 모든 접근 거부

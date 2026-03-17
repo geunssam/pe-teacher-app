@@ -2,10 +2,25 @@
 import { CITY_COORDS } from '../../utils/gridConvert'
 import { haversineDistanceKm } from '../../utils/haversine'
 
-const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY
-const AIR_ENDPOINT = import.meta.env.VITE_AIR_API_ENDPOINT
+const API_KEY = import.meta.env.VITE_PUBLIC_DATA_API_KEY || ''
+const AIR_ENDPOINT = import.meta.env.VITE_AIR_API_ENDPOINT || ''
 const AIR_STATION_ENDPOINT =
   import.meta.env.VITE_AIR_STATION_API_ENDPOINT || 'https://apis.data.go.kr/B552584/MsrstnInfoInqireSvc'
+// 프로덕션에서는 API 키를 숨기기 위해 Netlify Function 프록시 사용
+const USE_PROXY = !API_KEY
+
+// API URL 빌드 헬퍼: 프록시/직접 호출 분기
+function buildApiUrl(target, path, params) {
+  if (USE_PROXY) {
+    const proxyParams = new URLSearchParams(params)
+    proxyParams.delete('serviceKey')
+    proxyParams.set('target', target)
+    proxyParams.set('path', path)
+    return `/api/public-data?${proxyParams}`
+  }
+  const endpoint = target === 'station' ? AIR_STATION_ENDPOINT : AIR_ENDPOINT
+  return `${endpoint}/${path}?${new URLSearchParams(params)}`
+}
 const STATION_LIST_CACHE = new Map()
 const UMD_TM_CACHE = new Map()
 const NEARBY_STATION_CACHE = new Map()
@@ -237,15 +252,15 @@ async function fetchTmCoordByUmdName(umdName, addressHint = '') {
     return UMD_TM_CACHE.get(cacheKey)
   }
 
-  const params = new URLSearchParams({
+  const params = {
     serviceKey: API_KEY,
     returnType: 'json',
     pageNo: '1',
     numOfRows: '20',
     umdName: normalized,
-  })
+  }
 
-  const url = `${AIR_STATION_ENDPOINT}/getTMStdrCrdnt?${params}`
+  const url = buildApiUrl('station', 'getTMStdrCrdnt', params)
   const response = await fetch(url)
   const text = await response.text()
 
@@ -306,15 +321,15 @@ async function fetchTmCoordByUmdName(umdName, addressHint = '') {
 }
 
 async function fetchNearbyStationsByTm(tmX, tmY) {
-  const params = new URLSearchParams({
+  const params = {
     serviceKey: API_KEY,
     returnType: 'json',
     tmX: String(tmX),
     tmY: String(tmY),
     ver: '1.1',
-  })
+  }
 
-  const url = `${AIR_STATION_ENDPOINT}/getNearbyMsrstnList?${params}`
+  const url = buildApiUrl('station', 'getNearbyMsrstnList', params)
   const response = await fetch(url)
   const text = await response.text()
 
@@ -509,16 +524,16 @@ async function fetchStationsByAddress(addrKeyword) {
     return STATION_LIST_CACHE.get(query)
   }
 
-  const params = new URLSearchParams({
+  const params = {
     serviceKey: API_KEY,
     returnType: 'json',
     numOfRows: '500',
     pageNo: '1',
     addr: query,
     ver: '1.1',
-  })
+  }
 
-  const url = `${AIR_STATION_ENDPOINT}/getMsrstnList?${params}`
+  const url = buildApiUrl('station', 'getMsrstnList', params)
   const response = await fetch(url)
   const text = await response.text()
 
@@ -658,16 +673,16 @@ async function findNearestStationByAddressList(lat, lon, addressHint = '') {
 
 async function inferNearestStationBySido(lat, lon, addressHint = '') {
   const sidoName = guessSidoName(addressHint, lat, lon)
-  const params = new URLSearchParams({
+  const params = {
     serviceKey: API_KEY,
     returnType: 'json',
     numOfRows: '100',
     pageNo: '1',
     sidoName,
     ver: '1.0',
-  })
+  }
 
-  const url = `${AIR_ENDPOINT}/getCtprvnRltmMesureDnsty?${params}`
+  const url = buildApiUrl('air', 'getCtprvnRltmMesureDnsty', params)
   const response = await fetch(url)
   const data = await response.json()
 
