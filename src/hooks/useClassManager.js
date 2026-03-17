@@ -5,7 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../services/firebase'
 import { useLocalStorage } from './useLocalStorage'
 import { getUid } from './useDataSource'
-import { setDocument, getDocument, getCollection, commitBatchChunked } from '../services/firestore'
+import { setDocument, getDocument, getCollection, commitBatchChunked, deleteDocument } from '../services/firestore'
 import { generateClassId, generateStudentId } from '../utils/generateId'
 import { sanitizeForFirestore, trimLargeFields } from '../utils/firestoreHelpers'
 import { CLASS_COLOR_PRESETS } from '../constants/classColors'
@@ -203,6 +203,115 @@ export function useClassManager() {
     return { classes: newClasses, rosters: newRosters, records: newRecords }
   }
 
+  // --- 학급 추가 ---
+  const addClass = (classData) => {
+    const { grade, classNum, studentCount, color } = classData
+
+    // 중복 체크: 같은 학년/반이 이미 있으면 차단
+    const duplicate = classes.find(
+      (cls) => cls.grade === grade && cls.classNum === classNum
+    )
+    if (duplicate) {
+      toast.error(`${grade}학년 ${classNum}반은 이미 존재합니다`)
+      return null
+    }
+
+    const classId = generateClassId()
+    const newClass = {
+      id: classId,
+      grade,
+      classNum,
+      studentCount,
+      color: color || CLASS_COLOR_PRESETS[classes.length % CLASS_COLOR_PRESETS.length],
+      lastActivity: null,
+      lastDomain: null,
+      lastDate: null,
+      createdAt: new Date().toISOString(),
+    }
+
+    // 빈 명단 초기화
+    const newRoster = Array.from({ length: studentCount }, (_, index) => ({
+      id: generateStudentId(),
+      num: index + 1,
+      name: '',
+      gender: '',
+      note: '',
+    }))
+
+    setClasses((prev) => [...prev, newClass])
+    setRosters((prev) => ({ ...prev, [classId]: newRoster }))
+    setRecords((prev) => ({ ...prev, [classId]: [] }))
+
+    // classSetup 업데이트 (해당 학년 count 증가)
+    if (classSetup) {
+      const updatedSetup = { ...classSetup }
+      const gradeInfo = updatedSetup.grades?.find((g) => g.grade === grade)
+      if (gradeInfo) {
+        gradeInfo.count += 1
+        if (gradeInfo.studentCounts) gradeInfo.studentCounts.push(studentCount)
+      } else {
+        updatedSetup.grades = [
+          ...(updatedSetup.grades || []),
+          { grade, count: 1, studentCounts: [studentCount] },
+        ]
+      }
+      setClassSetup(updatedSetup)
+      syncClassSetupToFirestore(updatedSetup)
+    }
+
+    // Firestore 동기화
+    syncClassToFirestore(newClass)
+    syncRosterToFirestore(classId, newRoster)
+
+    toast.success(`${grade}학년 ${classNum}반이 추가되었습니다`)
+    return newClass
+  }
+
+  // --- 학급 삭제 ---
+  const deleteClass = async (classId) => {
+    const target = classes.find((cls) => cls.id === classId)
+    if (!target) return
+
+    // classes 배열에서 제거
+    setClasses((prev) => prev.filter((cls) => cls.id !== classId))
+    setRosters((prev) => {
+      const next = { ...prev }
+      delete next[classId]
+      return next
+    })
+    setRecords((prev) => {
+      const next = { ...prev }
+      delete next[classId]
+      return next
+    })
+
+    // classSetup 업데이트 (해당 학년 count 감소)
+    if (classSetup) {
+      const updatedSetup = { ...classSetup }
+      const gradeInfo = updatedSetup.grades?.find((g) => g.grade === target.grade)
+      if (gradeInfo) {
+        gradeInfo.count -= 1
+        if (gradeInfo.count <= 0) {
+          updatedSetup.grades = updatedSetup.grades.filter((g) => g.grade !== target.grade)
+        }
+      }
+      setClassSetup(updatedSetup)
+      syncClassSetupToFirestore(updatedSetup)
+    }
+
+    // Firestore에서 문서 삭제
+    const uid = getUid()
+    if (uid) {
+      try {
+        await deleteDocument(`users/${uid}/classes/${classId}`)
+      } catch (err) {
+        console.error('Failed to delete class from Firestore:', err)
+      }
+    }
+
+    toast.success(`${target.grade}학년 ${target.classNum}반이 삭제되었습니다`)
+  }
+
   const isSetupComplete = () => classSetup !== null && classes.length > 0
 
   const getClass = (classId) => classes.find((cls) => cls.id === classId) || null
@@ -261,8 +370,8 @@ export function useClassManager() {
     // 초기화
     initializeClasses, isSetupComplete, resetClassSetup,
 
-    // 조회 + 수정
-    getClass, getClassesByGrade,
+    // 학급 CRUD
+    getClass, getClassesByGrade, addClass, deleteClass, updateClass,
 
     // 색상 관리
     getClassColor, setClassColor,
