@@ -198,9 +198,9 @@ function renderList(items) {
       ${(act.steps||[]).length ? `
       <details class="mb-2">
         <summary class="text-sm font-medium text-gray-700 cursor-pointer">진행 순서 (${act.steps.length}단계)</summary>
-        <ul class="mt-1 ml-4 text-sm text-gray-600 list-disc space-y-0.5">
+        <ol class="mt-1 ml-4 text-sm text-gray-600 list-decimal space-y-0.5">
           ${act.steps.map(s => `<li>${s}</li>`).join('')}
-        </ul>
+        </ol>
       </details>` : ''}
       <div class="flex flex-wrap gap-1 mt-2">
         ${(act.equipment||[]).map(e => `<span class="px-2 py-0.5 text-xs rounded-full bg-orange-50 text-orange-600">${e}</span>`).join('')}
