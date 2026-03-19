@@ -276,7 +276,8 @@ export default function SetupWizard() {
           classId: cls.id,
           grade: cls.grade,
           classNum: cls.classNum,
-          label: `${cls.grade}-${cls.classNum}`,
+          className: `${cls.grade}학년 ${cls.classNum}반`,
+          memo: '',
         })
       }
     })

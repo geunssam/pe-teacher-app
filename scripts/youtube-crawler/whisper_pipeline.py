@@ -311,6 +311,19 @@ def run_structure(resume: bool = False):
                 json.dumps(structure_progress, ensure_ascii=False, indent=2), encoding="utf-8"
             )
 
+            # 뷰어용 상태 파일 기록
+            status_path = STRUCTURED_DIR / "structure_status.json"
+            status_path.write_text(json.dumps({
+                "running": True,
+                "last_update": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "current": i + 1,
+                "total_remaining": len(remaining),
+                "completed_total": len(activities),
+                "total_videos": len(videos),
+                "avg_seconds": round(avg, 1),
+                "eta_minutes": round(eta_min),
+            }, ensure_ascii=False), encoding="utf-8")
+
         except Exception as e:
             print(f"  [에러] {vid}: {e}")
 
@@ -321,6 +334,19 @@ def run_structure(resume: bool = False):
     print(f"Phase 2 완료!")
     print(f"  총 처리: {len(activities)}개 (체육: {pe_count}, 비체육: {len(activities) - pe_count})")
     print(f"  소요 시간: {total_time/3600:.1f}시간 ({total_time/60:.0f}분)")
+
+    # 완료 상태 기록
+    status_path = STRUCTURED_DIR / "structure_status.json"
+    status_path.write_text(json.dumps({
+        "running": False,
+        "last_update": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "current": len(remaining),
+        "total_remaining": len(remaining),
+        "completed_total": len(activities),
+        "total_videos": len(videos),
+        "avg_seconds": round(total_time / len(remaining), 1) if remaining else 0,
+        "eta_minutes": 0,
+    }, ensure_ascii=False), encoding="utf-8")
 
 
 # ============================================================

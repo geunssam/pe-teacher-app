@@ -50,6 +50,15 @@ tailwind.config = {
 </header>
 
 <main class="max-w-6xl mx-auto px-4 py-4">
+  <!-- 구조화 프로세스 상태바 -->
+  <div id="status-bar" class="mb-4 hidden">
+    <div class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm">
+      <span id="status-dot" class="w-2.5 h-2.5 rounded-full flex-shrink-0"></span>
+      <span id="status-text" class="font-medium"></span>
+      <span id="status-detail" class="text-gray-400 ml-auto"></span>
+    </div>
+  </div>
+
   <div id="progress-bar" class="mb-4 hidden">
     <div class="flex justify-between text-sm text-gray-500 mb-1">
       <span id="progress-text"></span>
@@ -274,9 +283,62 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// 구조화 프로세스 상태 확인
+async function loadStatus() {
+  const bar = document.getElementById('status-bar');
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  const detail = document.getElementById('status-detail');
+
+  try {
+    const res = await fetch('/data/structured/structure_status.json?t=' + Date.now());
+    if (!res.ok) throw new Error('Not found');
+    const s = await res.json();
+
+    bar.classList.remove('hidden');
+
+    // 마지막 업데이트로부터 경과 시간 (초)
+    const elapsed = (Date.now() - new Date(s.last_update).getTime()) / 1000;
+    // 평균 처리 시간의 3배 이내면 "실행 중"으로 판단 (기본 10분)
+    const threshold = Math.max((s.avg_seconds || 200) * 3, 600);
+    const isAlive = elapsed < threshold;
+
+    if (s.completed_total >= s.total_videos) {
+      // 전체 완료
+      dot.className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 bg-green-500';
+      bar.querySelector('div').className = 'flex items-center gap-3 px-4 py-3 rounded-xl border border-green-200 bg-green-50 text-sm';
+      text.textContent = '구조화 완료!';
+      text.className = 'font-medium text-green-700';
+      detail.textContent = `${s.completed_total} / ${s.total_videos}개 처리됨`;
+    } else if (isAlive) {
+      // 실행 중
+      dot.className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 bg-blue-500 animate-pulse';
+      bar.querySelector('div').className = 'flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-sm';
+      text.textContent = `구조화 진행 중 (${s.current}/${s.total_remaining})`;
+      text.className = 'font-medium text-blue-700';
+      const etaH = Math.floor(s.eta_minutes / 60);
+      const etaM = s.eta_minutes % 60;
+      detail.textContent = etaH > 0 ? `약 ${etaH}시간 ${etaM}분 남음` : `약 ${etaM}분 남음`;
+    } else {
+      // 멈춤
+      const mins = Math.floor(elapsed / 60);
+      dot.className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 bg-red-500';
+      bar.querySelector('div').className = 'flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-sm';
+      text.textContent = '구조화 멈춤';
+      text.className = 'font-medium text-red-700';
+      detail.textContent = `${mins}분 전 마지막 업데이트 · ${s.completed_total}/${s.total_videos}개 완료`;
+    }
+  } catch {
+    // 상태 파일 없으면 숨김
+    bar.classList.add('hidden');
+  }
+}
+
 // 초기 로드 + 3초마다 자동 새로고침 (구조화 실시간 반영)
 loadData();
+loadStatus();
 setInterval(loadData, 3000);
+setInterval(loadStatus, 5000);
 </script>
 </body>
 </html>
