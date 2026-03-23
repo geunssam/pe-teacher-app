@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startFlowServer } from '@genkit-ai/express';
@@ -11,13 +11,14 @@ import { ingestDocumentFlow } from './flows/ingestDocumentFlow.js';
 import { uploadPdfFlow } from './flows/uploadPdfFlow.js';
 import { ingestYouTubeFlow } from './flows/ingestYouTubeFlow.js';
 
-import { indexStaticData } from './rag/indexer.js';
+import { indexStaticData, indexYouTubeVideos } from './rag/indexer.js';
 import type {
   Activity,
   CurriculumActivity,
   Sport,
   Skill,
   Standard,
+  YouTubeVideo,
 } from './rag/dataLoader.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -130,18 +131,83 @@ async function loadAndIndexStaticData(): Promise<void> {
   );
 }
 
+// --- YouTube 시드 데이터 인덱싱 (이미 완료된 것은 스킵) ---
+
+const YT_INDEXED_PATH = resolve(__dirname, '../data/youtube-indexed-ids.json');
+
+function loadIndexedIds(): Set<string> {
+  if (!existsSync(YT_INDEXED_PATH)) return new Set();
+  try {
+    return new Set(JSON.parse(readFileSync(YT_INDEXED_PATH, 'utf-8')));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveIndexedIds(ids: Set<string>): void {
+  writeFileSync(YT_INDEXED_PATH, JSON.stringify([...ids]), 'utf-8');
+}
+
+async function loadAndIndexYouTubeData(): Promise<void> {
+  const ytPath = resolve(__dirname, '../data/youtube-activities.json');
+  if (!existsSync(ytPath)) {
+    console.log('[startup] YouTube 데이터 없음 (server/data/youtube-activities.json), 스킵');
+    return;
+  }
+
+  const raw = readFileSync(ytPath, 'utf-8');
+  const videos: YouTubeVideo[] = JSON.parse(raw);
+  const peVideos = videos.filter((v) => v.is_pe_activity && v.activity);
+
+  // 이미 인덱싱 완료된 ID 로드
+  const indexedIds = loadIndexedIds();
+  const remaining = peVideos.filter((v) => !indexedIds.has(v.video_id));
+
+  console.log(`[startup] YouTube: 전체 ${peVideos.length}개 | 인덱싱 완료 ${indexedIds.size}개 | 남은 ${remaining.length}개`);
+
+  if (remaining.length === 0) {
+    console.log('[startup] YouTube 임베딩 이미 전부 완료!');
+    return;
+  }
+
+  const result = await indexYouTubeVideos(remaining);
+
+  // 완료된 ID 저장
+  for (const v of remaining.slice(0, result.embedded)) {
+    indexedIds.add(v.video_id);
+  }
+  saveIndexedIds(indexedIds);
+
+  console.log(`[startup] YouTube 임베딩: ${result.embedded}개 추가 (총 ${indexedIds.size}개 완료)`);
+}
+
 // --- Server startup ---
 
 async function main(): Promise<void> {
   console.log('[server] PE Genkit Server starting...');
 
-  // Index static data on startup
+  // Index static data on startup (완료 마커 파일로 중복 방지)
+  const staticDonePath = resolve(__dirname, '../data/static-indexed.flag');
+  if (existsSync(staticDonePath)) {
+    console.log('[server] Static data already indexed, skipping.');
+  } else {
+    try {
+      await loadAndIndexStaticData();
+      writeFileSync(staticDonePath, new Date().toISOString(), 'utf-8');
+      console.log('[server] Static data indexing complete.');
+    } catch (error) {
+      console.error('[server] Failed to index static data:', error);
+      console.log('[server] Server will continue without indexed data.');
+    }
+  }
+
+  // Index YouTube data on startup
   try {
-    await loadAndIndexStaticData();
-    console.log('[server] Static data indexing complete.');
+    await loadAndIndexYouTubeData();
+    console.log('[server] YouTube data indexing complete.');
   } catch (error) {
-    console.error('[server] Failed to index static data:', error);
-    console.log('[server] Server will continue without indexed data.');
+    console.error('[server] Failed to index YouTube data:', error);
+    console.log('[server] Server will continue without YouTube indexed data.');
   }
 
   // Start HTTP flow server on port 3400

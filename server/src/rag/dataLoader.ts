@@ -145,7 +145,7 @@ export function youtubeVideoToDocument(video: YouTubeVideo): Document {
 
   const text = [
     `활동명: ${act.name}`,
-    `출처: 양수쌤체육수업 YouTube`,
+    `출처: YouTube 체육수업 채널`,
     `영상: ${video.title}`,
     `URL: ${video.url}`,
     `내용: ${act.summary}`,

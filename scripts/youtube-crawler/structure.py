@@ -138,17 +138,22 @@ def structure_single(video: dict) -> dict:
     }
 
 
-def _call_ollama(prompt: str) -> dict:
-    """Ollama로 구조화 추출 (JSON 스키마 강제)"""
+def _call_ollama(prompt: str, max_retries: int = 3) -> dict:
+    """Ollama로 구조화 추출 (JSON 스키마 강제, 빈 응답 시 재시도)"""
     import ollama
-    response = ollama.chat(
-        model=OLLAMA_MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        format=OLLAMA_JSON_SCHEMA,
-        options={"temperature": 0, "num_ctx": 8192},
-    )
-    text = response.message.content.strip()
-    return json.loads(text)
+    for attempt in range(max_retries):
+        response = ollama.chat(
+            model=OLLAMA_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            format=OLLAMA_JSON_SCHEMA,
+            options={"temperature": 0, "num_ctx": 8192},
+        )
+        text = response.message.content.strip()
+        if text:
+            return json.loads(text)
+        print(f"  [빈 응답] 재시도 {attempt+1}/{max_retries}...")
+        time.sleep(5)
+    raise ValueError("Ollama 빈 응답 3회 연속")
 
 
 def _call_gemini(prompt: str) -> dict:
